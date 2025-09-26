@@ -46,3 +46,6 @@ osmt*.env
 /test/postman/token.env
 /test/node_modules
 **/target/
+
+.m2-cache
+.m2
