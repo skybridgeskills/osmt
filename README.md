@@ -112,6 +112,11 @@ OSMT requires certain software and SDKs to build:
   * In the `ui` module, `frontend-maven-plugin` uses an embedded copy of Node v16.13.0 and npm 8.1.0.
   * Locally, a developer probably has their own versions of NodeJS and npm installed. They should be >= the versions given above.
 
+#### Version Management
+OSMT includes version management configuration files to help ensure consistent development environments:
+* **`.sdkmanrc`** - Specifies Java, Kotlin, and Maven versions. If you use [SDKMAN](https://sdkman.io/), run `sdk env install` to install the required versions, or `sdk env` to activate them. SDKMAN will automatically switch versions when you `cd` into the project directory if your shell is configured for auto-env.
+* **`.nvmrc`** - Specifies the Node.js version. If you use [nvm](https://github.com/nvm-sh/nvm), run `nvm install` to install the required version, or `nvm use` to activate it. nvm will automatically switch versions when you `cd` into the project directory if your shell is configured for auto-switching.
+
 Run `osmt_cli.sh -v` for feedback on your local SDKs and runtimes. The output of this command may be helpful in troubleshooting with the OSMT community as well.
 
 ### Project Structure

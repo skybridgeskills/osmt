@@ -1,0 +1,32 @@
+name: Version Consistency Check
+
+on:
+  pull_request:
+    paths:
+      - '.sdkmanrc'
+      - '.nvmrc'
+      - '**/Dockerfile*'
+      - '**/pom.xml'
+      - '.github/workflows/*.yml'
+      - 'README.md'
+      - 'scripts/validate-versions.sh'
+  push:
+    branches:
+      - develop
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  validate-versions:
+    name: Validate Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Validate version consistency
+        run: |
+          chmod +x scripts/validate-versions.sh
+          scripts/validate-versions.sh
+

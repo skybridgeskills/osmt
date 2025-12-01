@@ -321,8 +321,16 @@ _validate_osmt_dev_dependencies() {
   echo_info "Maven version: $(mvn --version)"
 
   echo
+  if [[ -f "${PROJECT_DIR}/.sdkmanrc" ]]; then
+    echo_info "Found .sdkmanrc file. To use SDKMAN for version management, run 'sdk env install' or 'sdk env'."
+  fi
+
+  echo
   echo_info "OSMT development recommends NodeJS version v18.18.2 or greater. Maven uses an embedded copy of NodeJS v18.18.2 via frontend-maven-plugin."
   echo_info "NodeJS version: $(node --version)"
+  if [[ -f "${PROJECT_DIR}/.nvmrc" ]]; then
+    echo_info "Found .nvmrc file. To use nvm for version management, run 'nvm install' or 'nvm use'."
+  fi
   echo
   echo_info "OSMT development recommends npm version 9.8.1 or greater. Maven uses an embedded copy of npm 9.8.1 via frontend-maven-plugin."
   echo_info "npm version: $(npm --version)"
