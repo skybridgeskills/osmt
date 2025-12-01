@@ -34,7 +34,8 @@
         <kotlin.version>1.7.21</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.coroutines.version>1.5.1</kotlin.coroutines.version>
-        <exposed.version>0.24.1</exposed.version>
+        <!-- <exposed.version>0.24.1</exposed.version> -->
+        <exposed.version>0.30.2</exposed.version>
         <flywaydb.version>8.5.13</flywaydb.version>
         <flyway-mysql>8.5.13</flyway-mysql>
         <okta.version>3.0.6</okta.version>
@@ -432,7 +433,8 @@
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
-                <version>4.0.0</version>
+                <!-- <version>4.0.0</version> -->
+                <version>4.9.10</version>
                 <executions>
                     <execution>
                         <id>get-the-git-infos</id>
@@ -467,6 +469,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>17</release>
+                </configuration>
             </plugin>
         </plugins>
     </build>

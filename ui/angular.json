@@ -33,7 +33,7 @@
               "file-saver",
               "chroma-js"
             ],
-            "outputPath": "../api/src/main/resources/ui/",
+            "outputPath": "dist/",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",

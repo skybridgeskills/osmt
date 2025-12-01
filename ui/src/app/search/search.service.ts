@@ -9,7 +9,7 @@ import {Subject} from "rxjs"
 export class SearchService {
   latestSearch?: ApiSearch
 
-  private searchQuerySource: Subject<ApiSearch> = new Subject()
+  private searchQuerySource: Subject<ApiSearch | undefined> = new Subject()
   searchQuery$ = this.searchQuerySource.asObservable()
 
   constructor(private router: Router) {
