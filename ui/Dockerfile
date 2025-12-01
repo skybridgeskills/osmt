@@ -1,10 +1,10 @@
-FROM node:18.10-alpine3.15 AS build
+FROM node:18.18-alpine3.15 AS build
 
 LABEL Maintainer="WGU / OSN"
 ENV BASE_DIR=/opt/osmt
 
 # Install Node Build Dependenices
-RUN apk add curl wget make chromium python3 gcc g++ 
+RUN apk add curl wget make chromium python3 gcc g++
 
 WORKDIR ${BASE_DIR}
 

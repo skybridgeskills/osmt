@@ -29,7 +29,7 @@ ENV BASE_DIR=/opt/${USER}
 ENV JAVA_HOME=/etc/alternatives/jre
 
 # Set Maven environment variables
-ENV M2_VERSION=3.9.11
+ENV M2_VERSION=3.9.6
 ENV M2_HOME=/usr/local/maven
 ENV PATH=${M2_HOME}/bin:${PATH}
 
