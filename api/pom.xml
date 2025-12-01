@@ -9,6 +9,17 @@
 
     <repositories>
         <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>spring-repo</id>
             <name>Spring Repository</name>
             <url>https://repo.spring.io/release</url>
@@ -17,11 +28,6 @@
             <id>spring-repo-milestone</id>
             <name>Spring Repository Milestone</name>
             <url>https://repo.spring.io/milestone</url>
-        </repository>
-        <repository>
-            <id>jcenter</id>
-            <name>jcenter</name>
-            <url>https://jcenter.bintray.com</url>
         </repository>
     </repositories>
 
