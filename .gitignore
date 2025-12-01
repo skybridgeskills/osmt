@@ -34,6 +34,11 @@ build/
 ### VS Code ###
 .vscode/
 
+### Cursor ###
+.cursor
+.cursorrules
+.cursor-plans
+
 ### Local nodejs downloaded for frontend-maven-plugin
 ui/node
 
