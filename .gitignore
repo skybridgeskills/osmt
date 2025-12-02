@@ -15,12 +15,6 @@ buildNumber.properties
 # OSX metadata
 **/.DS_Store
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -31,12 +25,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-
 ### Cursor ###
-.cursor
-.cursorrules
+# Cursor plans directory - contains development plans and notes
+# These are typically project-specific planning documents
 .cursor-plans
 
 ### Local nodejs downloaded for frontend-maven-plugin
