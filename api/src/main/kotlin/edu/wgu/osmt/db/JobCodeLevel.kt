@@ -14,6 +14,6 @@ enum class JobCodeLevel(val apiValue: String) {
     Major(MAJOR);
 
     companion object {
-        fun forApiValue(apiValue: String) = values().find { it.apiValue.toLowerCase() == apiValue.toLowerCase() }
+        fun forApiValue(apiValue: String) = values().find { it.apiValue.lowercase() == apiValue.lowercase() }
     }
 }

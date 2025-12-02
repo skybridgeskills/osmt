@@ -43,8 +43,8 @@ interface HasAllPaginated<T> {
     ): HttpEntity<List<T>> {
 
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted  || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted  || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val sortEnum: SortOrder = sortOrderCompanion.forValueOrDefault(sort)
         val pageable = OffsetPageable(from, size, sortEnum.sort)
@@ -61,7 +61,7 @@ interface HasAllPaginated<T> {
             .queryParam(RoutePaths.QueryParams.FROM, from)
             .queryParam(RoutePaths.QueryParams.SIZE, size)
             .queryParam(RoutePaths.QueryParams.SORT, sort)
-            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").toLowerCase())
+            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").lowercase())
 
         PaginatedLinks(
             pageable,

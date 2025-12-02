@@ -64,12 +64,10 @@ class JobCodeRepositoryImpl: JobCodeRepository {
             this.code = code
             this.framework = framework
             maybeDetailed?.let { detailed ->
-                {
-                    this.detailed = detailed.detailed
-                    this.broad = detailed.broad
-                    this.major = detailed.major
-                    this.minor = detailed.minor
-                }
+                this.detailed = detailed.detailed
+                this.broad = detailed.broad
+                this.major = detailed.major
+                this.minor = detailed.minor
             }
         }.also { jobCodeEsRepo.save(it.toModel()) }
     }

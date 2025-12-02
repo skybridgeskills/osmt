@@ -52,8 +52,8 @@ class XlsxTaskProcessor : TabularTask<XlsxTask>() {
         logger.info("Started processing task for Full Library .xlsx export")
 
         val xlsx = richSkillRepository.findAll()
-            ?.map { RichSkillAndCollections.fromDao(it) }
-            ?.let { RichSkillXlsxExport(appConfig).toXlsx(it) }
+            .map { RichSkillAndCollections.fromDao(it) }
+            .let { RichSkillXlsxExport(appConfig).toXlsx(it) }
 
         taskMessageService.publishResult(
             task.copy(result = xlsx, status = TaskStatus.Ready)

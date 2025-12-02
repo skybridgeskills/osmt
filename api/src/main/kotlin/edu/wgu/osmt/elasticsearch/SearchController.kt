@@ -72,8 +72,8 @@ class SearchController @Autowired constructor(
         }
         
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val sortEnum: CollectionSortEnum = CollectionSortEnum.forValueOrDefault(sort)
         val pageable = OffsetPageable(from, size, sortEnum.sort)
@@ -89,7 +89,7 @@ class SearchController @Autowired constructor(
             .path("${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.SEARCH_COLLECTIONS}")
             .queryParam(RoutePaths.QueryParams.FROM, from)
             .queryParam(RoutePaths.QueryParams.SIZE, size)
-            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").toLowerCase())
+            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").lowercase())
         sort?.let { uriComponentsBuilder.queryParam(RoutePaths.QueryParams.SORT, it) }
         
         PaginatedLinks(
@@ -155,8 +155,8 @@ class SearchController @Autowired constructor(
         }
         
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val sortEnum = sort?.let { SkillSortEnum.forApiValue(it) }
         val pageable = OffsetPageable(offset = from, limit = size, sort = sortEnum?.sort)
@@ -173,7 +173,7 @@ class SearchController @Autowired constructor(
             .path("${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.SEARCH_SKILLS}")
             .queryParam(RoutePaths.QueryParams.FROM, from)
             .queryParam(RoutePaths.QueryParams.SIZE, size)
-            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").toLowerCase())
+            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").lowercase())
         sort?.let { uriComponentsBuilder.queryParam(RoutePaths.QueryParams.SORT, it) }
         collectionId?.let { uriComponentsBuilder.queryParam(RoutePaths.QueryParams.COLLECTION_ID, it) }
         

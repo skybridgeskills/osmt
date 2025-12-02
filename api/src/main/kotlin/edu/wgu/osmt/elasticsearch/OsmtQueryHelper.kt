@@ -61,9 +61,7 @@ object OsmtQueryHelper {
         if (nativeQuery.query != null) {
             log?.debug(String.Companion.format("\t\t%s", nativeQuery.query.toString()))
         }
-        if (nativeQuery.sortOptions != null) {
-            log?.debug(String.Companion.format("\t\t%s", nativeQuery.sortOptions.toString()))
-        }
+        log?.debug(String.Companion.format("\t\t%s", nativeQuery.sortOptions.toString()))
     }
 
     fun createMatchPhrasePrefixDslQuery(fieldName: String, searchStr: String, boostVal : Float? = 1.0f): co.elastic.clients.elasticsearch._types.query_dsl.Query {
@@ -92,7 +90,7 @@ object OsmtQueryHelper {
     }
 
     //TODO: Finish this in total elasticSearch conversion to 8.X story
-    fun createNestedQueryDslQuery(path: String, scoreMode: ChildScoreMode, query: co.elastic.clients.elasticsearch._types.query_dsl.Query? = null, innerHits: InnerHits? = null): co.elastic.clients.elasticsearch._types.query_dsl.Query {
+    fun createNestedQueryDslQuery(path: String, _scoreMode: ChildScoreMode, query: co.elastic.clients.elasticsearch._types.query_dsl.Query? = null, innerHits: InnerHits? = null): co.elastic.clients.elasticsearch._types.query_dsl.Query {
         query ?: QueryBuilders.matchAll { b -> b }
         innerHits ?: InnerHits.Builder().build()
         return QueryBuilders.nested { qb ->   qb.path(path)

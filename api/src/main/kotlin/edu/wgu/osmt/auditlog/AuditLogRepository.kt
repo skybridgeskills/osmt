@@ -27,7 +27,7 @@ interface AuditLogRepository {
 
 @Repository
 @Transactional
-class AuditLogRepositoryImpl @Autowired constructor(appConfig: AppConfig) : AuditLogRepository {
+class AuditLogRepositoryImpl @Autowired constructor(_appConfig: AppConfig) : AuditLogRepository {
     override val table = AuditLogTable
     override val dao = AuditLogDao.Companion
 
@@ -36,7 +36,7 @@ class AuditLogRepositoryImpl @Autowired constructor(appConfig: AppConfig) : Audi
             return null
         }
 
-        val auditLog = dao.new {
+        val auditLogDao = dao.new {
             this.entityId = auditLog.entityId
             this.creationDate = auditLog.creationDate
             this.changedFields = Gson().toJson(auditLog.changedFields)
@@ -44,7 +44,7 @@ class AuditLogRepositoryImpl @Autowired constructor(appConfig: AppConfig) : Audi
             this.targetTableName = auditLog.tableName
             this.user = auditLog.user
         }
-        return auditLog
+        return auditLogDao
     }
 
     override fun findByTableAndId(tableName: String, entityId: Long, offsetPageable: OffsetPageable?): SizedIterable<AuditLogDao> {

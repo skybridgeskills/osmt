@@ -316,7 +316,7 @@ class RichSkillRepositoryImpl @Autowired constructor(
 
     override fun changeStatusesForTask(publishTask: PublishTask): ApiBatchResult {
         var modifiedCount = 0
-        var totalCount = 0
+        var totalCount: Int
 
         val publishSkill = { skillDao: RichSkillDescriptorDao, task: PublishTask ->
             val oldStatus = skillDao.publishStatus()

@@ -430,7 +430,7 @@ class CollectionRepositoryImpl @Autowired constructor(
 
     override fun changeStatusesForTask(publishTask: PublishTask): ApiBatchResult? {
         var modifiedCount = 0
-        var totalCount = 0
+        var totalCount: Int
 
         fun publishCollection(collectionDao: CollectionDao, task: PublishTask): Boolean {
             val oldStatus = collectionDao.publishStatus()

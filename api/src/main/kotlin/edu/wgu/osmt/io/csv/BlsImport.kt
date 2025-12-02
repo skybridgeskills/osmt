@@ -25,11 +25,11 @@ class BlsImport : CsvImport<BlsJobCode> {
 
     override val csvRowClass = BlsJobCode::class.java
 
-    private lateinit var jobCodeRepository: JobCodeRepository
-    private lateinit var jobCodeEsRepo: JobCodeEsRepo
-    private lateinit var richSkillRepository: RichSkillRepository
-    private lateinit var richSkillEsRepo: RichSkillEsRepo
-    private lateinit var appConfig: AppConfig
+    private val jobCodeRepository: JobCodeRepository
+    private val jobCodeEsRepo: JobCodeEsRepo
+    private val richSkillRepository: RichSkillRepository
+    private val richSkillEsRepo: RichSkillEsRepo
+    private val appConfig: AppConfig
 
     constructor(
         jobCodeRepository: JobCodeRepository,

@@ -134,18 +134,31 @@ class BatchImportRichSkill: CsvImport<RichSkillRow> {
         log.info("Processing ${rows.size} rows...")
 
         for (row in rows) transaction {
+            @Suppress("RedundantInitializer")
             var authors: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var categories: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var keywords: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var standards: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var certifications: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var employers: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var alignments: List<KeywordDao>? = null
+            @Suppress("RedundantInitializer")
             var blsMajor: List<JobCodeDao>? = null
+            @Suppress("RedundantInitializer")
             var blsMinor: List<JobCodeDao>? = null
+            @Suppress("RedundantInitializer")
             var blsBroad: List<JobCodeDao>? = null
+            @Suppress("RedundantInitializer")
             var blsDetailed: List<JobCodeDao>? = null
+            @Suppress("RedundantInitializer")
             var occupations: List<JobCodeDao>? = null
+            @Suppress("RedundantInitializer")
             var collections: List<CollectionDao>? = null
 
             categories = parseKeywords(KeywordTypeEnum.Category, row.skillCategories)

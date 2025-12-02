@@ -101,8 +101,8 @@ class RichSkillController @Autowired constructor(
         @AuthenticationPrincipal user: Jwt?
     ): HttpEntity<List<RichSkillDoc>> {
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val sortEnum: SortOrder = sortOrderCompanion.forValueOrDefault(sort)
         val pageable = OffsetPageable(from, size, sortEnum.sort)
@@ -121,7 +121,7 @@ class RichSkillController @Autowired constructor(
             .queryParam(RoutePaths.QueryParams.FROM, from)
             .queryParam(RoutePaths.QueryParams.SIZE, size)
             .queryParam(RoutePaths.QueryParams.SORT, sort)
-            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").toLowerCase())
+            .queryParam(RoutePaths.QueryParams.STATUS, status.joinToString(",").lowercase())
         
         PaginatedLinks(
             pageable,
@@ -389,7 +389,7 @@ class RichSkillController @Autowired constructor(
     ): HttpEntity<List<AuditLog>> {
         val pageable = OffsetPageable(0, Int.MAX_VALUE, AuditLogSortEnum.forValueOrDefault(AuditLogSortEnum.DateDesc.apiValue).sort)
         val skill = richSkillRepository.findByUUID(uuid) ?: throw ResponseStatusException(NOT_FOUND, "Skill with id $uuid not ready or not found")
-        val sizedIterable = auditLogRepository.findByTableAndId(RichSkillDescriptorTable.tableName, entityId = skill!!.id.value, offsetPageable = pageable)
+        val sizedIterable = auditLogRepository.findByTableAndId(RichSkillDescriptorTable.tableName, entityId = skill.id.value, offsetPageable = pageable)
         
         return ResponseEntity.status(200).body(sizedIterable.toList().map { it.toModel() })
     }
@@ -470,8 +470,8 @@ class RichSkillController @Autowired constructor(
             throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
         }
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val task = ExportSkillsToCsvTask(
             collectionUuid = "CustomList",
@@ -504,8 +504,8 @@ class RichSkillController @Autowired constructor(
             throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
         }
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val task = ExportSkillsToCsvTaskV2(
             collectionUuid = "CustomList",
@@ -534,8 +534,8 @@ class RichSkillController @Autowired constructor(
             throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
         }
         val publishStatuses = status.mapNotNull {
-            val status = PublishStatus.forApiValue(it)
-            if (user == null && (status == PublishStatus.Deleted || status == PublishStatus.Draft)) null else status
+            val publishStatus = PublishStatus.forApiValue(it)
+            if (user == null && (publishStatus == PublishStatus.Deleted || publishStatus == PublishStatus.Draft)) null else publishStatus
         }.toSet()
         val task = ExportSkillsToXlsxTask(collectionUuid = "CustomList", richSkillEsRepo.getUuidsFromApiSearch(apiSearch, publishStatuses, Pageable.unpaged(), user, StringUtils.EMPTY))
         taskMessageService.enqueueJob(TaskMessageService.skillsForCustomListExportXlsx, task)

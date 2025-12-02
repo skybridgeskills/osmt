@@ -21,6 +21,6 @@ enum class PublishStatus(@JsonValue val apiValue: String) {
         const val DEFAULT_API_PUBLISH_STATUS_SET = "${DRAFT},${PUBLISHED}"
         val publishStatusSet = values().toSet()
 
-        fun forApiValue(apiValue: String) = values().find { it.apiValue.toLowerCase() == apiValue.toLowerCase() }
+        fun forApiValue(apiValue: String) = values().find { it.apiValue.lowercase() == apiValue.lowercase() }
     }
 }

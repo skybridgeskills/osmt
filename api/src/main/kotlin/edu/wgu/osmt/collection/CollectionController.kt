@@ -324,7 +324,7 @@ class CollectionController @Autowired constructor(
     ): HttpEntity<List<AuditLog>> {
         val pageable = OffsetPageable(0, Int.MAX_VALUE, AuditLogSortEnum.forValueOrDefault(AuditLogSortEnum.DateDesc.apiValue).sort)
         val collection = collectionRepository.findByUUID(uuid) ?: throw ResponseStatusException(NOT_FOUND, "Collection with id $uuid not ready or not found")
-        val sizedIterable = auditLogRepository.findByTableAndId(CollectionTable.tableName, entityId = collection!!.id.value, offsetPageable = pageable)
+        val sizedIterable = auditLogRepository.findByTableAndId(CollectionTable.tableName, entityId = collection.id.value, offsetPageable = pageable)
         
         return ResponseEntity.status(200).body(sizedIterable.toList().map { it.toModel() })
     }

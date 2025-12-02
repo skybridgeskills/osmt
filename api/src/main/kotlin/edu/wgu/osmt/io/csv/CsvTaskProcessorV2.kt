@@ -50,8 +50,8 @@ class CsvTaskProcessorV2 : TabularTask<CsvTaskV2>() {
         logger.info("Started processing task for Full Library .csv export")
 
         val csv = richSkillRepository.findAll()
-            ?.map { RichSkillAndCollections.fromDao(it) }
-            ?.let { RichSkillCsvExportV2(appConfig).toCsv(it) }
+            .map { RichSkillAndCollections.fromDao(it) }
+            .let { RichSkillCsvExportV2(appConfig).toCsv(it) }
 
         taskMessageService.publishResult(
             task.copy(result = csv, status = TaskStatus.Ready)
