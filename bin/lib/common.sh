@@ -268,8 +268,8 @@ _validate_docker_version() {
 _validate_java_version() {
   echo
   echo_info "Checking Java..."
-  # OSMT requires at least Java 11
-  local -i req_java_major=17
+  # OSMT requires at least Java 21
+  local -i req_java_major=21
   local det_java_version
   local -i det_java_major
 
@@ -281,7 +281,7 @@ _validate_java_version() {
     return 1
   fi
 
-  echo_info "Checking Java JDK for version 11 or greater..."
+  echo_info "Checking Java JDK for version 21 or greater..."
   det_java_version="$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)"
     echo_debug "1 - ${det_java_version}"
   det_java_version="${det_java_version#[vV]}"

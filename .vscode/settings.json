@@ -2,7 +2,7 @@
   // Kotlin Language Server Configuration
   "kotlin.languageServer.enabled": true,
   "kotlin.languageServer.transport": "stdio",
-  "kotlin.compiler.jvm.target": "17",
+  "kotlin.compiler.jvm.target": "21",
   "kotlin.linting.debounceTime": 250,
   "kotlin.debugAdapter.enabled": true,
 
