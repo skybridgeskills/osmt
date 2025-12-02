@@ -48,15 +48,36 @@ This file tracks dependencies that were not upgraded during the systematic upgra
 **Date:** 2025-12-02
 **Notes:** All tests passing (155 tests, 0 failures), required code fixes for compatibility
 
+### Log4j 2.17.1 → 2.23.1
+**Status:** ✅ Completed
+**Date:** 2025-12-02
+**Notes:** Security updates, all tests passing
+
+### MySQL Connector Cleanup
+**Status:** ✅ Completed
+**Date:** 2025-12-02
+**Notes:** Removed deprecated mysql-connector-java, using mysql-connector-j only, all tests passing
+
+### Jackson 2.14.1 → 2.17.1
+**Status:** ✅ Completed
+**Date:** 2025-12-02
+**Notes:** All tests passing, JSON serialization verified
+
+### Angular 16 → 18
+**Status:** ✅ Completed
+**Date:** 2025-12-02
+**Notes:** 
+- Updated all Angular packages, CLI, and related tools
+- Updated RxJS to 7.8.1, TypeScript to 5.4.5, zone.js to 0.14.10
+- Fixed deprecated async → waitForAsync in tests
+- Fixed TypeScript 5 strictness issues
+- Build successful, 689 tests passing (3 pre-existing failures unrelated to upgrade)
+
 ---
 
 ## Pending Upgrades
 
 The following upgrades are planned but not yet attempted:
-- Log4j 2.17.1 → 2.23.x
-- MySQL Connector cleanup (remove deprecated mysql-connector-java)
-- Jackson 2.14.1 → 2.17.x
-- Angular 16 → 18
 - Elasticsearch client 7.17.8 → 8.x (Java API client)
 - Docker images (Redis, MySQL versions)
 - Node.js 18.18.2 → 20 LTS
