@@ -1,7 +1,7 @@
 // noinspection LocalVariableNamingConventionJS
 
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { By } from "@angular/platform-browser"
 import { first } from "rxjs/operators"
 import { createMockSkillSummary } from "../../../../test/resource/mock-data"
@@ -71,7 +71,7 @@ let childComponent: SkillListRowComponent
 
 
 describe("SkillListRowComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         SkillListRowComponent,

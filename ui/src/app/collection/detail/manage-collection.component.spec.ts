@@ -2,7 +2,7 @@
 
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Component, ElementRef, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { Title } from "@angular/platform-browser"
 import { Router } from "@angular/router"
 import { RouterTestingModule } from "@angular/router/testing"
@@ -44,8 +44,8 @@ import { KeywordCountPillControl } from "../../core/pill/pill-control";
   template: ``
 })
 class ConcreteComponent extends ManageCollectionComponent {
-  setSize(size: number): void { super.size = size }
-  setFrom(from: number): void { super.from = from }
+  setSize(size: number): void { this.size = size }
+  setFrom(from: number): void { this.from = from }
 }
 
 
@@ -68,7 +68,7 @@ let fixture: ComponentFixture<ConcreteComponent>
 
 
 describe("ManageCollectionComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ConcreteComponent

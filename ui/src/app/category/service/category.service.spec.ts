@@ -1,7 +1,7 @@
 import {Location} from "@angular/common"
 import {HttpClient} from "@angular/common/http"
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing"
-import {async, TestBed} from "@angular/core/testing"
+import {waitForAsync, TestBed} from "@angular/core/testing"
 import {Router} from "@angular/router"
 import {
   AuthServiceData,
@@ -24,7 +24,7 @@ describe("CategoryService", () => {
   let authService: AuthServiceStub
   let testService: CategoryService
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [],
       imports: [

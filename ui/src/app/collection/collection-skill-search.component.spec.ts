@@ -1,7 +1,7 @@
 import { Location } from "@angular/common"
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { Title } from "@angular/platform-browser"
 import { RouterTestingModule } from "@angular/router/testing"
 import { createMockPaginatedSkills, createMockSkillSummary } from "../../../test/resource/mock-data"
@@ -36,7 +36,7 @@ let fixture: ComponentFixture<CollectionSkillSearchComponent>
 
 
 describe("CollectionSkillSearchComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         CollectionSkillSearchComponent

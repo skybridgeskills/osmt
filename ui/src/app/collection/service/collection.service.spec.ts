@@ -3,7 +3,7 @@
 import { Location } from "@angular/common"
 import { HttpClient, HttpResponse } from "@angular/common/http"
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing"
-import {async, fakeAsync, flush, TestBed, tick} from "@angular/core/testing"
+import {waitForAsync, fakeAsync, flush, TestBed, tick} from "@angular/core/testing"
 import { Router } from "@angular/router"
 import {
   apiTaskResultForDeleteCollection,
@@ -43,7 +43,7 @@ describe("CollectionService", () => {
   let authService: AuthServiceStub
   let testService: CollectionService
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [],
       imports: [

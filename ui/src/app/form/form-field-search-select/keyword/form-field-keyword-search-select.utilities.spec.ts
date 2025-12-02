@@ -1,5 +1,5 @@
 // noinspection LocalVariableNamingConventionJS
-import {async, ComponentFixture, TestBed} from "@angular/core/testing"
+import {waitForAsync, ComponentFixture, TestBed} from "@angular/core/testing"
 import {ApiAlignment, ApiNamedReference, IAlignment, INamedReference, KeywordType} from "../../../richskill/ApiSkill"
 import {
   areAlignmentsEqual,

@@ -1,5 +1,5 @@
 import {Injectable, Type} from "@angular/core"
-import {async, ComponentFixture, TestBed} from "@angular/core/testing"
+import {waitForAsync, ComponentFixture, TestBed} from "@angular/core/testing"
 import {createMockSkillSummary} from "../../../test/resource/mock-data"
 import {ApiSortOrder} from "../richskill/ApiSkill"
 import {ApiSkillSummary, ISkillSummary} from "../richskill/ApiSkillSummary"
@@ -36,7 +36,7 @@ let fixture: ComponentFixture<ConcreteComponent>
 
 
 describe("AbstractTableComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ConcreteComponent

@@ -2,7 +2,7 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing"
 import {Component, Type} from "@angular/core"
 import {FormControl, Validators} from "@angular/forms"
-import {async, ComponentFixture, TestBed} from "@angular/core/testing"
+import {waitForAsync, ComponentFixture, TestBed} from "@angular/core/testing"
 import {FormsModule, ReactiveFormsModule} from "@angular/forms"
 import {ActivatedRoute, Router} from "@angular/router"
 import {RouterTestingModule} from "@angular/router/testing"
@@ -47,7 +47,7 @@ describe("AbstractFormFieldComponent", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

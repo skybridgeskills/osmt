@@ -1,6 +1,6 @@
 /* tslint:disable:no-string-literal */
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { ActivatedRoute, Router } from "@angular/router"
 import * as FileSaver from "file-saver"
 import { ActivatedRouteStubSpec } from "test/util/activated-route-stub.spec"
@@ -30,7 +30,7 @@ export function createComponent(T: Type<LibraryExportComponent>): Promise<void> 
 }
 
 describe("LibraryExportComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
     activatedRoute = new ActivatedRouteStubSpec()
 

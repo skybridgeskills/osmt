@@ -3,7 +3,7 @@
 import { Location } from "@angular/common"
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { FormBuilder } from "@angular/forms"
 import { Title } from "@angular/platform-browser"
 import { ActivatedRoute, Router } from "@angular/router"
@@ -55,7 +55,7 @@ let fixture: ComponentFixture<RichSkillFormComponent>
 
 
 describe("RichSkillFormComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         RichSkillFormComponent
@@ -439,7 +439,7 @@ describe("RichSkillFormComponent (with parameter)", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

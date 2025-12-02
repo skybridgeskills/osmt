@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed} from "@angular/core/testing"
+import {waitForAsync, ComponentFixture, TestBed} from "@angular/core/testing"
 import {ApiCategory, IKeyword} from "./ApiCategory"
 import {KeywordType} from "../richskill/ApiSkill"
 

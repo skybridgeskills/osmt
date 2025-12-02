@@ -8,7 +8,7 @@ import {share} from "rxjs/operators";
 })
 export class ClickService {
 
-  private nextClickSource: Subject<any> = new Subject()
+  private nextClickSource: Subject<void> = new Subject<void>()
   nextClick$ = this.nextClickSource.asObservable().pipe(share())
   private windowClickListener?: any;
   private renderer: Renderer2;
@@ -48,7 +48,7 @@ export class ClickService {
       return
     }
 
-    this.nextClickSource.next()
+    this.nextClickSource.next(undefined as any)
     this.stopListening()
   }
 

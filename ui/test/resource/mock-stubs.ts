@@ -96,7 +96,7 @@ export class AuthServiceStub {  // TODO consider using real class
 
 export let SearchServiceData = {
   latestSearch: new ApiSearch({}) as ApiSearch | undefined,
-  searchQuerySource: new Subject<ApiSearch>(),
+  searchQuerySource: new Subject<ApiSearch | undefined>(),
   _latestQuery: ""
 }
 export class SearchServiceStub {

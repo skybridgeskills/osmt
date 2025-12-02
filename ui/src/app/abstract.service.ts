@@ -130,8 +130,8 @@ export abstract class AbstractService {
     return new Observable((observer) => {
       obs.subscribe(task => {
         this.observableForTaskResult<T>(task, pollIntervalMs).subscribe(result => {
-          observer.next(result)
-          if (result) {
+          if (result !== undefined) {
+            observer.next(result)
             observer.complete()
           }
         })
@@ -139,7 +139,7 @@ export abstract class AbstractService {
     })
   }
 
-  observableForTaskResult<T>(task: ApiTaskResult, pollIntervalMs: number = 1000): Observable<T> {
+  observableForTaskResult<T>(task: ApiTaskResult, pollIntervalMs: number = 1000): Observable<T | undefined> {
     return new Observable((observer) => {
 
       const tick = () => {
@@ -154,7 +154,7 @@ export abstract class AbstractService {
           }
         }, ({error, status}) => {
           if (status === 404) {
-            observer.next(undefined)
+            observer.next(undefined as T | undefined)
             setTimeout(() => tick(), pollIntervalMs)
           }
         })

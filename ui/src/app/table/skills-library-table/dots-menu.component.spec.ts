@@ -1,5 +1,5 @@
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { By } from "@angular/platform-browser"
 import { ApiSkillSummary } from "../../richskill/ApiSkillSummary"
 import { DotsMenuComponent } from "./dots-menu.component"
@@ -41,7 +41,7 @@ let childComponent: DotsMenuComponent
 
 
 describe("DotsMenuComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         DotsMenuComponent,

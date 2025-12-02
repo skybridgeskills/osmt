@@ -1,4 +1,4 @@
-import {async, TestBed} from "@angular/core/testing"
+import {waitForAsync, TestBed} from "@angular/core/testing"
 import { ApiAdvancedSearch, ApiSearch } from "../richskill/service/rich-skill-search.service"
 import {SearchService} from "./search.service"
 import {Router} from "@angular/router"
@@ -7,7 +7,7 @@ import { RouterData, RouterStub } from "../../../test/resource/mock-stubs"
 
 describe("SearchService", () => {
   let service: SearchService
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
       providers: [

@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed} from '@angular/core/testing';
+import {waitForAsync, ComponentFixture, TestBed} from '@angular/core/testing';
 import { ActivatedRoute, Router } from "@angular/router";
 import { ActivatedRouteStubSpec } from "@test/util/activated-route-stub.spec";
 import { Type } from "@angular/core";
@@ -38,7 +38,7 @@ describe('BatchImportCollectionComponent', () => {
 
   let fixture: ComponentFixture<BatchImportCollectionComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [BatchImportCollectionComponent],
       imports: [

@@ -1,6 +1,6 @@
 import { HttpClientModule } from "@angular/common/http"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { ReactiveFormsModule } from "@angular/forms"
 import { Router } from "@angular/router"
 import { EnvironmentServiceStub, SearchServiceData, SearchServiceStub } from "test/resource/mock-stubs"
@@ -44,7 +44,7 @@ describe("AdvancedSearchComponent", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

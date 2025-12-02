@@ -1,7 +1,7 @@
 import { Location } from "@angular/common"
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { Title } from "@angular/platform-browser"
 import { ActivatedRoute, Router } from "@angular/router"
 import { ActivatedRouteStubSpec } from "test/util/activated-route-stub.spec"
@@ -41,7 +41,7 @@ describe("PublishCollectionComponent", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

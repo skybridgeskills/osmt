@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { Title } from "@angular/platform-browser"
 import { RouterTestingModule } from "@angular/router/testing"
 import { createMockCollectionSummary } from "../../../test/resource/mock-data"
@@ -35,7 +35,7 @@ let fixture: ComponentFixture<CollectionsLibraryComponent>
 describe("CollectionsLibraryComponent", () => {
   let collectionService: CollectionService
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         CollectionsLibraryComponent

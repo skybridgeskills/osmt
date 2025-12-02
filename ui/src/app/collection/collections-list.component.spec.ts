@@ -1,7 +1,7 @@
 // noinspection MagicNumberJS,LocalVariableNamingConventionJS
 
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { RouterTestingModule } from "@angular/router/testing"
 import { createMockCollectionSummary, createMockPaginatedCollections } from "../../../test/resource/mock-data"
 import {AuthServiceStub, CollectionServiceStub} from "../../../test/resource/mock-stubs"
@@ -51,7 +51,7 @@ let fixture: ComponentFixture<ConcreteComponent>
 
 
 describe("CollectionsListComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ConcreteComponent

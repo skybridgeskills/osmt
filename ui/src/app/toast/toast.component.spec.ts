@@ -1,5 +1,5 @@
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { ToastComponent } from "./toast.component"
 import { ToastMessage, ToastService } from "./toast.service"
 
@@ -24,7 +24,7 @@ let fixture: ComponentFixture<ToastComponent>
 
 
 describe("ToastComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ToastComponent

@@ -4,7 +4,7 @@ import {Whitelabelled} from "../whitelabel"
 import {AuthService} from "./auth/auth-service"
 import {ToastService} from "./toast/toast.service"
 import {NavigationEnd, Router} from "@angular/router"
-import * as chroma from "chroma-js"
+import chroma from "chroma-js"
 import {SearchService} from "./search/search.service"
 
 @Component({

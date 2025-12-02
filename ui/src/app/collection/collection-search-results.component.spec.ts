@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { Title } from "@angular/platform-browser"
 import { ActivatedRoute, Router } from "@angular/router"
 import { AppConfig } from "src/app/app.config"
@@ -46,7 +46,7 @@ describe("CollectionSearchResultsComponent", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({
@@ -190,7 +190,7 @@ describe("RichCollectionSearchResultsComponent with latestSearch", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({
@@ -240,7 +240,7 @@ describe("RichCollectionSearchResultsComponent with params", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

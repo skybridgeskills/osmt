@@ -1,5 +1,5 @@
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { By } from "@angular/platform-browser"
 import { Router } from "@angular/router"
 import * as FileSaver from "file-saver"
@@ -52,7 +52,7 @@ let childComponent: PublicRichSkillActionBarComponent
 
 
 describe("PublicRichSkillActionBarComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

@@ -1,6 +1,6 @@
 import { HttpClientModule } from "@angular/common/http"
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { ActivatedRoute, Router } from "@angular/router"
 import { AuthServiceStub, SearchServiceStub } from "../../../test/resource/mock-stubs"
 import { ActivatedRouteStubSpec } from "../../../test/util/activated-route-stub.spec"
@@ -44,7 +44,7 @@ describe("AbstractSearchComponent", () => {
   beforeEach(() => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

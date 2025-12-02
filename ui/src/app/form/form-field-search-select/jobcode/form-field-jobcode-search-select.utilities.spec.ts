@@ -1,5 +1,5 @@
 // noinspection LocalVariableNamingConventionJS
-import {async, ComponentFixture, TestBed} from "@angular/core/testing"
+import {waitForAsync, ComponentFixture, TestBed} from "@angular/core/testing"
 import {IJobCode} from "../../../job-codes/Jobcode"
 import {createMockJobcode} from "../../../../../test/resource/mock-data"
 import {

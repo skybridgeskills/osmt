@@ -1,5 +1,5 @@
 import {Component, Type} from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { By } from "@angular/platform-browser"
 import { ActivatedRouteStubSpec } from "test/util/activated-route-stub.spec"
 import {PaginationComponent} from "./pagination.component"
@@ -47,7 +47,7 @@ describe("PaginationComponent", () => {
     activatedRoute = new ActivatedRouteStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

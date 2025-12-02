@@ -1,5 +1,5 @@
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { By } from "@angular/platform-browser"
 import { PublishStatus } from "../PublishStatus"
 import { StatusBarComponent } from "./status-bar.component"
@@ -51,7 +51,7 @@ let childComponent: StatusBarComponent
 
 
 describe("StatusBarComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         StatusBarComponent,

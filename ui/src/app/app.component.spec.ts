@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { FormsModule } from "@angular/forms"
 import { Title } from "@angular/platform-browser"
 import { NavigationEnd, Router } from "@angular/router"
@@ -42,7 +42,7 @@ describe("AppComponent construction", () => {
     routerStub = new RouterStubSpec()
   })
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent
@@ -78,7 +78,7 @@ describe("AppComponent construction", () => {
 })
 
 describe("AppComponent methods", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     const routerSpy = ActivatedRouteStubSpec.createRouterSpy()
 
     TestBed.configureTestingModule({

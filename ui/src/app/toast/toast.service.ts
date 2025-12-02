@@ -11,7 +11,7 @@ export interface ToastMessage {
   providedIn: "root"
 })
 export class ToastService {
-  subject = new Subject<ToastMessage>()
+  subject = new Subject<ToastMessage | undefined>()
   loaderSubject = new Subject<boolean>()
 
   constructor() { }

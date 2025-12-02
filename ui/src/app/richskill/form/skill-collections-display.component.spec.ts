@@ -1,5 +1,5 @@
 import { Component, Type } from "@angular/core"
-import { async, ComponentFixture, TestBed } from "@angular/core/testing"
+import { waitForAsync, ComponentFixture, TestBed } from "@angular/core/testing"
 import { FormControl } from "@angular/forms"
 import { By } from "@angular/platform-browser"
 import { SkillCollectionsDisplayComponent } from "./skill-collections-display.component"
@@ -61,7 +61,7 @@ let childComponent: SkillCollectionsDisplayComponent
 
 
 describe("SkillCollectionsDisplayComponent", () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         SkillCollectionsDisplayComponent,

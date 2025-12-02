@@ -2,7 +2,7 @@ import { Location } from "@angular/common"
 import { HttpClient, HttpClientModule } from "@angular/common/http"
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing"
 import { Inject, Injectable } from "@angular/core"
-import { async, TestBed } from "@angular/core/testing"
+import { waitForAsync, TestBed } from "@angular/core/testing"
 import { Data, Router } from "@angular/router"
 import { Observable, of } from "rxjs"
 import { map } from "rxjs/operators"
@@ -67,7 +67,7 @@ describe("AbstractService (no HTTP needed)", () => {
   let authService: AuthServiceStub
   let testService: ConcreteService
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [],
       imports: [
@@ -149,7 +149,7 @@ describe("AbstractService (HTTP needed)", () => {
   let authService: AuthServiceStub
   let testService: ConcreteService
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [],
       imports: [
