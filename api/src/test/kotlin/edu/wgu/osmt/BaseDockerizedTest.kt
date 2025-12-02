@@ -49,7 +49,7 @@ object Containers {
     val mysqlContainer = GenericContainer<Nothing>("mysql:8").apply {
         withExposedPorts(3306)
         withCopyFileToContainer(
-            MountableFile.forHostPath("../docker/mysql-init/1init.sql"),
+            MountableFile.forHostPath("docker/mysql-init/1init.sql"),
             "/docker-entrypoint-initdb.d/1init.sql"
         )
         withEnv("MYSQL_ROOT_PASSWORD", "password")
