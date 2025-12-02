@@ -37,9 +37,9 @@
     <description>WGU Open Skills Management Toolset</description>
 
     <properties>
-        <kotlin.version>1.7.21</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.coroutines.version>1.5.1</kotlin.coroutines.version>
+        <kotlin.coroutines.version>1.9.5</kotlin.coroutines.version>
         <!-- <exposed.version>0.24.1</exposed.version> -->
         <exposed.version>0.30.2</exposed.version>
         <flywaydb.version>8.5.13</flywaydb.version>
@@ -203,7 +203,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
@@ -379,6 +379,7 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <configuration>
+                    <jvmTarget>21</jvmTarget>
                     <args>
                         <arg>-Xjsr305=strict</arg>
                     </args>

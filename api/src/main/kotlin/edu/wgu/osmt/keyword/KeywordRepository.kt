@@ -80,8 +80,8 @@ class KeywordRepositoryImpl @Autowired constructor(val appConfig: AppConfig) : K
     }
 
     override fun create(type: KeywordTypeEnum, value: String?, uri: String?, framework: String?): KeywordDao? {
-        val strippedValue = value?.strip()
-        val strippedUri = uri?.strip()
+        val strippedValue = value?.trim()
+        val strippedUri = uri?.trim()
         return if (!strippedValue.isNullOrBlank() || !strippedUri.isNullOrBlank()) dao.new {
             updateDate = LocalDateTime.now(ZoneOffset.UTC)
             creationDate = LocalDateTime.now(ZoneOffset.UTC)

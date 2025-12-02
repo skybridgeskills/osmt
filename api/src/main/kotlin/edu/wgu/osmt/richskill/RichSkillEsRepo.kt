@@ -593,7 +593,7 @@ class CustomRichSkillQueriesImpl @Autowired constructor(override val elasticSear
             generateBoolQueriesFromApiSearch(bq, apiSearch.advanced)
 
             if (collectionId.isNullOrBlank()) {
-                apiSearch?.advanced.collectionName?.let {
+                apiSearch.advanced?.collectionName?.let {
                     bq.must(
                         nestedQuery(
                             RichSkillDoc::collections.name,
