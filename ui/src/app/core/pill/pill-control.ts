@@ -1,48 +1,52 @@
-import {IAlignment, INamedReference, KeywordCount} from "../../richskill/ApiSkill";
+import {
+  IAlignment,
+  INamedReference,
+  KeywordCount,
+} from '../../richskill/ApiSkill';
 
 export abstract class AbstractPillControl {
+  private selected = false;
 
-  private selected: boolean = false
+  abstract get primaryLabel(): string;
 
-  abstract get primaryLabel(): string
-
-  get secondaryLabel(): string|undefined { return undefined }
+  get secondaryLabel(): string | undefined {
+    return undefined;
+  }
 
   get isSelected(): boolean {
-    return this.selected
+    return this.selected;
   }
 
   deselect() {
-    this.selected = false
+    this.selected = false;
   }
 
   select() {
-    this.selected = true
+    this.selected = true;
   }
 }
 
 export class KeywordCountPillControl extends AbstractPillControl {
-
-  readonly keywordCount: KeywordCount
+  readonly keywordCount: KeywordCount;
 
   constructor(keywordCount: KeywordCount) {
     super();
-    this.keywordCount = keywordCount
+    this.keywordCount = keywordCount;
   }
 
   get keyword(): IAlignment | INamedReference | string {
-    return this.keywordCount.keyword
+    return this.keywordCount.keyword;
   }
 
   get count(): number {
-    return this.keywordCount.count
+    return this.keywordCount.count;
   }
 
   get primaryLabel(): string {
-    return `${this.keyword}`
+    return `${this.keyword}`;
   }
 
   get secondaryLabel(): string | undefined {
-    return `${this.count}`
+    return `${this.count}`;
   }
 }

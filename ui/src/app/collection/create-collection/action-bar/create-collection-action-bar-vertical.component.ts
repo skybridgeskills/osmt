@@ -1,12 +1,17 @@
-import {Component, Output, EventEmitter} from "@angular/core"
-import {AbstractCreateCollectionActionbarComponent} from "./abstract-create-collection-actionbar.component"
+import { Component, Output, EventEmitter } from '@angular/core';
+import { AbstractCreateCollectionActionbarComponent } from './abstract-create-collection-actionbar.component';
 
 @Component({
-  selector: " app-create-collection-action-bar-vertical",
+  selector: ' app-create-collection-action-bar-vertical',
   template: `
     <div class="l-actionBarVertical">
       <div class="l-actionBarVertical-x-message" *ngIf="!formValid">
-        <p>Additional information required before you can save. Go to <a class="t-type-bodyLink t-link" (click)="showMissingFields.emit()">first required missing field</a>.</p>
+        <p>
+          Additional information required before you can save. Go to
+          <a class="t-type-bodyLink t-link" (click)="showMissingFields.emit()"
+            >first required missing field</a
+          >.
+        </p>
       </div>
       <div class="l-actionBarVertical-x-action">
         <app-formfield-submit
@@ -30,16 +35,14 @@ import {AbstractCreateCollectionActionbarComponent} from "./abstract-create-coll
         </button>
       </div>
     </div>
-  `
+  `,
 })
 export class CreateCollectionActionBarVerticalComponent extends AbstractCreateCollectionActionbarComponent {
-
-  @Output() showMissingFields = new EventEmitter<void>()
+  @Output() showMissingFields = new EventEmitter<void>();
 
   constructor() {
-    super()
+    super();
   }
 
-  handleFormErrors(error: any): void {
-  }
+  handleFormErrors(error: any): void {}
 }
