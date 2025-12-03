@@ -36,13 +36,13 @@ services:
       - ui
     profiles:
       - test
-  
+
   db-mysql:
     image: library/mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - sql_db:/var/lib/mysql:rw
-      - ./docker/mysql-init:/docker-entrypoint-initdb.d
+      - ./api/docker/mysql-init:/docker-entrypoint-initdb.d
     environment:
       - "MYSQL_PASSWORD=password"
       - "MYSQL_HOST=0.0.0.0"
