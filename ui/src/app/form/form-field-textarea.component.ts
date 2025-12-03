@@ -1,5 +1,4 @@
 import { Component, Input, OnInit, Output } from '@angular/core';
-import { AbstractControl, FormControl } from '@angular/forms';
 import { FormField } from './form-field.component';
 import { Subject } from 'rxjs';
 
@@ -29,6 +28,7 @@ import { Subject } from 'rxjs';
   </app-formfield>`,
 })
 export class FormFieldTextArea extends FormField implements OnInit {
+  // eslint-disable-next-line @angular-eslint/no-output-native -- legacy
   @Output() blur = new Subject<FocusEvent>();
   @Input() isWarning = false;
 

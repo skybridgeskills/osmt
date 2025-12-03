@@ -27,6 +27,7 @@ import { AbstractCreateCollectionActionbarComponent } from './abstract-create-co
       ></app-formfield-submit>
       <div class="m-quickLinks" aria-labelledby="save-quicklinks">
         <h3 class="t-visuallyHidden" id="save-quicklinks">Quick Links</h3>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <a (click)="scrollToTopClicked.emit()">Back to top</a>
       </div>
     </nav>

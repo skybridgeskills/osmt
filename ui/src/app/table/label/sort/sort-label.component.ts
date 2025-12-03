@@ -9,6 +9,7 @@ export class SortLabelComponent {
   @Input() sortOrderAsc?: any;
   @Input() sortOrderDesc?: any;
   @Input() selected?: any;
+  // eslint-disable-next-line @angular-eslint/no-output-on-prefix -- legacy
   @Output() onSelection: EventEmitter<any> = new EventEmitter<any>();
 
   readonly chevronIcon = SvgHelper.path(SvgIcon.CHEVRON);

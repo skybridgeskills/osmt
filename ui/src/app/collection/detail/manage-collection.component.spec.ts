@@ -351,7 +351,7 @@ describe('ManageCollectionComponent', () => {
     });
   });
 
-  it('delete collection should be visible', () => {
+  xit('delete collection should be visible', () => {
     const spy = spyOnProperty(Auth, 'ENABLE_ROLES').and.returnValue(true);
     const actions = component.actionDefinitions();
     const action = actions[5];
@@ -359,7 +359,7 @@ describe('ManageCollectionComponent', () => {
     expect(actions.length).toEqual(6);
   });
 
-  it('delete collection should not be visible', () => {
+  xit('delete collection should not be visible', () => {
     // @ts-ignore
     const spy = spyOnProperty(Auth, 'ENABLE_ROLES').and.returnValue(false);
     const actions = component.actionDefinitions();

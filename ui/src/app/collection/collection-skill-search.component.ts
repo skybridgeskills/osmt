@@ -152,6 +152,7 @@ export class CollectionSkillSearchComponent
 
     this.toastService.showBlockingLoader();
     this.collectionUpdated = this.collectionService.updateSkills(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
       this.uuidParam!,
       new ApiSkillListUpdate({ add: apiSearch })
     );

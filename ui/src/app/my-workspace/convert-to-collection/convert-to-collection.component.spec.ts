@@ -21,6 +21,7 @@ describe('ConvertToCollectionComponent', () => {
   let fixture: ComponentFixture<ConvertToCollectionComponent>;
   let activatedRoute: ActivatedRouteStubSpec;
 
+  // eslint-disable-next-line prefer-const -- legacy
   activatedRoute = new ActivatedRouteStubSpec();
   activatedRoute.setParams({ uuid: 'uuid1' });
 

@@ -87,6 +87,7 @@ export class OccupationsCardSectionComponent implements OnInit {
   distinctJobcodes(input: Array<IJobCode>): Array<IJobCode> {
     return input
       .sort((a, b) =>
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
         b.targetNodeName?.localeCompare(a.targetNodeName!) ? 1 : -1
       )
       .filter(
@@ -132,6 +133,7 @@ export class OccupationsCardSectionComponent implements OnInit {
       )
     );
   }
+
   detailed(): Set<IJobCode> {
     return new Set(
       this.distinctJobcodes(

@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { AbstractCreateCollectionActionbarComponent } from './abstract-create-collection-actionbar.component';
 
 @Component({
@@ -8,6 +8,7 @@ import { AbstractCreateCollectionActionbarComponent } from './abstract-create-co
       <div class="l-actionBarVertical-x-message" *ngIf="!formValid">
         <p>
           Additional information required before you can save. Go to
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
           <a class="t-type-bodyLink t-link" (click)="showMissingFields.emit()"
             >first required missing field</a
           >.
@@ -22,6 +23,7 @@ import { AbstractCreateCollectionActionbarComponent } from './abstract-create-co
       </div>
       <nav class="m-quickLinks" aria-labelledby="save-quicklinks">
         <h3 class="t-visuallyHidden" id="save-quicklinks">Quick Links</h3>
+        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
         <a (click)="scrollToTopClicked.emit()">Back to top</a>
       </nav>
       <div class="l-actionBarVertical-x-items">

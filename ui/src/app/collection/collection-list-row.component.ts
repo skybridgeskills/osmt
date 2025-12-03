@@ -8,6 +8,7 @@ import { SvgHelper, SvgIcon } from '../core/SvgHelper';
 
 @Component({
   // tslint:disable-next-line:component-selector
+  // eslint-disable-next-line @angular-eslint/component-selector -- legacy
   selector: '[app-collection-list-row]',
   templateUrl: './collection-list-row.component.html',
 })

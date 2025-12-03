@@ -13,6 +13,7 @@ export interface ISelectOption<TValue> {
 export class SelectLabelComponent {
   @Input() options?: ISelectOption<any>[];
   @Input() selected?: ISelectOption<any>;
+  // eslint-disable-next-line @angular-eslint/no-output-on-prefix -- legacy
   @Output() onSelection: EventEmitter<ISelectOption<any>> = new EventEmitter<
     ISelectOption<any>
   >();

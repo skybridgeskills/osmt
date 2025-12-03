@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth-service';
 
 @Component({
   // tslint:disable-next-line:component-selector
+  // eslint-disable-next-line @angular-eslint/component-selector -- legacy
   selector: '[app-commoncontrols-mobile]',
   templateUrl: './commoncontrols-mobile.component.html',
 })

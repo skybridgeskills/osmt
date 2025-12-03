@@ -23,6 +23,7 @@
     <ng-template [ngIf]="singleRowAction" [ngIfElse]="dotActions">
       <div *ngFor="let action of rowActions">
         <button class="m-buttonSmall">
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
           <span class="m-buttonSmall-x-text" (click)="handleClick(action)">{{
             action.label
           }}</span>
@@ -55,6 +56,7 @@
           </div>
         </div>
         <div class="m-quickLinks">
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
           <a (click)="focusActionBar.emit()">Actions menu.</a>
         </div>
       </div>

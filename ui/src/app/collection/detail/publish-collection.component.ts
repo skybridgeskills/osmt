@@ -40,9 +40,11 @@ export class PublishCollectionComponent
   blockingSkills?: PaginatedSkills;
 
   skillsSaved?: Observable<ApiBatchResult>;
+
   get checkingDraft(): boolean {
     return this.activeState === PubColState.checkingDraft;
   }
+
   get checkingArchived(): boolean {
     return this.activeState === PubColState.checkingArchived;
   }
@@ -67,6 +69,7 @@ export class PublishCollectionComponent
   ngOnInit(): void {
     this.titleService.setTitle(`Heads Up | ${this.whitelabel.toolName}`);
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
     this.uuidParam = this.route.snapshot.paramMap.get('uuid')!;
     this.collectionLoaded = this.collectionService.getCollectionByUUID(
       this.uuidParam
@@ -102,6 +105,7 @@ export class PublishCollectionComponent
 
   checkForStatus(statuses: Set<PublishStatus>): void {
     this.skillsLoaded = this.collectionService.getCollectionSkills(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
       this.uuidParam!,
       this.batchSize,
       0,
@@ -130,6 +134,7 @@ export class PublishCollectionComponent
     const filterBy = new Set([PublishStatus.Archived, PublishStatus.Deleted]);
     this.toastService.showBlockingLoader();
     this.skillsSaved = this.collectionService.updateSkillsWithResult(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
       this.uuidParam!,
       skillListUpdate,
       filterBy
@@ -186,6 +191,7 @@ export class PublishCollectionComponent
     });
     this.toastService.showBlockingLoader();
     this.collectionSaved = this.collectionService.updateCollection(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- legacy
       this.uuidParam!,
       updateObject
     );

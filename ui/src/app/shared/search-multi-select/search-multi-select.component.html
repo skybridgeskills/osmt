@@ -1,3 +1,4 @@
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 <div class="expand-panel" (click)="showInput = !showInput">
   <strong
     ><b>{{ name | titlecase }}</b></strong
@@ -93,6 +94,7 @@
         </div>
 
         <div class="l-searchSelect-x-items">
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
           <div
             class="m-inputItem"
             *ngFor="let result of control.value"

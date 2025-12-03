@@ -137,6 +137,7 @@
 
             <div class="t-margin-medium t-margin-top">
               <div class="m-field">
+                <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
                 <label>Alignments</label>
                 <div class="l-inset">
                   <div
@@ -270,10 +271,12 @@
                 <h3 class="t-visuallyHidden" id="save-quicklinks">
                   Quick Links
                 </h3>
+                <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                 <a (click)="scrollToTop()">Back to top</a>
               </nav>
 
               <div class="l-actionBarVertical-x-items">
+                <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                 <a class="m-actionBarItem" (click)="handleClickCancel()">
                   <span class="m-actionBarItem-x-icon">
                     <svg class="t-icon" aria-hidden="true">

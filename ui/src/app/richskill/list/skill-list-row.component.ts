@@ -6,6 +6,7 @@ import { TableActionDefinition } from '../../table/skills-library-table/has-acti
 
 @Component({
   // tslint:disable-next-line:component-selector
+  // eslint-disable-next-line @angular-eslint/component-selector -- legacy
   selector: '[app-skill-list-row]',
   templateUrl: './skill-list-row.component.html',
 })

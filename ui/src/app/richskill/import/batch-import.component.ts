@@ -213,12 +213,15 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
   isUploadStep(): boolean {
     return this.currentStep === ImportStep.UploadFile;
   }
+
   isMappingStep(): boolean {
     return this.currentStep === ImportStep.FieldMapping;
   }
+
   isReviewStep(): boolean {
     return this.currentStep === ImportStep.ReviewRecords;
   }
+
   isSuccessStep(): boolean {
     return this.currentStep === ImportStep.Success;
   }
@@ -231,6 +234,7 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
         return 'Next';
     }
   }
+
   get cancelButtonLabel(): string {
     switch (this.currentStep) {
       case ImportStep.FieldMapping:
@@ -244,6 +248,7 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
   get recordCount(): number {
     return this.parseResults?.data?.length ?? 0;
   }
+
   get validCount(): number {
     return (
       this.auditedSkills?.filter(
@@ -255,6 +260,7 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
   showStepLoader(): void {
     this.stepLoaded = new Observable<ImportStep>(observer => {});
   }
+
   hideStepLoader(): void {
     this.stepLoaded = undefined;
   }
@@ -330,11 +336,13 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
     }
     return false;
   }
+
   handleFileDrag($event: DragEvent): boolean {
     this.isHover = true;
     $event.preventDefault();
     return false;
   }
+
   handleFileLeave($event: DragEvent): boolean {
     this.isHover = false;
     return true;
@@ -624,8 +632,10 @@ export class BatchImportComponent extends QuickLinksHelper implements OnInit {
       this.searchingSimilarity = false;
       this.similarSkills = results;
       this.auditedSkills = this.previewSkills?.map((skill, idx) => {
-        const required = ['skillName', 'skillStatement'];
-        // @ts-ignore
+        const required = [
+          'skillName',
+          'skillStatement',
+        ] satisfies (keyof ApiSkillUpdate)[];
         const missing = required.filter(it => skill[it] === undefined);
         const similar = (results[idx]?.length ?? 0) > 0;
         return new AuditedImportSkill(skill, missing, similar, results[idx]);

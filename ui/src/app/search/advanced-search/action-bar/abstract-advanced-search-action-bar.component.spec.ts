@@ -1,5 +1,5 @@
 import { Component, Type } from '@angular/core';
-import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { first } from 'rxjs/operators';
 import { TestPage } from '../../../../../test/util/test-page.spec';
@@ -8,7 +8,9 @@ import { AbstractAdvancedSearchActionBarComponent } from './abstract-advanced-se
 // An example of how to test an @Output field
 
 @Component({
-  template: ` <button id="skillButton" (click)="skillButtonClicked()"></button>
+  template: ` <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+    <button id="skillButton" (click)="skillButtonClicked()"></button>
+    <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
     <button
       id="collectionButton"
       (click)="collectionButtonClicked()"
@@ -24,6 +26,7 @@ class Page extends TestPage<ConcreteComponent> {
   get skillButton(): HTMLButtonElement {
     return this.query<HTMLButtonElement>('#skillButton');
   }
+
   get collectionButton(): HTMLButtonElement {
     return this.query<HTMLButtonElement>('#collectionButton');
   }
