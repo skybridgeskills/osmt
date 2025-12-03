@@ -23,7 +23,7 @@ export function determineFilters(
 
   // truth table for determining which statuses to send to API
   // Draft|Published|Archived -> Set<PublishStatus>
-  const truthTable = {
+  const truthTable: Record<number, PublishStatus[]> = {
     0b000: [],
     0b001: [PublishStatus.Archived, PublishStatus.Deleted],
     0b010: [PublishStatus.Published],
@@ -39,7 +39,6 @@ export function determineFilters(
     ],
   };
 
-  // @ts-ignore
   return new Set(truthTable[value] ?? []);
 }
 
