@@ -1,4 +1,4 @@
-FROM node:18.18-alpine3.15 AS build
+FROM node:20.18-alpine AS build
 
 LABEL Maintainer="WGU / OSN"
 ENV BASE_DIR=/opt/osmt
