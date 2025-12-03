@@ -27,8 +27,7 @@ build/
 
 ### Cursor ###
 # Cursor plans directory - contains development plans and notes
-# These are typically project-specific planning documents
-.cursor-plans
+.plans
 
 ### Local nodejs downloaded for frontend-maven-plugin
 ui/node
