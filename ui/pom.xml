@@ -46,9 +46,40 @@
             <goals>
               <goal>npm</goal>
             </goals>
+            <phase>process-sources</phase>
             <configuration>
               <npmInheritsProxyConfigFromMaven>false</npmInheritsProxyConfigFromMaven>
               <arguments>install</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>format</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+              <arguments>run format</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>lint-fix</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+              <arguments>run lint:fix</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm-build-prod</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+              <arguments>run build-prod</arguments>
             </configuration>
           </execution>
           <execution>
@@ -59,16 +90,6 @@
             <phase>test</phase>
             <configuration>
               <arguments>run ci-test</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm-build-prod</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build-prod</arguments>
             </configuration>
           </execution>
         </executions>
