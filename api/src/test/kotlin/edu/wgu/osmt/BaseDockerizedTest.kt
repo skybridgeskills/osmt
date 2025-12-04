@@ -4,6 +4,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.MountableFile
+import java.io.File
 
 /**
  * Interface for unit tests that provides dockerized servers
@@ -31,16 +32,17 @@ interface BaseDockerizedTest {
 }
 
 object Containers {
-    val elasticContainer = GenericContainer<Nothing>("docker.elastic.co/elasticsearch/elasticsearch:8.11.3").apply{
-        withExposedPorts(9200, 9300)
-        withEnv("discovery.type","single-node")
-        withEnv("net","host")
-        withEnv("xpack.security.enabled","false")
-        start()
-        println("Elasticsearch port: ${getMappedPort(9200)}")
-    }
+    val elasticContainer =
+        GenericContainer<Nothing>("docker.elastic.co/elasticsearch/elasticsearch:8.11.3").apply {
+            withExposedPorts(9200, 9300)
+            withEnv("discovery.type", "single-node")
+            withEnv("net", "host")
+            withEnv("xpack.security.enabled", "false")
+            start()
+            println("Elasticsearch port: ${getMappedPort(9200)}")
+        }
 
-    val redisContainer = GenericContainer<Nothing>("redis:6.0.6").apply{
+    val redisContainer = GenericContainer<Nothing>("redis:6.0.6").apply {
         withExposedPorts(6379)
         start()
         println("Redis port: ${getMappedPort(6379)}")
@@ -48,8 +50,19 @@ object Containers {
 
     val mysqlContainer = GenericContainer<Nothing>("mysql:8").apply {
         withExposedPorts(3306)
+
+        // Find init sql handling common run directories
+        val apiRelPath = "docker/mysql-init/1init.sql"
+        val initSqlFile =
+            listOf("./", "../api/", "api/")
+                .map { File(it + apiRelPath) }
+                .find { it.exists() }
+                ?: throw IllegalStateException(
+                    "Init SQL file not found at: $apiRelPath"
+                )
+
         withCopyFileToContainer(
-            MountableFile.forHostPath("api/docker/mysql-init/1init.sql"),
+            MountableFile.forHostPath(initSqlFile.toPath()),
             "/docker-entrypoint-initdb.d/1init.sql"
         )
         withEnv("MYSQL_ROOT_PASSWORD", "password")
