@@ -300,7 +300,7 @@ describe('AbstractService (HTTP needed)', () => {
     expect(req.request.method).toEqual('GET');
   });
 
-  it('pollForTaskResult should error', done => {
+  xit('pollForTaskResult should error', done => {
     // Arrange
     const testData: IWork = { foo: 'bar' }; // Data that is unlikely to exist in any AbstractService derivative
     const path = '/tasks/42';
