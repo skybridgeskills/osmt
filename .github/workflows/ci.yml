@@ -153,11 +153,11 @@ jobs:
       - name: Maven version
         run: mvn -version
 
-      - name: Build all modules
+      - name: Build API and test modules
         id: build-all
         run: |
-          echo "::group::Building all modules"
-          mvn clean install -DskipTests --batch-mode
+          echo "::group::Building API and test modules"
+          mvn clean install -pl api,test -am -DskipTests --batch-mode
           echo "::endgroup::"
 
       - name: Run API integration tests
