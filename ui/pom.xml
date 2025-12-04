@@ -30,7 +30,7 @@
         <version>1.12.1</version>
         <configuration>
           <workingDirectory>./</workingDirectory>
-          <nodeVersion>v20.18</nodeVersion>
+          <nodeVersion>v20.18.3</nodeVersion>
           <npmVersion>8.19.2</npmVersion>
         </configuration>
         <executions>
