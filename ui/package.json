@@ -11,8 +11,8 @@
     "test": "./node_modules/@angular/cli/bin/ng.js test",
     "lint": "./node_modules/@angular/cli/bin/ng.js lint",
     "lint:fix": "./node_modules/@angular/cli/bin/ng.js lint --fix",
-    "format": "prettier --write \"src/**/*.{ts,html,scss,css,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,scss,css,json}\"",
+    "format": "prettier --write --log-level warn \"src/**/*.{ts,html,scss,css,json}\"",
+    "format:check": "prettier --log-level warn --check \"src/**/*.{ts,html,scss,css,json}\"",
     "ci-test": "./node_modules/@angular/cli/bin/ng.js test --no-watch --no-progress --karma-config=karma.ci.conf.js",
     "clean": "rm -rf ../api/src/main/resources/ui/*; rm -rf coverage; rm -rf reports; rm -rf test-results; rm -rf node_modules"
   },
@@ -70,7 +70,7 @@
     "karma-junit-reporter": "^2.0.1",
     "karma-sonarqube-unit-reporter": "^0.0.23",
     "lodash": "^4.17.21",
-    "prettier": "^3.2.5",
+    "prettier": "^3.4.2",
     "ts-node": "~10.9.1",
     "typescript": "~5.4.5"
   }
