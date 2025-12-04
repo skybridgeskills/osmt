@@ -103,8 +103,7 @@ jobs:
         uses: sdkman/sdkman-action@master
         with:
           candidate: maven
-          version: "@"
-          sdkmanrc: ".sdkmanrc"
+          version: "3.9.6"
 
       - name: Maven version
         run: mvn -version
@@ -147,8 +146,7 @@ jobs:
         uses: sdkman/sdkman-action@master
         with:
           candidate: maven
-          version: "@"
-          sdkmanrc: ".sdkmanrc"
+          version: "3.9.6"
 
       - name: Maven version
         run: mvn -version
