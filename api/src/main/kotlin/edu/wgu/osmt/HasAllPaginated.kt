@@ -32,8 +32,7 @@ interface HasAllPaginated<T> {
 
     fun allPaginated(
         uriComponentsBuilder: UriComponentsBuilder,
-        @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-            Int,
+        @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
         @RequestParam(required = false, defaultValue = "0") from: Int,
         @RequestParam(
             required = false,

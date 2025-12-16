@@ -463,7 +463,5 @@ CREATE TABLE IF NOT EXISTS CollectionSkills
 
 CALL createIndexIfNotExist('CollectionSkills', 'CollectionSkills_collection_id', 'collection_id');
 CALL createIndexIfNotExist('CollectionSkills', 'CollectionSkills_skill_id', 'skill_id');
-#CREATE
-INDEX CollectionSkills_collection_id ON CollectionSkills (collection_id);
-#CREATE
-INDEX CollectionSkills_skill_id ON CollectionSkills (skill_id);
+# CREATE INDEX CollectionSkills_collection_id ON CollectionSkills (collection_id);
+# CREATE INDEX CollectionSkills_skill_id ON CollectionSkills (skill_id);

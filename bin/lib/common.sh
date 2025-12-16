@@ -26,6 +26,20 @@ if [[ -z "${PROJECT_DIR}" ]]; then
   exit 135
 fi
 
+# Detect which docker compose command is available
+_detect_docker_compose_cmd() {
+  if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+    echo_debug "Detected Docker Compose V2 plugin: ${DOCKER_COMPOSE_CMD}"
+  elif docker-compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+    echo_debug "Detected Docker Compose standalone: ${DOCKER_COMPOSE_CMD}"
+  else
+    echo_err "Neither 'docker compose' nor 'docker-compose' found on path."
+    return 1
+  fi
+}
+
 # new line formatted to indent with echo_err / echo_info etc
 declare INDENT="       "
 declare NL="\n${INDENT}"
@@ -93,7 +107,7 @@ start_osmt_docker_stack() {
   echo_info "Starting OSMT ${stack_name} Docker stack. You can stop it with $(basename "${0}") -e"
   cd "${PROJECT_DIR}/docker" || return 1
   # Docker stack should receive the service port variables sourced from the shell environment
-  docker-compose --file dev-stack.yml --project-name "${stack_name}" up --detach
+  ${DOCKER_COMPOSE_CMD} --file dev-stack.yml --project-name "${stack_name}" up --detach
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Starting OSMT ${stack_name} Docker stack failed. Exiting..."
@@ -109,7 +123,7 @@ stop_osmt_docker_stack() {
   echo
   echo_info "Stopping OSMT ${stack_name} Docker stack"
   cd "${PROJECT_DIR}/docker" || return 1
-  docker-compose --file dev-stack.yml --project-name "${stack_name}" down
+  ${DOCKER_COMPOSE_CMD} --file dev-stack.yml --project-name "${stack_name}" down
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Stopping OSMT ${stack_name} Docker stack failed. Exiting..."
@@ -165,6 +179,9 @@ echo_debug_env() {
   echo_debug "################################################################################################################################"
   echo
 }
+
+# Initialize docker compose command
+_detect_docker_compose_cmd || exit 135
 
 _validate_env_file() {
   local env_file="${1}"

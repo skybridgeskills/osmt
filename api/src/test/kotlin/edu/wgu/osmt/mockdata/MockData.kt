@@ -19,6 +19,7 @@ import java.io.IOException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Arrays
 import java.util.stream.Collectors
 import javax.xml.stream.XMLStreamException
 
@@ -37,9 +38,17 @@ class MockData {
     var appConfig: AppConfig
         get() = field
 
-    init {
+    constructor() {
         appConfig = createAppConfig()
+        initializeData()
+    }
 
+    constructor(appConfig: AppConfig) {
+        this.appConfig = appConfig
+        initializeData()
+    }
+
+    private fun initializeData() {
         try {
             val filename = "mock-data.xml"
             val file = this::class.java.classLoader.getResource(filename)
@@ -335,7 +344,7 @@ class MockData {
                         osmtData.richSkillDocs!!
                             .stream()
                             .filter { rsd: edu.wgu.skills.service.mockdata.xml.RichSkillDoc ->
-                                sid != null && rsd.id == sid.toLong()
+                                sid != null && rsd.id == sid.trim().toLong()
                             }.findAny()
                     if (r.isPresent) {
                         skillUUIDs.add(r.get().uuid)
@@ -392,7 +401,7 @@ class MockData {
                         Arrays
                             .stream(
                                 rsd.collections!!.split(",").toTypedArray(),
-                            ).map { collectionDoc2Collection(this.collections[it?.toLong()]) }
+                            ).map { id: String? -> collectionDoc2Collection(this.collections[id?.trim()?.toLong()]) }
                             .collect(Collectors.toList())
                     }
 
@@ -403,7 +412,7 @@ class MockData {
                         Arrays
                             .stream(
                                 rsd.jobCodes!!.split(",").toTypedArray(),
-                            ).map { id: String? -> this.jobCodes[id?.toLong()] }
+                            ).map { id: String? -> this.jobCodes[id?.trim()?.toLong()] }
                             .collect(Collectors.toList())
                     }
 
@@ -414,7 +423,7 @@ class MockData {
                         Arrays
                             .stream(
                                 rsd.authorValues!!.split(",").toTypedArray(),
-                            ).map { id: String? -> this.keywords[id?.toLong()] }
+                            ).map { id: String? -> this.keywords[id?.trim()?.toLong()] }
                             .collect(Collectors.toList())
                     }
 
@@ -425,7 +434,7 @@ class MockData {
                         Arrays
                             .stream(
                                 rsd.categoryValues!!.split(",").toTypedArray(),
-                            ).map { id: String? -> this.keywords[id?.toLong()] }
+                            ).map { id: String? -> this.keywords[id?.trim()?.toLong()] }
                             .collect(Collectors.toList())
                     }
 
@@ -436,7 +445,7 @@ class MockData {
                         Arrays
                             .stream(
                                 rsd.keywordValues!!.split(",").toTypedArray(),
-                            ).map { id: String? -> this.keywords[id?.toLong()] }
+                            ).map { id: String? -> this.keywords[id?.trim()?.toLong()] }
                             .collect(Collectors.toList())
                     }
 

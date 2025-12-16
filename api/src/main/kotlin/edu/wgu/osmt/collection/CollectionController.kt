@@ -212,8 +212,7 @@ class CollectionController
             @PathVariable uuid: String,
             @RequestBody apiUpdate: ApiCollectionUpdate,
             @AuthenticationPrincipal user: Jwt?,
-        ): ApiCollection =
-            ApiCollectionV2.fromLatest(updateCollection(uuid, apiUpdate, user), appConfig)
+        ): ApiCollection = ApiCollectionV2.fromLatest(updateCollection(uuid, apiUpdate, user), appConfig)
 
         @PostMapping(
             path = [
@@ -499,6 +498,5 @@ class CollectionController
         @ResponseBody
         fun getOrCreateWorkspaceV2(
             @AuthenticationPrincipal user: Jwt?,
-        ): ApiCollection? =
-            getOrCreateWorkspace(user)?.let { ApiCollectionV2.fromLatest(it, appConfig) }
+        ): ApiCollection? = getOrCreateWorkspace(user)?.let { ApiCollectionV2.fromLatest(it, appConfig) }
     }

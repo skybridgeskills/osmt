@@ -150,7 +150,7 @@ class CustomRichSkillQueriesImpl
         )
         override fun occupationQueries(query: String): NestedQueryBuilder {
             val jobCodePath = RichSkillDoc::jobCodes.name
-            return QueryBuilders.nestedQuery(
+            return nestedQuery(
                 jobCodePath,
                 JobCodeQueries.multiPropertySearch(query, jobCodePath),
                 ScoreMode.Max,
@@ -861,9 +861,7 @@ class CustomRichSkillQueriesImpl
             return nsqb
         }
 
-        override fun findSimilar(
-            apiSimilaritySearch: ApiSimilaritySearch,
-        ): SearchHits<RichSkillDoc> {
+        override fun findSimilar(apiSimilaritySearch: ApiSimilaritySearch): SearchHits<RichSkillDoc> {
             val query =
                 convertToNativeQuery(
                     OffsetPageable(0, 10, null),

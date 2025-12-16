@@ -359,15 +359,19 @@ describe('RichSkillService', () => {
   });
 
   it('libraryExport should return', fakeAsync(() => {
+    // Arrange
     RouterData.commands = [];
-
+    AuthServiceData.isDown = false;
+    const testData = createMockTaskResult();
     // Act
     const result$ = testService.libraryExportCsv();
 
     tick(ASYNC_WAIT_PERIOD);
     // Assert
     result$.subscribe((data: ApiTaskResult) => {
+      expect(data).toEqual(new ApiTaskResult(testData));
       expect(RouterData.commands).toEqual([]); // No Errors
+      expect(AuthServiceData.isDown).toEqual(false);
     });
 
     const req = httpTestingController.expectOne(
@@ -375,17 +379,23 @@ describe('RichSkillService', () => {
     );
     expect(req.request.method).toEqual('GET');
     expect(req.request.headers.get('Accept')).toEqual('application/json');
-    req.flush(result$);
+    req.flush(testData);
   }));
 
   it('export search', fakeAsync(() => {
+    // Arrange
+    RouterData.commands = [];
+    AuthServiceData.isDown = false;
+    const testData = createMockTaskResult();
     const result$ = testService.exportSearchCsv(
       new ApiSearch({ query: 'net' })
     );
     tick(ASYNC_WAIT_PERIOD);
     // Assert
     result$.subscribe((data: ApiTaskResult) => {
+      expect(data).toEqual(new ApiTaskResult(testData));
       expect(RouterData.commands).toEqual([]); // No Errors
+      expect(AuthServiceData.isDown).toEqual(false);
     });
     const req = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
@@ -394,7 +404,7 @@ describe('RichSkillService', () => {
     );
     expect(req.request.method).toEqual('POST');
     expect(req.request.headers.get('Accept')).toEqual('application/json');
-    req.flush(result$);
+    req.flush(testData);
   }));
 
   it('getResultExportedLibrary', fakeAsync(() => {
