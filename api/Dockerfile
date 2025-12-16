@@ -8,7 +8,7 @@ ENV JAVA_HOME=/etc/alternatives/jre
 RUN /usr/bin/yum install -y epel-release \
     && /usr/bin/yum update -y \
     && /usr/bin/yum remove -y java-1.8.0-openjdk* \
-    && /usr/bin/yum install -y curl java-17-openjdk
+    && /usr/bin/yum install -y curl java-21-openjdk
 
 # Add in configuration files
 ADD ./api/docker/etc /etc
@@ -29,12 +29,12 @@ ENV BASE_DIR=/opt/${USER}
 ENV JAVA_HOME=/etc/alternatives/jre
 
 # Set Maven environment variables
-ENV M2_VERSION=3.9.11
+ENV M2_VERSION=3.9.6
 ENV M2_HOME=/usr/local/maven
 ENV PATH=${M2_HOME}/bin:${PATH}
 
 # Install compile-time extra packages
-RUN /usr/bin/yum install -y java-17-openjdk-devel wget make gcc g++ chromium
+RUN /usr/bin/yum install -y java-21-openjdk-devel wget make gcc g++ chromium
 
 # Download / Install Maven
 ADD https://dlcdn.apache.org/maven/maven-3/${M2_VERSION}/binaries/apache-maven-${M2_VERSION}-bin.tar.gz /usr/share/src/

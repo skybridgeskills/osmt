@@ -13,23 +13,23 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-
 @Configuration
 class WebMvcConfig : WebMvcConfigurer {
     @Bean
-    fun objectMapper(): ObjectMapper {
-        return ObjectMapper()
+    fun objectMapper(): ObjectMapper =
+        ObjectMapper()
             .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
             .registerModule(JavaTimeModule())
             .setDateFormat(StdDateFormat())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    }
 
     @Autowired
     private lateinit var messageConvertersProvider: ObjectProvider<HttpMessageConverters>
 
     override fun configureMessageConverters(converters: MutableList<HttpMessageConverter<*>?>) {
         this.messageConvertersProvider
-            .ifAvailable({ customConverters -> converters.addAll(customConverters.getConverters()) })
+            .ifAvailable(
+                { customConverters -> converters.addAll(customConverters.getConverters()) },
+            )
     }
 }

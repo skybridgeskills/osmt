@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>edu.wgu.osmt</groupId>
@@ -8,6 +10,17 @@
     </parent>
 
     <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
         <repository>
             <id>spring-repo</id>
             <name>Spring Repository</name>
@@ -18,11 +31,6 @@
             <name>Spring Repository Milestone</name>
             <url>https://repo.spring.io/milestone</url>
         </repository>
-        <repository>
-            <id>jcenter</id>
-            <name>jcenter</name>
-            <url>https://jcenter.bintray.com</url>
-        </repository>
     </repositories>
 
     <groupId>edu.wgu.osmt</groupId>
@@ -31,23 +39,24 @@
     <description>WGU Open Skills Management Toolset</description>
 
     <properties>
-        <kotlin.version>1.7.21</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.coroutines.version>1.5.1</kotlin.coroutines.version>
+        <kotlin.coroutines.version>1.9.5</kotlin.coroutines.version>
         <!-- <exposed.version>0.24.1</exposed.version> -->
         <exposed.version>0.30.2</exposed.version>
         <flywaydb.version>8.5.13</flywaydb.version>
         <flyway-mysql>8.5.13</flyway-mysql>
         <okta.version>3.0.6</okta.version>
-<!--        TODO - is this needed?-->
+        <!--        TODO - is this needed?-->
         <kotest.version>4.1.3</kotest.version>
         <start-class>edu.wgu.osmt.ApplicationKt</start-class>
-        <testcontainers.version>1.19.5</testcontainers.version>
-        <spring-data-elasticsearch.version>5.1.3</spring-data-elasticsearch.version>
+        <testcontainers.version>1.21.3</testcontainers.version>
+        <spring-data-elasticsearch.version>5.1.3
+        </spring-data-elasticsearch.version>
         <ehcache.version>3.9.2</ehcache.version>
-        <log4j.version>2.17.1</log4j.version>
+        <log4j.version>2.23.1</log4j.version>
         <bucket4j.version>4.10.0</bucket4j.version>
-        <jackson.version>2.14.1</jackson.version>
+        <jackson.version>2.17.1</jackson.version>
     </properties>
 
     <dependencies>
@@ -117,7 +126,7 @@
             </exclusions>
         </dependency>
 
-<!--        Remove when WGU fully migrate to ElasticSearch v8.x apis DMND-1778-->
+        <!--        Remove when WGU fully migrate to ElasticSearch v8.x apis DMND-1778-->
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
@@ -197,7 +206,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
@@ -210,11 +219,6 @@
         <!--            <scope>runtime</scope>-->
         <!--            <optional>true</optional>-->
         <!--        </dependency>-->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -358,7 +362,8 @@
 
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin
+        </testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -373,8 +378,10 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
                 <configuration>
+                    <jvmTarget>21</jvmTarget>
                     <args>
                         <arg>-Xjsr305=strict</arg>
+                        <arg>-Xannotation-default-target=param-property</arg>
                     </args>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -408,8 +415,11 @@
                             <classifier>lib</classifier>
                             <excludes>
                                 <exclude>**/edu/wgu/osmt/Application</exclude>
-                                <exclude>**/edu/wgu/osmt/ImportCommandRunner</exclude>
-                                <exclude>**/edu/wgu/osmt/security/SecurityConfig**</exclude>
+                                <exclude>**/edu/wgu/osmt/ImportCommandRunner
+                                </exclude>
+                                <exclude>
+                                    **/edu/wgu/osmt/security/SecurityConfig**
+                                </exclude>
                                 <exclude>**/ui/**</exclude>
                                 <exclude>**/config/*.properties</exclude>
                             </excludes>
@@ -445,12 +455,17 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
+                    <dotGitDirectory>${project.basedir}/../.git
+                    </dotGitDirectory>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                    <generateGitPropertiesFilename>
+                        ${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
                     <includeOnlyProperties>
-                        <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
-                        <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.build.(time|version)$
+                        </includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.(abbrev|full)$
+                        </includeOnlyProperty>
                         <includeOnlyProperty>^git.tags$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
@@ -475,8 +490,28 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>17</release>
+                    <release>21</release>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <kotlin>
+                        <ktlint>
+                            <version>1.8.0</version>
+                        </ktlint>
+                    </kotlin>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

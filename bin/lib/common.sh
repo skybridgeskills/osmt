@@ -26,6 +26,20 @@ if [[ -z "${PROJECT_DIR}" ]]; then
   exit 135
 fi
 
+# Detect which docker compose command is available
+_detect_docker_compose_cmd() {
+  if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+    echo_debug "Detected Docker Compose V2 plugin: ${DOCKER_COMPOSE_CMD}"
+  elif docker-compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+    echo_debug "Detected Docker Compose standalone: ${DOCKER_COMPOSE_CMD}"
+  else
+    echo_err "Neither 'docker compose' nor 'docker-compose' found on path."
+    return 1
+  fi
+}
+
 # new line formatted to indent with echo_err / echo_info etc
 declare INDENT="       "
 declare NL="\n${INDENT}"
@@ -91,9 +105,9 @@ start_osmt_docker_stack() {
   local -i rc
   echo
   echo_info "Starting OSMT ${stack_name} Docker stack. You can stop it with $(basename "${0}") -e"
-  cd "${PROJECT_DIR}/docker" || return 1
+  cd "${PROJECT_DIR}" || return 1
   # Docker stack should receive the service port variables sourced from the shell environment
-  docker-compose --file dev-stack.yml --project-name "${stack_name}" up --detach
+  ${DOCKER_COMPOSE_CMD} --file docker-compose.yml --profile all --project-name "${stack_name}" up db-mysql db-elasticsearch db-redis --detach
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Starting OSMT ${stack_name} Docker stack failed. Exiting..."
@@ -108,8 +122,8 @@ stop_osmt_docker_stack() {
   local -i rc
   echo
   echo_info "Stopping OSMT ${stack_name} Docker stack"
-  cd "${PROJECT_DIR}/docker" || return 1
-  docker-compose --file dev-stack.yml --project-name "${stack_name}" down
+  cd "${PROJECT_DIR}" || return 1
+  ${DOCKER_COMPOSE_CMD} --file docker-compose.yml --project-name "${stack_name}" down db-mysql db-elasticsearch db-redis
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Stopping OSMT ${stack_name} Docker stack failed. Exiting..."
@@ -165,6 +179,9 @@ echo_debug_env() {
   echo_debug "################################################################################################################################"
   echo
 }
+
+# Initialize docker compose command
+_detect_docker_compose_cmd || exit 135
 
 _validate_env_file() {
   local env_file="${1}"
@@ -268,8 +285,8 @@ _validate_docker_version() {
 _validate_java_version() {
   echo
   echo_info "Checking Java..."
-  # OSMT requires at least Java 11
-  local -i req_java_major=17
+  # OSMT requires at least Java 21
+  local -i req_java_major=21
   local det_java_version
   local -i det_java_major
 
@@ -281,7 +298,7 @@ _validate_java_version() {
     return 1
   fi
 
-  echo_info "Checking Java JDK for version 11 or greater..."
+  echo_info "Checking Java JDK for version 21 or greater..."
   det_java_version="$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)"
     echo_debug "1 - ${det_java_version}"
   det_java_version="${det_java_version#[vV]}"
@@ -321,8 +338,16 @@ _validate_osmt_dev_dependencies() {
   echo_info "Maven version: $(mvn --version)"
 
   echo
+  if [[ -f "${PROJECT_DIR}/.sdkmanrc" ]]; then
+    echo_info "Found .sdkmanrc file. To use SDKMAN for version management, run 'sdk env install' or 'sdk env'."
+  fi
+
+  echo
   echo_info "OSMT development recommends NodeJS version v18.18.2 or greater. Maven uses an embedded copy of NodeJS v18.18.2 via frontend-maven-plugin."
   echo_info "NodeJS version: $(node --version)"
+  if [[ -f "${PROJECT_DIR}/.nvmrc" ]]; then
+    echo_info "Found .nvmrc file. To use nvm for version management, run 'nvm install' or 'nvm use'."
+  fi
   echo
   echo_info "OSMT development recommends npm version 9.8.1 or greater. Maven uses an embedded copy of npm 9.8.1 via frontend-maven-plugin."
   echo_info "npm version: $(npm --version)"
