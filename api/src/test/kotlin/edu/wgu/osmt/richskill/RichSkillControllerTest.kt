@@ -45,7 +45,6 @@ import org.springframework.web.util.UriComponentsBuilder
 import java.time.Instant
 import java.util.*
 
-
 @Transactional
 internal class RichSkillControllerTest @Autowired constructor(
     override val richSkillEsRepo: RichSkillEsRepo,
@@ -54,8 +53,8 @@ internal class RichSkillControllerTest @Autowired constructor(
     val appConfig: AppConfig,
     override val collectionEsRepo: CollectionEsRepo,
     override val keywordEsRepo: KeywordEsRepo,
-    override val jobCodeEsRepo: JobCodeEsRepo
-): SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
+    override val jobCodeEsRepo: JobCodeEsRepo,
+) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
 
     var authentication: Authentication = Mockito.mock(Authentication::class.java)
 
@@ -65,18 +64,17 @@ internal class RichSkillControllerTest @Autowired constructor(
     @Autowired
     lateinit var batchImportRichSkill: BatchImportRichSkill
 
-    private lateinit var mockData : MockData
-    val nullJwt : Jwt? = null
-
+    private lateinit var mockData: MockData
+    val nullJwt: Jwt? = null
 
     @BeforeAll
     fun setup() {
         mockData = MockData()
-        ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin");
+        ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin")
     }
 
     @Test
-    fun testAllPaginated(){
+    fun testAllPaginated() {
         // Arrange
         val size = 50
         val listOfSkills = mockData.getRichSkillDocs()
@@ -84,12 +82,12 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         // Act
         val result = richSkillController.allPaginated(
-                UriComponentsBuilder.newInstance(),
-                size,
-                0,
-                arrayOf("draft","published"),
-                "",
-                nullJwt
+            UriComponentsBuilder.newInstance(),
+            size,
+            0,
+            arrayOf("draft", "published"),
+            "",
+            nullJwt,
         )
 
         // Assert
@@ -97,7 +95,7 @@ internal class RichSkillControllerTest @Autowired constructor(
     }
 
     @Test
-    fun testAllPaginatedV2(){
+    fun testAllPaginatedV2() {
         // Arrange
         val size = 50
         val listOfSkills = mockData.getRichSkillDocs()
@@ -105,12 +103,12 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         // Act
         val result = richSkillController.allPaginatedV2(
-                UriComponentsBuilder.newInstance(),
-                size,
-                0,
-                arrayOf("draft","published"),
-                "",
-                nullJwt
+            UriComponentsBuilder.newInstance(),
+            size,
+            0,
+            arrayOf("draft", "published"),
+            "",
+            nullJwt,
         )
 
         // Assert
@@ -118,7 +116,7 @@ internal class RichSkillControllerTest @Autowired constructor(
     }
 
     @Test
-    fun testAllPaginatedWithNoFilters(){
+    fun testAllPaginatedWithNoFilters() {
         // Arrange
         val size = 50
         val listOfSkills = mockData.getRichSkillDocs()
@@ -129,10 +127,10 @@ internal class RichSkillControllerTest @Autowired constructor(
             UriComponentsBuilder.newInstance(),
             size,
             0,
-            arrayOf("draft","published"),
+            arrayOf("draft", "published"),
             ApiSearch(),
             "",
-            nullJwt
+            nullJwt,
         )
 
         // Assert
@@ -140,7 +138,7 @@ internal class RichSkillControllerTest @Autowired constructor(
     }
 
     @Test
-    fun testAllPaginatedWithFilters(){
+    fun testAllPaginatedWithFilters() {
         // Arrange
         val size = 50
         val listOfSkills = mockData.getRichSkillDocs()
@@ -152,10 +150,10 @@ internal class RichSkillControllerTest @Autowired constructor(
             UriComponentsBuilder.newInstance(),
             size,
             0,
-            arrayOf("draft","published"),
+            arrayOf("draft", "published"),
             ApiSearch(filtered = filter),
             "",
-            nullJwt
+            nullJwt,
         )
 
         // Assert
@@ -164,14 +162,14 @@ internal class RichSkillControllerTest @Autowired constructor(
     }
 
     @Test
-    fun testByUUID(){
+    fun testByUUID() {
         // Arrange
         val numOfSkills = 3
         val richSkillRows = mockData.getRichSkillRows()
         val listOfRichSkillRows = mutableListOf<RichSkillRow>()
         val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
 
-        for (i in 1..numOfSkills ) {
+        for (i in 1..numOfSkills) {
             listOfRichSkillRows.add(richSkillRows[i])
         }
 
@@ -179,21 +177,21 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         // Act
         val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUID(skillResult.searchHits[0].id.toString(),jwt)
+        val result = richSkillController.byUUID(skillResult.searchHits[0].id.toString(), jwt)
 
         // Assert
         assertThat(result?.uuid).isEqualTo(skillResult.searchHits[0].id.toString())
     }
 
     @Test
-    fun testByUUIDHtmlView(){
+    fun testByUUIDHtmlView() {
         // Arrange
         val numOfSkills = 3
         val richSkillRows = mockData.getRichSkillRows()
         val listOfRichSkillRows = mutableListOf<RichSkillRow>()
         val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
 
-        for (i in 1..numOfSkills ) {
+        for (i in 1..numOfSkills) {
             listOfRichSkillRows.add(richSkillRows[i])
         }
 
@@ -201,21 +199,21 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         // Act
         val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUIDHtmlView(skillResult.searchHits[0].id.toString(),jwt)
+        val result = richSkillController.byUUIDHtmlView(skillResult.searchHits[0].id.toString(), jwt)
 
         // Assert
-        assertThat(result).isEqualTo("forward:/v3/skills/"+skillResult.searchHits[0].id.toString())
+        assertThat(result).isEqualTo("forward:/v3/skills/" + skillResult.searchHits[0].id.toString())
     }
 
     @Test
-    fun testByUUIDHtmlViewV2(){
+    fun testByUUIDHtmlViewV2() {
         // Arrange
         val numOfSkills = 3
         val richSkillRows = mockData.getRichSkillRows()
         val listOfRichSkillRows = mutableListOf<RichSkillRow>()
         val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
 
-        for (i in 1..numOfSkills ) {
+        for (i in 1..numOfSkills) {
             listOfRichSkillRows.add(richSkillRows[i])
         }
 
@@ -223,21 +221,21 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         // Act
         val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUIDHtmlViewV2(skillResult.searchHits[0].id.toString(),jwt)
+        val result = richSkillController.byUUIDHtmlViewV2(skillResult.searchHits[0].id.toString(), jwt)
 
         // Assert
-        assertThat(result).isEqualTo("forward:/v2/skills/"+skillResult.searchHits[0].id.toString())
+        assertThat(result).isEqualTo("forward:/v2/skills/" + skillResult.searchHits[0].id.toString())
     }
 
     @Test
-    fun testByUUIDCsvView(){
+    fun testByUUIDCsvView() {
         // Arrange
         val numOfSkills = 3
         val richSkillRows = mockData.getRichSkillRows()
         val listOfRichSkillRows = mutableListOf<RichSkillRow>()
         val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
 
-        for (i in 1..numOfSkills ) {
+        for (i in 1..numOfSkills) {
             listOfRichSkillRows.add(richSkillRows[i])
         }
 
@@ -252,13 +250,13 @@ internal class RichSkillControllerTest @Autowired constructor(
     }
 
     @Test
-    fun testSkillAuditLog(){
+    fun testSkillAuditLog() {
         // Arrange
         val numOfSkills = 3
         val richSkillRows = mockData.getRichSkillRows()
         val listOfRichSkillRows = mutableListOf<RichSkillRow>()
 
-        for (i in 1..numOfSkills ) {
+        for (i in 1..numOfSkills) {
             listOfRichSkillRows.add(richSkillRows[i])
         }
 
@@ -273,11 +271,9 @@ internal class RichSkillControllerTest @Autowired constructor(
         assertThat(result.body?.get(0)?.user).isEqualTo("Batch Import")
     }
 
-
     @Disabled
     @Test
     fun testExportLibrary() {
-
         val securityContext: SecurityContext = Mockito.mock(SecurityContext::class.java)
         SecurityContextHolder.setContext(securityContext)
 
@@ -292,13 +288,14 @@ internal class RichSkillControllerTest @Autowired constructor(
 
         val responseHeaders = HttpHeaders()
         responseHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-        val headers : MutableMap<String, Any> = HashMap()
+        val headers: MutableMap<String, Any> = HashMap()
         headers["key"] = "value"
-        val notNullJwt : Jwt? = Jwt("tokenValue", Instant.MIN, Instant.MAX,headers,headers)
-        val csvTaskResult = TaskResult(UUID.randomUUID().toString(),
-                MediaType.APPLICATION_JSON_VALUE,
-                TaskStatus.Processing,
-                "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.EXPORT_LIBRARY_CSV}"
+        val notNullJwt: Jwt? = Jwt("tokenValue", Instant.MIN, Instant.MAX, headers, headers)
+        val csvTaskResult = TaskResult(
+            UUID.randomUUID().toString(),
+            MediaType.APPLICATION_JSON_VALUE,
+            TaskStatus.Processing,
+            "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.EXPORT_LIBRARY_CSV}",
         )
 
         val service = mockk<TaskMessageService>()
@@ -310,5 +307,4 @@ internal class RichSkillControllerTest @Autowired constructor(
         val result = richSkillController.exportLibraryCsv(user = notNullJwt)
         assertThat(result.body?.uuid).isNotBlank()
     }
-
 }

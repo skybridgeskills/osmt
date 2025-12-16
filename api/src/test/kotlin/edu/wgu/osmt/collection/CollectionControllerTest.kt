@@ -34,20 +34,19 @@ internal class CollectionControllerTest @Autowired constructor(
     override val collectionEsRepo: CollectionEsRepo,
     override val keywordEsRepo: KeywordEsRepo,
     override val jobCodeEsRepo: JobCodeEsRepo,
-    override val richSkillEsRepo: RichSkillEsRepo
-): SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
+    override val richSkillEsRepo: RichSkillEsRepo,
+) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
 
     @Autowired
     lateinit var collectionController: CollectionController
 
     var authentication: Authentication = mockk()
 
-    private lateinit var mockData : MockData
+    private lateinit var mockData: MockData
 
     val userString = "unittestuser"
 
     val userEmail = "unit@test.user"
-
 
     @BeforeAll
     fun setup() {
@@ -70,7 +69,7 @@ internal class CollectionControllerTest @Autowired constructor(
     @Test
     fun `workspaceByOwner() should retrieve an existing workspace`() {
         // arrange
-        collectionRepository.create(CollectionUpdateObject(12345,"testCollection",null,null,null,PublishStatus.Workspace), userString, userEmail)
+        collectionRepository.create(CollectionUpdateObject(12345, "testCollection", null, null, null, PublishStatus.Workspace), userString, userEmail)
         val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("email", userEmail).build()
 
         // act
@@ -102,7 +101,8 @@ internal class CollectionControllerTest @Autowired constructor(
             name = "newName",
             description = "newDescription",
             publishStatus = PublishStatus.Unarchived,
-            author = "newAuthor")
+            author = "newAuthor",
+        )
         val collection = collectionRepository.create(name = "name", user = "user", email = "user@xmail.com", description = "description")
         collection!!.status = PublishStatus.Archived
         collection.archiveDate = LocalDateTime.now()

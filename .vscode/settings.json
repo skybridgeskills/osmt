@@ -38,7 +38,7 @@
 
   // Editor Configuration for Kotlin
   "[kotlin]": {
-    "editor.defaultFormatter": "fwcd.kotlin",
+    "editor.defaultFormatter": "mathiasfrohlich.Kotlin",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
@@ -46,6 +46,9 @@
     "editor.tabSize": 4,
     "editor.insertSpaces": true
   },
+  // ktlint Configuration
+  "kotlin.linter.ktlint.enabled": true,
+  "kotlin.linter.ktlint.codeStyle": "official",
 
   // File Associations
   "files.associations": {

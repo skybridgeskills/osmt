@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Transactional
-class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseReset {
+class CollectionRepositoryTest : SpringTest(), BaseDockerizedTest, HasDatabaseReset {
 
     @Autowired
     lateinit var collectionRepository: CollectionRepository
@@ -35,12 +35,11 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
 
     val userEmail = "unit@test.user"
 
-
     @Test
     fun `should not create a blank collection`() {
         assertThat(collectionRepository.create(CollectionUpdateObject(), userString, userEmail)).isNull()
-        assertThat(collectionRepository.create(CollectionUpdateObject(name=""), userString, userEmail)).isNull()
-        assertThat(collectionRepository.create(CollectionUpdateObject(name=" "), userString, userEmail)).isNull()
+        assertThat(collectionRepository.create(CollectionUpdateObject(name = ""), userString, userEmail)).isNull()
+        assertThat(collectionRepository.create(CollectionUpdateObject(name = " "), userString, userEmail)).isNull()
     }
 
     @Test
@@ -64,14 +63,17 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         assertThat(collection.author?.value).isEqualTo(apiObj.author)
         assertThat(collection.publishStatus()).isEqualTo(apiObj.publishStatus)
 
-        assertThat(crs.skills.map { it.uuid }.toSet() ).isEqualTo(apiObj.skills!!.add!!.toSet())
+        assertThat(crs.skills.map { it.uuid }.toSet()).isEqualTo(apiObj.skills!!.add!!.toSet())
     }
 
     private fun random_skill(): RichSkillDescriptorDao {
-        return richSkillRepository.create(RsdUpdateObject(
-            name=UUID.randomUUID().toString(),
-            statement=UUID.randomUUID().toString()
-        ), userString)!!
+        return richSkillRepository.create(
+            RsdUpdateObject(
+                name = UUID.randomUUID().toString(),
+                statement = UUID.randomUUID().toString(),
+            ),
+            userString,
+        )!!
     }
 
     private fun random_collection_update(): ApiCollectionUpdate {
@@ -82,14 +84,14 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         val skillCount = 3
         val skillDaos = (1..skillCount).toList().map { random_skill() }
         val skills = ApiStringListUpdate(
-            add=skillDaos.map { it.toModel().uuid }
+            add = skillDaos.map { it.toModel().uuid },
         )
         return ApiCollectionUpdate(
-            name=name,
-            description=description,
-            author=author,
-            publishStatus=status,
-            skills=skills
+            name = name,
+            description = description,
+            author = author,
+            publishStatus = status,
+            skills = skills,
         )
     }
 
@@ -100,7 +102,7 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
 
         var newUpdate = random_collection_update()
         newUpdate = newUpdate.copy(
-            skills=newUpdate.skills?.copy(remove=originalUpdate.skills?.add)
+            skills = newUpdate.skills?.copy(remove = originalUpdate.skills?.add),
         )
 
         val updatedDao = collectionRepository.updateFromApi(originalDao.id.value, newUpdate, richSkillRepository, userString)
@@ -113,10 +115,10 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         val totalSkillCount = 10
         val toAddCount = 7
         val searchQuery = "known prefix"
-        val skillUpdates = (1..totalSkillCount-toAddCount).toList().map { TestObjectHelpers.apiSkillUpdateGenerator() }
+        val skillUpdates = (1..totalSkillCount - toAddCount).toList().map { TestObjectHelpers.apiSkillUpdateGenerator() }
         val knownUpdates = (1..toAddCount).toList().map {
             TestObjectHelpers.apiSkillUpdateGenerator(
-                name = "${searchQuery} ${UUID.randomUUID()}"
+                name = "$searchQuery ${UUID.randomUUID()}",
             )
         }
 
@@ -129,8 +131,8 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
 
         val task = UpdateCollectionSkillsTask(
             collection.uuid,
-            skillListUpdate = ApiSkillListUpdate(add= ApiSearch(query=searchQuery)),
-            userString=userString
+            skillListUpdate = ApiSkillListUpdate(add = ApiSearch(query = searchQuery)),
+            userString = userString,
         )
         val batchResult = collectionRepository.updateSkillsForTask(collection.uuid, task, richSkillRepository)
 
@@ -156,7 +158,7 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
     @Test
     fun `findByOwner() should find an existing workspace`() {
         // Arrange
-        collectionRepository.create(CollectionUpdateObject(12345,"My Workspace",null,null,null,PublishStatus.Workspace), userString, userEmail)
+        collectionRepository.create(CollectionUpdateObject(12345, "My Workspace", null, null, null, PublishStatus.Workspace), userString, userEmail)
 
         // Act
         val collectionDao = collectionRepository.findByOwner("unit@test.user")
@@ -182,8 +184,8 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         val collections = (1..collectionsCount).toList().map { collectionRepository.create(UUID.randomUUID().toString(), userString, userEmail)!!.toModel() }
 
         val task = PublishTask(
-                search=ApiSearch(uuids= collections.map { it.uuid }),
-                userString=userString
+            search = ApiSearch(uuids = collections.map { it.uuid }),
+            userString = userString,
         )
 
         // Act
@@ -191,7 +193,6 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
 
         // Assert
         assertThat(batchResult?.modifiedCount).isEqualTo(collectionsCount)
-
     }
 
     @Test
@@ -206,16 +207,16 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         richSkillRepository.createFromApi(skills, userString, userEmail)
 
         val task = PublishTask(
-            search=ApiSearch(),
-            collectionUuid=collection.uuid,
-            userString=userString
+            search = ApiSearch(),
+            collectionUuid = collection.uuid,
+            userString = userString,
         )
 
         // Act
         val batchResult = collectionRepository.changeStatusesForTask(task)
 
         // Assert
-        assertThat(batchResult?.modifiedCount).isEqualTo(skillCount*3)
+        assertThat(batchResult?.modifiedCount).isEqualTo(skillCount * 3)
     }
 
     @Test
@@ -234,7 +235,6 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         assertThat(CollectionSkills.selectAll()).isEmpty()
         assertThat(batchResult?.modifiedCount).isEqualTo(1)
         assertThat(batchResult?.success).isEqualTo(true)
-
     }
 
     @Test
@@ -246,5 +246,4 @@ class CollectionRepositoryTest: SpringTest(), BaseDockerizedTest, HasDatabaseRes
         assertThat(batchResult?.modifiedCount).isEqualTo(0)
         assertThat(batchResult?.success).isEqualTo(false)
     }
-
 }

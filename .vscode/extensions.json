@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "fwcd.kotlin",
+    "mathiasfrohlich.Kotlin",
     "vscjava.vscode-java-pack",
     "vmware.vscode-spring-boot",
     "angular.ng-template",

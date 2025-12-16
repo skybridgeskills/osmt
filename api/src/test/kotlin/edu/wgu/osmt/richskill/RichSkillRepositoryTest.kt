@@ -37,8 +37,8 @@ class RichSkillRepositoryTest @Autowired constructor(
     override val richSkillEsRepo: RichSkillEsRepo,
     override val collectionEsRepo: CollectionEsRepo,
     override val keywordEsRepo: KeywordEsRepo,
-    override val jobCodeEsRepo: JobCodeEsRepo
-) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset  {
+    override val jobCodeEsRepo: JobCodeEsRepo,
+) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
 
     @Autowired
     lateinit var richSkillRepository: RichSkillRepository
@@ -50,9 +50,8 @@ class RichSkillRepositoryTest @Autowired constructor(
     lateinit var keywordRepository: KeywordRepository
 
     val userString = "unittestuser"
-    
-    val userEmail = "user@email.com"
 
+    val userEmail = "user@email.com"
 
     fun assertThatKeywordsMatchStringList(keywords: List<Keyword>, stringList: ApiStringListUpdate) {
         stringList.add?.forEach { str ->
@@ -141,25 +140,25 @@ class RichSkillRepositoryTest @Autowired constructor(
         val originalSkillDao = richSkillRepository.createFromApi(
             listOf(originalSkillUpdate),
             userString,
-            userEmail
+            userEmail,
         ).first()
 
         var newSkillUpdate = apiSkillUpdateGenerator()
         newSkillUpdate = newSkillUpdate.copy(
-            keywords=newSkillUpdate.keywords?.copy(remove=originalSkillUpdate.keywords?.add),
-            certifications=newSkillUpdate.certifications?.copy(remove=originalSkillUpdate.certifications?.add),
-            standards=newSkillUpdate.standards?.copy(remove=originalSkillUpdate.standards?.add),
-            alignments=newSkillUpdate.alignments?.copy(remove=originalSkillUpdate.alignments?.add),
-            employers=newSkillUpdate.employers?.copy(remove=originalSkillUpdate.employers?.add),
-            occupations=newSkillUpdate.occupations?.copy(remove=originalSkillUpdate.occupations?.add),
-            collections=newSkillUpdate.collections?.copy(remove=originalSkillUpdate.collections?.add)
+            keywords = newSkillUpdate.keywords?.copy(remove = originalSkillUpdate.keywords?.add),
+            certifications = newSkillUpdate.certifications?.copy(remove = originalSkillUpdate.certifications?.add),
+            standards = newSkillUpdate.standards?.copy(remove = originalSkillUpdate.standards?.add),
+            alignments = newSkillUpdate.alignments?.copy(remove = originalSkillUpdate.alignments?.add),
+            employers = newSkillUpdate.employers?.copy(remove = originalSkillUpdate.employers?.add),
+            occupations = newSkillUpdate.occupations?.copy(remove = originalSkillUpdate.occupations?.add),
+            collections = newSkillUpdate.collections?.copy(remove = originalSkillUpdate.collections?.add),
         )
 
         val updatedDao = richSkillRepository.updateFromApi(
             originalSkillDao.id.value,
             newSkillUpdate,
             userString,
-            userEmail
+            userEmail,
         )
         assertThat(updatedDao).isNotNull
         assertThatRichSkillMatchesApiSkillUpdate(RichSkillAndCollections.fromDao(updatedDao!!), newSkillUpdate)
@@ -173,7 +172,7 @@ class RichSkillRepositoryTest @Autowired constructor(
         val results: List<RichSkillDescriptorDao> = richSkillRepository.createFromApi(
             skillUpdates,
             userString,
-            userEmail
+            userEmail,
         )
 
         results.forEachIndexed { i, skillDao ->
@@ -184,41 +183,46 @@ class RichSkillRepositoryTest @Autowired constructor(
     }
 
     @Test
-    fun `should not create a rich skill without a non-blank name and statement`(){
+    fun `should not create a rich skill without a non-blank name and statement`() {
         assertThat(richSkillRepository.create(RsdUpdateObject(), userString)).isNull()
-        assertThat(richSkillRepository.create(RsdUpdateObject(name="name"), userString)).isNull()
-        assertThat(richSkillRepository.create(RsdUpdateObject(statement="statement"), userString)).isNull()
-        assertThat(richSkillRepository.create(RsdUpdateObject(name=" ",statement=" "), userString)).isNull()
+        assertThat(richSkillRepository.create(RsdUpdateObject(name = "name"), userString)).isNull()
+        assertThat(richSkillRepository.create(RsdUpdateObject(statement = "statement"), userString)).isNull()
+        assertThat(richSkillRepository.create(RsdUpdateObject(name = " ", statement = " "), userString)).isNull()
     }
 
     @Test
     fun `should update an existing skill`() {
         val name = UUID.randomUUID().toString()
         val statement = UUID.randomUUID().toString()
-        val created = richSkillRepository.create(RsdUpdateObject(
-            name = name,
-            statement = statement,
-        ), "test")
+        val created = richSkillRepository.create(
+            RsdUpdateObject(
+                name = name,
+                statement = statement,
+            ),
+            "test",
+        )
         assertThat(created).isNotNull
         assertThat(created!!.name).isEqualTo(name)
 
         val newName = UUID.randomUUID().toString()
         val newStatement = UUID.randomUUID().toString()
 
-        val updated = richSkillRepository.update(RsdUpdateObject(
-            id=created.id.value,
-            name=newName,
-            statement=newStatement
-        ), "test")
-        val retrieved  = richSkillRepository.findById(created.id.value)
+        val updated = richSkillRepository.update(
+            RsdUpdateObject(
+                id = created.id.value,
+                name = newName,
+                statement = newStatement,
+            ),
+            "test",
+        )
+        val retrieved = richSkillRepository.findById(created.id.value)
 
         assertThat(retrieved?.name).isEqualTo(newName)
         assertThat(updated?.name).isEqualTo(newName)
-
     }
 
     @Test
-    fun `should insert and retrieve a rich skill to the database`(){
+    fun `should insert and retrieve a rich skill to the database`() {
         val name = UUID.randomUUID().toString()
         val statement = UUID.randomUUID().toString()
         val updateObject = RsdUpdateObject(name = name, statement = statement)
@@ -226,7 +230,7 @@ class RichSkillRepositoryTest @Autowired constructor(
         val created = richSkillRepository.create(updateObject, userString)
         assertThat(created).isNotNull
 
-        val retrieved  = richSkillRepository.findById(created!!.id.value)
+        val retrieved = richSkillRepository.findById(created!!.id.value)
         assertThat(created.id.value).isEqualTo(retrieved?.id?.value)
         assertThat(retrieved?.name).isEqualTo(name)
         assertThat(retrieved?.statement).isEqualTo(statement)
@@ -237,12 +241,12 @@ class RichSkillRepositoryTest @Autowired constructor(
         val name = UUID.randomUUID().toString()
         val statement = UUID.randomUUID().toString()
         val keywordName = UUID.randomUUID().toString()
-        val keyword = keywordRepository.findOrCreate(KeywordTypeEnum.Keyword, value=keywordName)!!
-        val otherKeyword = keywordRepository.findOrCreate(KeywordTypeEnum.Keyword, value=UUID.randomUUID().toString())!!
+        val keyword = keywordRepository.findOrCreate(KeywordTypeEnum.Keyword, value = keywordName)!!
+        val otherKeyword = keywordRepository.findOrCreate(KeywordTypeEnum.Keyword, value = UUID.randomUUID().toString())!!
         val createObject = RsdUpdateObject(
             name = name,
             statement = statement,
-            keywords = ListFieldUpdate(add=listOf(keyword))
+            keywords = ListFieldUpdate(add = listOf(keyword)),
         )
 
         val created = richSkillRepository.create(createObject, userString)
@@ -250,7 +254,7 @@ class RichSkillRepositoryTest @Autowired constructor(
 
         val updateObject = RsdUpdateObject(
             id = created?.id?.value,
-            keywords = ListFieldUpdate(add=listOf(keyword), remove=listOf(otherKeyword))
+            keywords = ListFieldUpdate(add = listOf(keyword), remove = listOf(otherKeyword)),
         )
         val updated = richSkillRepository.update(updateObject, userString)
         assertThat(updated).isNotNull
@@ -269,7 +273,7 @@ class RichSkillRepositoryTest @Autowired constructor(
         val createObject = RsdUpdateObject(
             name = name,
             statement = statement,
-            keywords = ListFieldUpdate(add = listOf(category))
+            keywords = ListFieldUpdate(add = listOf(category)),
         )
         val created = richSkillRepository.create(createObject, userString)?.toModel()
         assertThat(created).isNotNull
@@ -278,26 +282,26 @@ class RichSkillRepositoryTest @Autowired constructor(
         // doesnt clear category if not specified in update object
         val newName = UUID.randomUUID().toString()
         val apiUpdate = ApiSkillUpdate(
-            skillName=newName
+            skillName = newName,
         )
         var apiUpdated = richSkillRepository.updateFromApi(
             created!!.id!!,
             apiUpdate,
             userString,
-            userEmail
+            userEmail,
         )?.toModel()
         assertThat(apiUpdated).isNotNull
         assertThat(apiUpdated?.categories?.get(0)?.value).isEqualTo(categoryName)
 
         // Remove category
         val apiUpdateBlank = ApiSkillUpdate(
-            categories = ApiStringListUpdate(remove = listOf(categoryName))
+            categories = ApiStringListUpdate(remove = listOf(categoryName)),
         )
         apiUpdated = richSkillRepository.updateFromApi(
             created.id!!,
             apiUpdateBlank,
             userString,
-            userEmail
+            userEmail,
         )?.toModel()
         assertThat(apiUpdated).isNotNull
         assertThat(apiUpdated?.categories?.size).isEqualTo(0)
@@ -308,20 +312,24 @@ class RichSkillRepositoryTest @Autowired constructor(
         val totalSkillCount = 10
         val toPublishCount = 7
         val searchQuery = "a different thing"
-        val skillUpdates = (1..totalSkillCount-toPublishCount).toList().map { apiSkillUpdateGenerator() }
-        val knownUpdates = (1..toPublishCount).toList().map { apiSkillUpdateGenerator(
-            name="${searchQuery} ${UUID.randomUUID()}"
-        )}
+        val skillUpdates = (1..totalSkillCount - toPublishCount).toList().map { apiSkillUpdateGenerator() }
+        val knownUpdates = (1..toPublishCount).toList().map {
+            apiSkillUpdateGenerator(
+                name = "$searchQuery ${UUID.randomUUID()}",
+            )
+        }
 
         val skillDaos = richSkillRepository.createFromApi(skillUpdates, userString, userEmail)
         val knownDaos = richSkillRepository.createFromApi(knownUpdates, userString, userEmail)
         assertThat(skillDaos.size + knownDaos.size).isEqualTo(totalSkillCount)
 
-        val batchResult = richSkillRepository.changeStatusesForTask(PublishTask(
-            search=ApiSearch(query=searchQuery),
-            publishStatus=PublishStatus.Published,
-            userString=userString
-        ))
+        val batchResult = richSkillRepository.changeStatusesForTask(
+            PublishTask(
+                search = ApiSearch(query = searchQuery),
+                publishStatus = PublishStatus.Published,
+                userString = userString,
+            ),
+        )
 
         assertThat(batchResult.totalCount).isEqualTo(toPublishCount)
         assertThat(batchResult.modifiedCount).isEqualTo(toPublishCount)
@@ -345,49 +353,49 @@ class RichSkillRepositoryTest @Autowired constructor(
         val publishedCount = 2
         val draftCount = 2
         val deletedCount = 2
-        val includedCount = archivedCount+publishedCount+draftCount+deletedCount
+        val includedCount = archivedCount + publishedCount + draftCount + deletedCount
         val notIncludedCount = 10
 
         val archivedSkills = (1..archivedCount).toList().flatMap {
             richSkillRepository.createFromApi(
-                listOf(apiSkillUpdateGenerator(publishStatus=PublishStatus.Published)),
+                listOf(apiSkillUpdateGenerator(publishStatus = PublishStatus.Published)),
                 userString,
-                userEmail
+                userEmail,
             ).map { skillDao ->
-                richSkillRepository.update(RsdUpdateObject(id=skillDao.id.value, publishStatus=PublishStatus.Archived), userString)
+                richSkillRepository.update(RsdUpdateObject(id = skillDao.id.value, publishStatus = PublishStatus.Archived), userString)
             }.filterNotNull()
         }
         val publishedSkills = (1..publishedCount).toList().flatMap {
             richSkillRepository.createFromApi(
-                listOf(apiSkillUpdateGenerator(publishStatus=PublishStatus.Published)),
+                listOf(apiSkillUpdateGenerator(publishStatus = PublishStatus.Published)),
                 userString,
-                userEmail
+                userEmail,
             )
         }
         val draftSkills = (1..draftCount).toList().flatMap {
             richSkillRepository.createFromApi(
-                listOf(apiSkillUpdateGenerator(publishStatus=PublishStatus.Draft)),
+                listOf(apiSkillUpdateGenerator(publishStatus = PublishStatus.Draft)),
                 userString,
-                userEmail
+                userEmail,
             )
         }
 
         // make skills that are draft+archived
         val deletedSkills = (1..deletedCount).toList().flatMap {
             richSkillRepository.createFromApi(
-                listOf(apiSkillUpdateGenerator(publishStatus=PublishStatus.Draft)),
+                listOf(apiSkillUpdateGenerator(publishStatus = PublishStatus.Draft)),
                 userString,
-                userEmail
+                userEmail,
             ).map { skillDao ->
-                richSkillRepository.update(RsdUpdateObject(id=skillDao.id.value, publishStatus=PublishStatus.Archived), userString)
+                richSkillRepository.update(RsdUpdateObject(id = skillDao.id.value, publishStatus = PublishStatus.Archived), userString)
             }.filterNotNull()
         }
 
         val extraSkills = (1..notIncludedCount).toList().flatMap {
             richSkillRepository.createFromApi(
-                listOf(apiSkillUpdateGenerator(publishStatus=PublishStatus.Draft)),
+                listOf(apiSkillUpdateGenerator(publishStatus = PublishStatus.Draft)),
                 userString,
-                userEmail
+                userEmail,
             )
         }
 
@@ -402,18 +410,21 @@ class RichSkillRepositoryTest @Autowired constructor(
         assertThat(collection).isNotNull
 
         // add skills to collection
-        collectionRepository.update(CollectionUpdateObject(
-            id=collection!!.id!!,
-            skills=ListFieldUpdate(add=(archivedSkills+publishedSkills+draftSkills+deletedSkills))
-        ), userString)
+        collectionRepository.update(
+            CollectionUpdateObject(
+                id = collection!!.id!!,
+                skills = ListFieldUpdate(add = (archivedSkills + publishedSkills + draftSkills + deletedSkills)),
+            ),
+            userString,
+        )
 
         // publish all draft skills in collection
         val publishTask = PublishTask(
-            search=ApiSearch(),
-            publishStatus=PublishStatus.Published,
-            filterByStatus=setOf(PublishStatus.Draft),
-            collectionUuid=collection.uuid,
-            userString=userString
+            search = ApiSearch(),
+            publishStatus = PublishStatus.Published,
+            filterByStatus = setOf(PublishStatus.Draft),
+            collectionUuid = collection.uuid,
+            userString = userString,
         )
 
         val batchResult = richSkillRepository.changeStatusesForTask(publishTask)
@@ -431,11 +442,13 @@ class RichSkillRepositoryTest @Autowired constructor(
         val toPublishCount = 3
         val skillDaosToPublish = skillDaos.subList(0, toPublishCount)
 
-        val batchResult = richSkillRepository.changeStatusesForTask(PublishTask(
-            search=ApiSearch(uuids=skillDaosToPublish.map { it.uuid }),
-            publishStatus=PublishStatus.Published,
-            userString=userString
-        ))
+        val batchResult = richSkillRepository.changeStatusesForTask(
+            PublishTask(
+                search = ApiSearch(uuids = skillDaosToPublish.map { it.uuid }),
+                publishStatus = PublishStatus.Published,
+                userString = userString,
+            ),
+        )
 
         assertThat(batchResult.totalCount).isEqualTo(toPublishCount)
         assertThat(batchResult.modifiedCount).isEqualTo(toPublishCount)
@@ -448,11 +461,13 @@ class RichSkillRepositoryTest @Autowired constructor(
         }
 
         // attempt to publish all the skills, only un-published ones should get published
-        val archiveResult = richSkillRepository.changeStatusesForTask(PublishTask(
-            search=ApiSearch(uuids=skillDaos.map { it.uuid }),
-            publishStatus=PublishStatus.Published,
-            userString=userString
-        ))
+        val archiveResult = richSkillRepository.changeStatusesForTask(
+            PublishTask(
+                search = ApiSearch(uuids = skillDaos.map { it.uuid }),
+                publishStatus = PublishStatus.Published,
+                userString = userString,
+            ),
+        )
 
         assertThat(archiveResult.totalCount).isEqualTo(totalSkillCount)
         assertThat(archiveResult.modifiedCount).isEqualTo(totalSkillCount - toPublishCount)
@@ -466,7 +481,7 @@ class RichSkillRepositoryTest @Autowired constructor(
     }
 
     @Test
-    fun `should find rich skills by jobcode`(){
+    fun `should find rich skills by jobcode`() {
         val jobCode = TestObjectHelpers.randomJobCode()
         val skillUpdate = apiSkillUpdateGenerator().copy(occupations = ApiStringListUpdate(add = listOf(jobCode.code)))
         val noiseSkillCount = 10

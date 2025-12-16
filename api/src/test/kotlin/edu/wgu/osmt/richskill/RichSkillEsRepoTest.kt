@@ -12,9 +12,9 @@ import edu.wgu.osmt.api.model.ApiSearch
 import edu.wgu.osmt.api.model.ApiSimilaritySearch
 import edu.wgu.osmt.collection.CollectionDoc
 import edu.wgu.osmt.collection.CollectionEsRepo
-import edu.wgu.osmt.io.csv.BatchImportRichSkill
 import edu.wgu.osmt.db.ListFieldUpdate
 import edu.wgu.osmt.db.PublishStatus
+import edu.wgu.osmt.io.csv.BatchImportRichSkill
 import edu.wgu.osmt.jobcode.JobCodeEsRepo
 import edu.wgu.osmt.keyword.KeywordEsRepo
 import edu.wgu.osmt.keyword.KeywordRepository
@@ -36,7 +36,7 @@ interface QuotedSearchHelpers {
     fun quotedSearchSetup(): SearchSetupResults {
         var collection1 = TestObjectHelpers.collectionDoc(name = "Self-Management Collection", description = "Collection of Self-Management Skills")
         val collection2 = TestObjectHelpers.collectionDoc(name = "Best Self Management Collection", description = "Collection of the best Self Management Skills")
-        val randomCollections = (1..10).map{ TestObjectHelpers.randomCollectionDoc() }
+        val randomCollections = (1..10).map { TestObjectHelpers.randomCollectionDoc() }
 
         val skill1 = TestObjectHelpers.richSkillDoc(name = "Self-Management", statement = "A statement for a skill").copy(collections = listOf(collection1))
         val skill2 = TestObjectHelpers.richSkillDoc(name = "Self Mis-Management", statement = "A statement for a skill")
@@ -45,9 +45,9 @@ interface QuotedSearchHelpers {
 
         collection1 = collection1.copy(skillIds = listOf(skill1.uuid, skill2.uuid))
 
-        val randomSkills = (1..10).map{TestObjectHelpers.randomRichSkillDoc()}
+        val randomSkills = (1..10).map { TestObjectHelpers.randomRichSkillDoc() }
         richSkillEsRepo.saveAll(randomSkills + listOf(skill1, skill2, skill3, skill4))
-        collectionEsRepo.saveAll(listOf(collection1,collection2) + randomCollections)
+        collectionEsRepo.saveAll(listOf(collection1, collection2) + randomCollections)
         return SearchSetupResults(listOf(collection1, collection2), listOf(skill1, skill2, skill3, skill4))
     }
 }
@@ -59,11 +59,11 @@ class RichSkillEsRepoTest @Autowired constructor(
     override val keywordEsRepo: KeywordEsRepo,
     override val jobCodeEsRepo: JobCodeEsRepo,
     val richSkillRepository: RichSkillRepository,
-    val keywordRepository: KeywordRepository
+    val keywordRepository: KeywordRepository,
 ) : SpringTest(), HasDatabaseReset, HasElasticsearchReset, QuotedSearchHelpers {
 
     val authorString = "unit-test-author"
-    val nullJwt : Jwt? = null
+    val nullJwt: Jwt? = null
 
     @Test
     fun `Should insert a rich skill into elastic search`() {
@@ -81,8 +81,9 @@ class RichSkillEsRepoTest @Autowired constructor(
             RsdUpdateObject(
                 name = name,
                 statement = statement,
-                keywords = ListFieldUpdate(add = allKeywordDao)
-            ), BatchImportRichSkill.user
+                keywords = ListFieldUpdate(add = allKeywordDao),
+            ),
+            BatchImportRichSkill.user,
         )?.toModel()!!
 
         val elasticModel = richSkillEsRepo.findByUuid(rsd.uuid, Pageable.unpaged())
@@ -107,8 +108,9 @@ class RichSkillEsRepoTest @Autowired constructor(
             RsdUpdateObject(
                 name = name,
                 statement = statement,
-                keywords = ListFieldUpdate(add = allKeywordDao)
-            ), BatchImportRichSkill.user
+                keywords = ListFieldUpdate(add = allKeywordDao),
+            ),
+            BatchImportRichSkill.user,
         )?.toModel()!!
 
         val newName = UUID.randomUUID().toString()
@@ -122,7 +124,7 @@ class RichSkillEsRepoTest @Autowired constructor(
             id = rsd.id,
             name = newName,
             statement = newStatement,
-            keywords = ListFieldUpdate(add = listOf(keywordToAddDao!!), remove = listOf(keywordToRemove))
+            keywords = ListFieldUpdate(add = listOf(keywordToAddDao!!), remove = listOf(keywordToRemove)),
         )
         val updateResult = richSkillRepository.update(updateObject, "test-user")
 
@@ -174,7 +176,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertAgainstRichSkillDoc(queryRichSkillHits(richSkillDoc.employers[richSkillDoc.employers.indices.random()]))
 
         val searchByCollectionName = richSkillEsRepo.byApiSearch(
-            ApiSearch(query = richSkillDoc.collections[0].name)
+            ApiSearch(query = richSkillDoc.collections[0].name),
         ).searchHits.map { it.content }
 
         assertThat(searchByCollectionName[0].uuid).isEqualTo(richSkillDoc.uuid)
@@ -183,7 +185,6 @@ class RichSkillEsRepoTest @Autowired constructor(
     @Test
     fun `Should limit rich skills search to a related collection if collection id present`() {
         val associatedCollection = TestObjectHelpers.collectionDoc(name = "Test Collection", description = "Collection of Test Skills")
-
 
         val skillsWCollectionIds = (1..100).map {
             val doc = TestObjectHelpers.randomRichSkillDoc()
@@ -207,8 +208,10 @@ class RichSkillEsRepoTest @Autowired constructor(
 
         assertThat(collectionRelatedSkillIds).isEqualTo(skillsWCollectionIds.map { it.uuid }.toSet())
 
-        assertThat(allResultsCollectionIds).isEqualTo((skillsWCollectionIds + nonCollectionSkills).map { it.uuid }
-            .toSet())
+        assertThat(allResultsCollectionIds).isEqualTo(
+            (skillsWCollectionIds + nonCollectionSkills).map { it.uuid }
+                .toSet(),
+        )
     }
 
     @Test
@@ -217,7 +220,7 @@ class RichSkillEsRepoTest @Autowired constructor(
             .copy(name = "A collection that questions the ability to perform partial query matches")
         val skill = TestObjectHelpers.randomRichSkillDoc().copy(
             name = "A skill that questions the ability to perform partial query matches",
-            collections = listOf(collection)
+            collections = listOf(collection),
         )
         collection = collection.copy(skillIds = listOf(skill.uuid))
 
@@ -228,10 +231,8 @@ class RichSkillEsRepoTest @Autowired constructor(
         richSkillEsRepo.saveAll(listOf(skill) + otherSkills)
         collectionEsRepo.saveAll(listOf(collection) + otherCollections)
 
-
         val skillSearchResult = richSkillEsRepo.byApiSearch(ApiSearch(query = "quest"))
         val collectionSearchResult = collectionEsRepo.byApiSearch(ApiSearch(query = "quest"))
-
 
         assertThat(skillSearchResult.searchHits.first().content.uuid).isEqualTo(skill.uuid)
         assertThat(skillSearchResult.totalHits).isEqualTo(1L)
@@ -250,7 +251,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         }
 
         val jobCodes = listOf(
-            TestObjectHelpers.randomJobCode().copy(code = "10-9999.88", id = TestObjectHelpers.elasticIdCounter)
+            TestObjectHelpers.randomJobCode().copy(code = "10-9999.88", id = TestObjectHelpers.elasticIdCounter),
         )
 
         val skillWithJobCodes = TestObjectHelpers.randomRichSkillDoc().copy(jobCodes = jobCodes).also {
@@ -261,10 +262,10 @@ class RichSkillEsRepoTest @Autowired constructor(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     occupations = listOf(
-                        "10-99"
-                    )
-                )
-            )
+                        "10-99",
+                    ),
+                ),
+            ),
         )
 
         assertThat(searchResult.searchHits.first().content.uuid).isEqualTo(skillWithJobCodes.uuid)
@@ -314,37 +315,37 @@ class RichSkillEsRepoTest @Autowired constructor(
                 advanced = ApiAdvancedSearch(
                     standards = listOf(
                         ApiNamedReference(name = "red"),
-                        ApiNamedReference(name = "orange")
-                    )
-                )
-            )
+                        ApiNamedReference(name = "orange"),
+                    ),
+                ),
+            ),
         )
         val result2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     certifications = listOf(
                         ApiNamedReference(name = "yellow"),
-                        ApiNamedReference(name = "green")
-                    )
-                )
-            )
+                        ApiNamedReference(name = "green"),
+                    ),
+                ),
+            ),
         )
         val result3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     employers = listOf(
                         ApiNamedReference(name = "blue"),
-                        ApiNamedReference(name = "indigo")
-                    )
-                )
-            )
+                        ApiNamedReference(name = "indigo"),
+                    ),
+                ),
+            ),
         )
         val result4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
-                    alignments = listOf(ApiNamedReference(name = "violet"))
-                )
-            )
+                    alignments = listOf(ApiNamedReference(name = "violet")),
+                ),
+            ),
         )
 
         assertThat(result1.searchHits.first().content.uuid).isEqualTo(richSkill1.uuid)
@@ -353,32 +354,30 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(result4.searchHits.first().content.uuid).isEqualTo(richSkill4.uuid)
     }
 
-
     @Test
-    fun `Should perform simple quoted searches`(){
+    fun `Should perform simple quoted searches`() {
         val searchSetupResults = quotedSearchSetup()
 
-        val ambiguousNonQuotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(query = "self management")).searchHits.map{it.content}
-        val quotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(query= "\"Self-Management\"")).searchHits.map{it.content}
+        val ambiguousNonQuotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(query = "self management")).searchHits.map { it.content }
+        val quotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(query = "\"Self-Management\"")).searchHits.map { it.content }
 
         assertThat(quotedSearch).contains(searchSetupResults.skills.first())
         assertThat(quotedSearch.size).isEqualTo(1)
     }
 
     @Test
-    fun `Should perform advanced quoted searches`(){
+    fun `Should perform advanced quoted searches`() {
         val searchSetupResults = quotedSearchSetup()
-        val advancedQuotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(advanced = ApiAdvancedSearch(skillName = "\"Self-Management\""))).searchHits.map{ it.content }
+        val advancedQuotedSearch = richSkillEsRepo.byApiSearch(ApiSearch(advanced = ApiAdvancedSearch(skillName = "\"Self-Management\""))).searchHits.map { it.content }
 
         assertThat(advancedQuotedSearch).contains(searchSetupResults.skills.first())
         assertThat(advancedQuotedSearch.size).isEqualTo(1)
     }
 
-
     @Test
     fun testByApiSearchWithAdvance() {
         // Arrange
-        val categoriesList = listOf("Category1", "Category2", "Category3", "Category4","Category5", "Category6")
+        val categoriesList = listOf("Category1", "Category2", "Category3", "Category4", "Category5", "Category6")
         val authorsList = listOf("Author1", "Author2", "Author3", "Author4", "Author5", "Author6")
         val keywordslist = listOf("One", "Two", "Three", "Four", "Five", "Six")
 
@@ -392,93 +391,97 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillByEmployers = TestObjectHelpers.randomRichSkillDoc().copy(employers = keywordslist)
         val skillByAlignments = TestObjectHelpers.randomRichSkillDoc().copy(alignments = keywordslist)
 
-        richSkillEsRepo.saveAll(listOf(skillByName, skillByCategory, skillByAuthor, skillByStatement,skillByKeywords,
-                skillByStandards,skillByCertifications,skillByEmployers,skillByAlignments))
+        richSkillEsRepo.saveAll(
+            listOf(
+                skillByName, skillByCategory, skillByAuthor, skillByStatement, skillByKeywords,
+                skillByStandards, skillByCertifications, skillByEmployers, skillByAlignments,
+            ),
+        )
 
         // Act
         val skillResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                skillName="skillName"
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    skillName = "skillName",
+                ),
+            ),
         )
 
         val categoryResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                category = "category2"
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    category = "category2",
+                ),
+            ),
         )
 
         val authorResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                author = "author"
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    author = "author",
+                ),
+            ),
         )
 
         val skillStatementResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                skillStatement = "skillStatement"
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    skillStatement = "skillStatement",
+                ),
+            ),
         )
 
         val keywordsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                keywords = keywordslist
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    keywords = keywordslist,
 
-                        )
-                )
+                ),
+            ),
         )
 
         val standardsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                standards = listOf(
-                                        ApiNamedReference(name = "One"),
-                                        ApiNamedReference(name = "Two")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    standards = listOf(
+                        ApiNamedReference(name = "One"),
+                        ApiNamedReference(name = "Two"),
+                    ),
+                ),
+            ),
         )
 
         val certificationsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                certifications = listOf(
-                                        ApiNamedReference(name = "Three"),
-                                        ApiNamedReference(name = "Four")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    certifications = listOf(
+                        ApiNamedReference(name = "Three"),
+                        ApiNamedReference(name = "Four"),
+                    ),
+                ),
+            ),
         )
 
         val employersResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                employers = listOf(
-                                        ApiNamedReference(name = "Five"),
-                                        ApiNamedReference(name = "Six")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    employers = listOf(
+                        ApiNamedReference(name = "Five"),
+                        ApiNamedReference(name = "Six"),
+                    ),
+                ),
+            ),
         )
 
         val alignmentsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                alignments = listOf(
-                                        ApiNamedReference(name = "Six"),
-                                        ApiNamedReference(name = "One")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    alignments = listOf(
+                        ApiNamedReference(name = "Six"),
+                        ApiNamedReference(name = "One"),
+                    ),
+                ),
+            ),
         )
 
         // Assert
@@ -491,13 +494,12 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(certificationsResult.searchHits.first().content.uuid).isEqualTo(skillByCertifications.uuid)
         assertThat(employersResult.searchHits.first().content.uuid).isEqualTo(skillByEmployers.uuid)
         assertThat(alignmentsResult.searchHits.first().content.uuid).isEqualTo(skillByAlignments.uuid)
-
     }
 
     @Test
     fun testByApiSearchWithSimpleQuoted() {
         // Arrange
-        val categoriesList = listOf("Category1", "Category2", "Category3", "Category4","Category5", "Category6")
+        val categoriesList = listOf("Category1", "Category2", "Category3", "Category4", "Category5", "Category6")
         val authorsList = listOf("Author1", "Author2", "Author3", "Author4", "Author5", "Author6")
         val keywordslist = listOf("One", "Two", "Three", "Four", "Five", "Six")
 
@@ -511,92 +513,92 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillByEmployers = TestObjectHelpers.randomRichSkillDoc().copy(employers = keywordslist)
         val skillByAlignments = TestObjectHelpers.randomRichSkillDoc().copy(alignments = keywordslist)
 
-        richSkillEsRepo.saveAll(listOf(skillByName, skillByCategory, skillByAuthor, skillByStatement,skillByKeywords,skillByStandards,skillByCertifications,skillByEmployers,skillByAlignments))
+        richSkillEsRepo.saveAll(listOf(skillByName, skillByCategory, skillByAuthor, skillByStatement, skillByKeywords, skillByStandards, skillByCertifications, skillByEmployers, skillByAlignments))
 
         // Act
         val skillResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                skillName="\"skillName\""
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    skillName = "\"skillName\"",
+                ),
+            ),
         )
 
         val categoryResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                category = "\"category4\""
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    category = "\"category4\"",
+                ),
+            ),
         )
 
         val authorResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                author = "\"author3\""
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    author = "\"author3\"",
+                ),
+            ),
         )
 
         val skillStatementResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                skillStatement = "\"skillStatement\""
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    skillStatement = "\"skillStatement\"",
+                ),
+            ),
         )
 
         val keywordsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                keywords = listOf("\"One\"", "\"Two\"", "\"Three\"", "\"Four\"", "\"Five\"", "\"Six\"")
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    keywords = listOf("\"One\"", "\"Two\"", "\"Three\"", "\"Four\"", "\"Five\"", "\"Six\""),
 
-                        )
-                )
+                ),
+            ),
         )
 
         val standardsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                standards = listOf(
-                                        ApiNamedReference(name = "\"One\""),
-                                        ApiNamedReference(name = "\"Two\"")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    standards = listOf(
+                        ApiNamedReference(name = "\"One\""),
+                        ApiNamedReference(name = "\"Two\""),
+                    ),
+                ),
+            ),
         )
 
         val certificationsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                certifications = listOf(
-                                        ApiNamedReference(name = "\"Three\""),
-                                        ApiNamedReference(name = "\"Four\"")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    certifications = listOf(
+                        ApiNamedReference(name = "\"Three\""),
+                        ApiNamedReference(name = "\"Four\""),
+                    ),
+                ),
+            ),
         )
 
         val employersResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                employers = listOf(
-                                        ApiNamedReference(name = "\"Five\""),
-                                        ApiNamedReference(name = "\"Six\"")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    employers = listOf(
+                        ApiNamedReference(name = "\"Five\""),
+                        ApiNamedReference(name = "\"Six\""),
+                    ),
+                ),
+            ),
         )
 
         val alignmentsResult = richSkillEsRepo.byApiSearch(
-                ApiSearch(
-                        advanced = ApiAdvancedSearch(
-                                alignments = listOf(
-                                        ApiNamedReference(name = "\"Six\""),
-                                        ApiNamedReference(name = "\"One\"")
-                                )
-                        )
-                )
+            ApiSearch(
+                advanced = ApiAdvancedSearch(
+                    alignments = listOf(
+                        ApiNamedReference(name = "\"Six\""),
+                        ApiNamedReference(name = "\"One\""),
+                    ),
+                ),
+            ),
         )
 
         // Assert
@@ -609,8 +611,8 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(certificationsResult.searchHits.first().content.uuid).isEqualTo(skillByCertifications.uuid)
         assertThat(employersResult.searchHits.first().content.uuid).isEqualTo(skillByEmployers.uuid)
         assertThat(alignmentsResult.searchHits.first().content.uuid).isEqualTo(skillByAlignments.uuid)
-
     }
+
     @Test
     fun `search with categories filter should apply to filtered search`() {
         // Arrange
@@ -618,21 +620,22 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithCategory2 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category2"))
         val skillWithCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category3"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithCategory1,skillWithCategory2,skillWithCategory3))
+        richSkillEsRepo.saveAll(listOf(skillWithCategory1, skillWithCategory2, skillWithCategory3))
 
         // Act
         val filteredSearchResult = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    categories = listOf("category1", "category3")
-                )
-            )
+                    categories = listOf("category1", "category3"),
+                ),
+            ),
         )
 
         // Assert
         assertThat(filteredSearchResult.searchHits.first().content.uuid).isEqualTo(skillWithCategory1.uuid)
         assertThat(filteredSearchResult.searchHits[1].content.uuid).isEqualTo(skillWithCategory3.uuid)
     }
+
     @Test
     fun `search with keywords filter should apply to filtered search with AND operator between keywords`() {
         // Arrange
@@ -640,36 +643,36 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithKeywords2and3 = TestObjectHelpers.randomRichSkillDoc().copy(searchingKeywords = listOf("keyword2", "keyword3"))
         val skillWithKeywords3and4 = TestObjectHelpers.randomRichSkillDoc().copy(searchingKeywords = listOf("keyword3", "keyword4"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithKeywords1and2,skillWithKeywords2and3,skillWithKeywords3and4))
+        richSkillEsRepo.saveAll(listOf(skillWithKeywords1and2, skillWithKeywords2and3, skillWithKeywords3and4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    keywords = listOf("keyword1", "keyword2")
-                )
-            )
+                    keywords = listOf("keyword1", "keyword2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    keywords = listOf("keyword2", "keyword3")
-                )
-            )
+                    keywords = listOf("keyword2", "keyword3"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    keywords = listOf("keyword3", "keyword4")
-                )
-            )
+                    keywords = listOf("keyword3", "keyword4"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    keywords = listOf("keyword1", "keyword3")
-                )
-            )
+                    keywords = listOf("keyword1", "keyword3"),
+                ),
+            ),
         )
 
         // Assert
@@ -678,6 +681,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithKeywords3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
     }
+
     @Test
     fun `search with standards filter should apply to filtered search with AND operator between standards`() {
         // Arrange
@@ -685,36 +689,36 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithStandards2and3 = TestObjectHelpers.randomRichSkillDoc().copy(standards = listOf("standard2", "standard3"))
         val skillWithStandards3and4 = TestObjectHelpers.randomRichSkillDoc().copy(standards = listOf("standard3", "standard4"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithStandards1and2,skillWithStandards2and3,skillWithStandards3and4))
+        richSkillEsRepo.saveAll(listOf(skillWithStandards1and2, skillWithStandards2and3, skillWithStandards3and4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    standards = listOf("standard1", "standard2")
-                )
-            )
+                    standards = listOf("standard1", "standard2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    standards = listOf("standard2", "standard3")
-                )
-            )
+                    standards = listOf("standard2", "standard3"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    standards = listOf("standard3", "standard4")
-                )
-            )
+                    standards = listOf("standard3", "standard4"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    standards = listOf("standard1", "standard3")
-                )
-            )
+                    standards = listOf("standard1", "standard3"),
+                ),
+            ),
         )
 
         // Assert
@@ -723,6 +727,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithStandards3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
     }
+
     @Test
     fun `Search with certifications filter should apply to filtered search with AND operator between certifications`() {
         // Arrange
@@ -730,36 +735,36 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithCertifications2and3 = TestObjectHelpers.randomRichSkillDoc().copy(certifications = listOf("certification2", "certification3"))
         val skillWithCertifications3and4 = TestObjectHelpers.randomRichSkillDoc().copy(certifications = listOf("certification3", "certification4"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithCertifications1and2,skillWithCertifications2and3,skillWithCertifications3and4))
+        richSkillEsRepo.saveAll(listOf(skillWithCertifications1and2, skillWithCertifications2and3, skillWithCertifications3and4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    certifications = listOf("certification1", "certification2")
-                )
-            )
+                    certifications = listOf("certification1", "certification2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    certifications = listOf("certification2", "certification3")
-                )
-            )
+                    certifications = listOf("certification2", "certification3"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    certifications = listOf("certification3", "certification4")
-                )
-            )
+                    certifications = listOf("certification3", "certification4"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    certifications = listOf("certification1", "certification3")
-                )
-            )
+                    certifications = listOf("certification1", "certification3"),
+                ),
+            ),
         )
 
         // Assert
@@ -768,6 +773,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithCertifications3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
     }
+
     @Test
     fun `Search with alignments filter should apply to filtered search with AND operator between alignments`() {
         // Arrange
@@ -775,36 +781,36 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithAlignments2and3 = TestObjectHelpers.randomRichSkillDoc().copy(alignments = listOf("alignment2", "alignment3"))
         val skillWithAlignments3and4 = TestObjectHelpers.randomRichSkillDoc().copy(alignments = listOf("alignment3", "alignment4"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithAlignments1and2,skillWithAlignments2and3,skillWithAlignments3and4))
+        richSkillEsRepo.saveAll(listOf(skillWithAlignments1and2, skillWithAlignments2and3, skillWithAlignments3and4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    alignments = listOf("alignment1", "alignment2")
-                )
-            )
+                    alignments = listOf("alignment1", "alignment2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    alignments = listOf("alignment2", "alignment3")
-                )
-            )
+                    alignments = listOf("alignment2", "alignment3"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    alignments = listOf("alignment3", "alignment4")
-                )
-            )
+                    alignments = listOf("alignment3", "alignment4"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    alignments = listOf("alignment1", "alignment3")
-                )
-            )
+                    alignments = listOf("alignment1", "alignment3"),
+                ),
+            ),
         )
 
         // Assert
@@ -813,6 +819,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithAlignments3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
     }
+
     @Test
     fun `Search with employers filter should apply to filtered search with AND operator between employers`() {
         // Arrange
@@ -820,36 +827,36 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithEmployers2and3 = TestObjectHelpers.randomRichSkillDoc().copy(employers = listOf("employer2", "employer3"))
         val skillWithEmployers3and4 = TestObjectHelpers.randomRichSkillDoc().copy(employers = listOf("employer3", "employer4"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithEmployers1and2,skillWithEmployers2and3,skillWithEmployers3and4))
+        richSkillEsRepo.saveAll(listOf(skillWithEmployers1and2, skillWithEmployers2and3, skillWithEmployers3and4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    employers = listOf("employer1", "employer2")
-                )
-            )
+                    employers = listOf("employer1", "employer2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    employers = listOf("employer2", "employer3")
-                )
-            )
+                    employers = listOf("employer2", "employer3"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    employers = listOf("employer3", "employer4")
-                )
-            )
+                    employers = listOf("employer3", "employer4"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    employers = listOf("employer1", "employer3")
-                )
-            )
+                    employers = listOf("employer1", "employer3"),
+                ),
+            ),
         )
 
         // Assert
@@ -858,6 +865,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithEmployers3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
     }
+
     @Test
     fun `search with occupations filter should apply to filtered search`() {
         // Arrange
@@ -889,40 +897,40 @@ class RichSkillEsRepoTest @Autowired constructor(
                 advanced = ApiAdvancedSearch(
                     occupations = listOf(
                         "10-11",
-                        "10-22"
-                    )
-                )
-            )
+                        "10-22",
+                    ),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     occupations = listOf(
                         "10-22",
-                        "10-33"
-                    )
-                )
-            )
+                        "10-33",
+                    ),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     occupations = listOf(
                         "10-33",
-                        "10-44"
-                    )
-                )
-            )
+                        "10-44",
+                    ),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 advanced = ApiAdvancedSearch(
                     occupations = listOf(
                         "10-11",
-                        "10-33"
-                    )
-                )
-            )
+                        "10-33",
+                    ),
+                ),
+            ),
         )
 
         // Assert
@@ -930,8 +938,8 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult2.searchHits.first().content.uuid).isEqualTo(skillWithOccupations2and3.uuid)
         assertThat(filteredSearchResult3.searchHits.first().content.uuid).isEqualTo(skillWithOccupations3and4.uuid)
         assertThat(filteredSearchResult4).isEmpty()
-
     }
+
     @Test
     fun `search with authors filter should apply to filtered search`() {
         // Arrange
@@ -939,21 +947,22 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithAuthor2 = TestObjectHelpers.randomRichSkillDoc().copy(authors = listOf("author2"))
         val skillWithAuthor3 = TestObjectHelpers.randomRichSkillDoc().copy(authors = listOf("author3"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithAuthor1,skillWithAuthor2,skillWithAuthor3))
+        richSkillEsRepo.saveAll(listOf(skillWithAuthor1, skillWithAuthor2, skillWithAuthor3))
 
         // Act
         val filteredSearchResult = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
-                    authors = listOf("author1", "author3")
-                )
-            )
+                    authors = listOf("author1", "author3"),
+                ),
+            ),
         )
 
         // Assert
         assertThat(filteredSearchResult.searchHits.first().content.uuid).isEqualTo(skillWithAuthor1.uuid)
         assertThat(filteredSearchResult.searchHits[1].content.uuid).isEqualTo(skillWithAuthor3.uuid)
     }
+
     @Test
     fun `search with authors & categories filter should apply to filtered search with AND operator between fields, and OR operator between values`() {
         // Arrange
@@ -963,25 +972,32 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillWithAuthor2AndCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(authors = listOf("author2"), categories = listOf("category3"))
         val skillWithAuthor3AndCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(authors = listOf("author3"), categories = listOf("category3"))
 
-        richSkillEsRepo.saveAll(listOf(skillWithAuthor1AndCategory1,skillWithAuthor2AndCategory2,skillWithAuthor3AndCategory3,
-            skillWithAuthor1AndCategory3,skillWithAuthor2AndCategory3))
+        richSkillEsRepo.saveAll(
+            listOf(
+                skillWithAuthor1AndCategory1,
+                skillWithAuthor2AndCategory2,
+                skillWithAuthor3AndCategory3,
+                skillWithAuthor1AndCategory3,
+                skillWithAuthor2AndCategory3,
+            ),
+        )
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     authors = listOf("author1", "author2"),
-                    categories = listOf("category1", "category2")
-                )
-            )
+                    categories = listOf("category1", "category2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     authors = listOf("author1", "author2", "author3"),
-                    categories = listOf("category1", "category2", "category3")
-                )
-            )
+                    categories = listOf("category1", "category2", "category3"),
+                ),
+            ),
         )
 
         // Assert
@@ -992,37 +1008,45 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult2.searchHits.first().content.uuid).isEqualTo(skillWithAuthor1AndCategory1.uuid)
         assertThat(filteredSearchResult2.searchHits[4].content.uuid).isEqualTo(skillWithAuthor2AndCategory3.uuid)
     }
+
     @Test
     fun `search with authors & categories & keywords filter should apply to filtered search with AND operator between fields, and OR operator between categories and authors and AND between keywords`() {
         // Arrange
         val skillWithAuthor1AndCategory1 = TestObjectHelpers.randomRichSkillDoc().copy(
             authors = listOf("author1"),
             categories = listOf("category1"),
-            searchingKeywords = listOf("keyword1")
+            searchingKeywords = listOf("keyword1"),
         )
         val skillWithAuthor2AndCategory2 = TestObjectHelpers.randomRichSkillDoc().copy(
             authors = listOf("author2"),
             categories = listOf("category2"),
-            searchingKeywords = listOf("keyword2")
+            searchingKeywords = listOf("keyword2"),
         )
         val skillWithAuthor1AndCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(
             authors = listOf("author1"),
             categories = listOf("category3"),
-            searchingKeywords = listOf("keyword1", "keyword3")
+            searchingKeywords = listOf("keyword1", "keyword3"),
         )
         val skillWithAuthor2AndCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(
             authors = listOf("author2"),
             categories = listOf("category3"),
-            searchingKeywords = listOf("keyword2", "keyword3")
+            searchingKeywords = listOf("keyword2", "keyword3"),
         )
         val skillWithAuthor3AndCategory3 = TestObjectHelpers.randomRichSkillDoc().copy(
             authors = listOf("author3"),
             categories = listOf("category3"),
-            searchingKeywords = listOf("keyword1", "keyword2", "keyword3")
+            searchingKeywords = listOf("keyword1", "keyword2", "keyword3"),
         )
 
-        richSkillEsRepo.saveAll(listOf(skillWithAuthor1AndCategory1,skillWithAuthor2AndCategory2,skillWithAuthor3AndCategory3,
-            skillWithAuthor1AndCategory3,skillWithAuthor2AndCategory3))
+        richSkillEsRepo.saveAll(
+            listOf(
+                skillWithAuthor1AndCategory1,
+                skillWithAuthor2AndCategory2,
+                skillWithAuthor3AndCategory3,
+                skillWithAuthor1AndCategory3,
+                skillWithAuthor2AndCategory3,
+            ),
+        )
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
@@ -1030,18 +1054,18 @@ class RichSkillEsRepoTest @Autowired constructor(
                 filtered = ApiFilteredSearch(
                     authors = listOf("author1", "author2"),
                     categories = listOf("category1", "category2"),
-                    keywords = listOf("keyword1", "keyword2")
-                )
-            )
+                    keywords = listOf("keyword1", "keyword2"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     authors = listOf("author1", "author2", "author3"),
                     categories = listOf("category1", "category2", "category3"),
-                    keywords = listOf("keyword1", "keyword2", "keyword3")
-                )
-            )
+                    keywords = listOf("keyword1", "keyword2", "keyword3"),
+                ),
+            ),
         )
 
         // Assert
@@ -1049,28 +1073,32 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(filteredSearchResult2.searchHits).hasSize(1)
         assertThat(filteredSearchResult2.searchHits.first().content.uuid).isEqualTo(skillWithAuthor3AndCategory3.uuid)
     }
+
     @Test
     fun `search with categories, keywords & standards filter should apply to filtered search with AND operator between fields, and OR operator between categories and AND operator between keywords and standards`() {
         // Arrange
-        val skill1 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category1"),
+        val skill1 = TestObjectHelpers.randomRichSkillDoc().copy(
+            categories = listOf("category1"),
             searchingKeywords = listOf("keyword1"),
-            standards = listOf("standard1")
+            standards = listOf("standard1"),
         )
-        val skill2 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category2"),
+        val skill2 = TestObjectHelpers.randomRichSkillDoc().copy(
+            categories = listOf("category2"),
             searchingKeywords = listOf("keyword1", "keyword2"),
-            standards = listOf("standard1", "standard2")
+            standards = listOf("standard1", "standard2"),
         )
-        val skill3 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category3"),
+        val skill3 = TestObjectHelpers.randomRichSkillDoc().copy(
+            categories = listOf("category3"),
             searchingKeywords = listOf("keyword1", "keyword2", "keyword3"),
-            standards = listOf("standard1", "standard2", "standard3")
+            standards = listOf("standard1", "standard2", "standard3"),
         )
-        val skill4 = TestObjectHelpers.randomRichSkillDoc().copy(categories = listOf("category4"),
+        val skill4 = TestObjectHelpers.randomRichSkillDoc().copy(
+            categories = listOf("category4"),
             searchingKeywords = listOf("keyword1", "keyword2", "keyword3", "keyword4"),
-            standards = listOf("standard1", "standard2", "standard3", "standard4")
+            standards = listOf("standard1", "standard2", "standard3", "standard4"),
         )
 
-
-        richSkillEsRepo.saveAll(listOf(skill1,skill2,skill3,skill4))
+        richSkillEsRepo.saveAll(listOf(skill1, skill2, skill3, skill4))
 
         // Act
         val filteredSearchResult1 = richSkillEsRepo.byApiSearch(
@@ -1078,45 +1106,45 @@ class RichSkillEsRepoTest @Autowired constructor(
                 filtered = ApiFilteredSearch(
                     categories = listOf("category1", "category2"),
                     keywords = listOf("keyword1", "keyword2"),
-                    standards = listOf("standard1")
-                )
-            )
+                    standards = listOf("standard1"),
+                ),
+            ),
         )
         val filteredSearchResult2 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     categories = listOf("category1", "category2", "category3"),
                     keywords = listOf("keyword1", "keyword2", "keyword3"),
-                    standards = listOf("standard1", "standard2")
-                )
-            )
+                    standards = listOf("standard1", "standard2"),
+                ),
+            ),
         )
         val filteredSearchResult3 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     categories = listOf("category1", "category2", "category3"),
                     keywords = listOf("keyword1", "keyword2", "keyword3"),
-                    standards = listOf("standard1", "standard2", "standard3")
-                )
-            )
+                    standards = listOf("standard1", "standard2", "standard3"),
+                ),
+            ),
         )
         val filteredSearchResult4 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     categories = listOf("category1", "category2", "category3"),
                     keywords = listOf("keyword1", "keyword2", "keyword3"),
-                    standards = listOf("standard1", "standard2", "standard3", "standard4")
-                )
-            )
+                    standards = listOf("standard1", "standard2", "standard3", "standard4"),
+                ),
+            ),
         )
         val filteredSearchResult5 = richSkillEsRepo.byApiSearch(
             ApiSearch(
                 filtered = ApiFilteredSearch(
                     categories = listOf("category1", "category2", "category3", "category4"),
                     keywords = listOf("keyword1"),
-                    standards = listOf("standard1")
-                )
-            )
+                    standards = listOf("standard1"),
+                ),
+            ),
         )
 
         // Assert
@@ -1137,7 +1165,7 @@ class RichSkillEsRepoTest @Autowired constructor(
         val skillByStatement1 = TestObjectHelpers.randomRichSkillDoc().copy(statement = "Evaluate the level of listening to avoid listening traps.")
         val skillByStatement2 = TestObjectHelpers.randomRichSkillDoc().copy(statement = "Evaluate the level of listening to understand the message being conveyed.")
 
-        richSkillEsRepo.saveAll(listOf(skillByStatement1,skillByStatement2))
+        richSkillEsRepo.saveAll(listOf(skillByStatement1, skillByStatement2))
 
         // Act
         val result = richSkillEsRepo.findSimilar(ApiSimilaritySearch("Evaluate the level"))
@@ -1169,19 +1197,19 @@ class RichSkillEsRepoTest @Autowired constructor(
 
         val skill1 = TestObjectHelpers.richSkillDoc(
             name = "Self-Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         ).copy(collections = listOf(collection1))
         val skill2 = TestObjectHelpers.richSkillDoc(
             name = "Self Mis-Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         )
         val skill3 = TestObjectHelpers.richSkillDoc(
             name = "Best Self Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         ).copy(collections = listOf(collection2))
         val skill4 = TestObjectHelpers.richSkillDoc(
             name = "Management of Selfies",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         )
 
         collection1 = collection1.copy(skillIds = listOf(skill1.uuid, skill2.uuid))
@@ -1190,18 +1218,18 @@ class RichSkillEsRepoTest @Autowired constructor(
         richSkillEsRepo.saveAll(randomSkills + listOf(skill1, skill2, skill3, skill4))
         collectionEsRepo.saveAll(listOf(collection1, collection2))
 
-        //Act
+        // Act
         val skillResult = richSkillEsRepo.byApiSearch(
             ApiSearch(
-                uuids = listOf(randomSkills[0].uuid, skill1.uuid, skill2.uuid)
-            ), collectionId = collection1.uuid
+                uuids = listOf(randomSkills[0].uuid, skill1.uuid, skill2.uuid),
+            ),
+            collectionId = collection1.uuid,
         ).searchHits.map { it.content }
 
         // Assert
         assertThat(skillResult.isNotEmpty())
         assertThat(skillResult.size).isEqualTo(1)
         assertThat(skillResult[0] == skill1)
-
     }
 
     @Test
@@ -1212,19 +1240,19 @@ class RichSkillEsRepoTest @Autowired constructor(
 
         val skill1 = TestObjectHelpers.richSkillDoc(
             name = "Self-Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         ).copy(collections = listOf(collection1))
         val skill2 = TestObjectHelpers.richSkillDoc(
             name = "Self Mis-Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         )
         val skill3 = TestObjectHelpers.richSkillDoc(
             name = "Best Self Management",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         ).copy(collections = listOf(collection2))
         val skill4 = TestObjectHelpers.richSkillDoc(
             name = "Management of Selfies",
-            statement = "A statement for a skill"
+            statement = "A statement for a skill",
         )
 
         collection1 = collection1.copy(skillIds = listOf(skill1.uuid, skill2.uuid))
@@ -1233,11 +1261,11 @@ class RichSkillEsRepoTest @Autowired constructor(
         richSkillEsRepo.saveAll(randomSkills + listOf(skill1, skill2, skill3, skill4))
         collectionEsRepo.saveAll(listOf(collection1, collection2))
 
-        //Act
+        // Act
         val skillResult = richSkillEsRepo.byApiSearch(
             ApiSearch(
-                uuids = listOf(randomSkills[0].uuid, skill2.uuid)
-            )
+                uuids = listOf(randomSkills[0].uuid, skill2.uuid),
+            ),
         ).searchHits.map { it.content }
 
         // Assert
@@ -1245,7 +1273,6 @@ class RichSkillEsRepoTest @Autowired constructor(
         assertThat(skillResult.size).isEqualTo(2)
         assertThat(skillResult.contains(randomSkills[0]))
         assertThat(skillResult.contains(skill2))
-
     }
 
     @Test
@@ -1259,7 +1286,7 @@ class RichSkillEsRepoTest @Autowired constructor(
     fun `Should return an array of uuids using query`() {
         val richSkill = TestObjectHelpers.randomRichSkillDoc().copy(name = "RSD to export by query", collections = listOf(), jobCodes = listOf(), publishStatus = PublishStatus.Published)
         richSkillEsRepo.save(richSkill)
-        val uuids = richSkillEsRepo.getUuidsFromApiSearch(ApiSearch(query = "export"), arrayOf(PublishStatus.Draft,PublishStatus.Published).toSet(), Pageable.unpaged(), nullJwt)
+        val uuids = richSkillEsRepo.getUuidsFromApiSearch(ApiSearch(query = "export"), arrayOf(PublishStatus.Draft, PublishStatus.Published).toSet(), Pageable.unpaged(), nullJwt)
         assertThat(uuids.size).isGreaterThan(0)
     }
 }
