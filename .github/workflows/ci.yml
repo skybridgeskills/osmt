@@ -22,8 +22,8 @@ jobs:
 
       - name: Validate version consistency
         run: |
-          chmod +x scripts/validate-versions.sh
-          scripts/validate-versions.sh
+          chmod +x bin/validate-versions.sh
+          bin/validate-versions.sh
 
   ui-build-test:
     name: UI Build & Tests

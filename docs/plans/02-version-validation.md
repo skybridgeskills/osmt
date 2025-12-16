@@ -3,23 +3,27 @@
 ## Current Version Inconsistencies
 
 ### Java
+
 - `.sdkmanrc`: `17.0.10-tem`
 - `pom.xml`: `17` (major version only)
 - `.github/workflows/*.yml`: `17`
 - `api/Dockerfile`: `java-17-openjdk` (package name, no specific version)
 
 ### Node.js
+
 - `.nvmrc`: `18.18.2`
 - `ui/Dockerfile`: `node:18.10-alpine3.15`
 - `ui/pom.xml`: `v18.10.0` (frontend-maven-plugin)
 - `README.md`: `v18.18.2` (documented requirement)
 
 ### Maven
+
 - `.sdkmanrc`: `3.9.6`
 - `api/Dockerfile`: `3.9.11` (M2_VERSION)
 - `.github/workflows/*.yml`: No version specified (uses default)
 
 ### Kotlin
+
 - `.sdkmanrc`: `1.7.21`
 - `api/pom.xml`: `1.7.21` ✓ (consistent)
 
@@ -29,7 +33,8 @@
 
 Create a validation script that checks version consistency:
 
-**`.github/scripts/validate-versions.sh`**
+**`.github/bin/validate-versions.sh`**
+
 ```bash
 #!/bin/bash
 set -e
@@ -74,6 +79,7 @@ echo "✓ All versions are consistent"
 Add a validation step to existing workflows:
 
 **`.github/workflows/version-check.yml`**
+
 ```yaml
 name: Version Consistency Check
 
@@ -95,7 +101,7 @@ jobs:
       
       - name: Validate version consistency
         run: |
-          .github/scripts/validate-versions.sh
+          .github/bin/validate-versions.sh
 ```
 
 ### 3. Pre-commit Hook
@@ -103,13 +109,14 @@ jobs:
 Use pre-commit framework to validate before commits:
 
 **.pre-commit-config.yaml**
+
 ```yaml
 repos:
   - repo: local
     hooks:
       - id: validate-versions
         name: Validate version consistency
-        entry: .github/scripts/validate-versions.sh
+        entry: .github/bin/validate-versions.sh
         language: system
         pass_filenames: false
         always_run: true
@@ -120,6 +127,7 @@ repos:
 Create a single source of truth:
 
 **`versions.yml`** (or in `pom.xml` properties)
+
 ```yaml
 java:
   major: 17
@@ -143,6 +151,7 @@ Then use templating or scripts to inject into files.
 Configure Renovate to update versions across files:
 
 **`renovate.json`**
+
 ```json
 {
   "extends": ["config:base"],
@@ -166,6 +175,7 @@ Configure Renovate to update versions across files:
 Create a reusable action:
 
 **`.github/actions/version-check/action.yml`**
+
 ```yaml
 name: 'Version Consistency Check'
 description: 'Validates version consistency across configuration files'
@@ -196,12 +206,13 @@ runs:
 ### 7. Using Makefile or Task Runner
 
 **`Makefile`**
+
 ```makefile
 .PHONY: check-versions
 
 check-versions:
 	@echo "Checking version consistency..."
-	@.github/scripts/validate-versions.sh
+	@.github/bin/validate-versions.sh
 
 validate-pr: check-versions
 	@echo "Running PR validation..."
@@ -212,6 +223,7 @@ validate-pr: check-versions
 For structured validation:
 
 **`version-schema.json`**
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -238,7 +250,7 @@ For structured validation:
 
 For this project, I recommend:
 
-1. **Immediate**: Create `.github/scripts/validate-versions.sh` script
+1. **Immediate**: Create `.github/bin/validate-versions.sh` script
 2. **Short-term**: Add version check to GitHub Actions workflows
 3. **Long-term**: Consider centralizing versions in `pom.xml` properties and using Maven filtering/templating for Dockerfiles
 
@@ -252,5 +264,5 @@ For this project, I recommend:
 
 ## Example: Complete Validation Script
 
-See `.github/scripts/validate-versions.sh` for a complete implementation.
+See `.github/bin/validate-versions.sh` for a complete implementation.
 
