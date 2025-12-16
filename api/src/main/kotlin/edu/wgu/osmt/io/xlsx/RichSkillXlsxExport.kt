@@ -10,9 +10,7 @@ class RichSkillXlsxExport(
 ) : XlsxResource<RichSkillAndCollections>("RichSkillXlsxExport") {
     private val listDelimiter = "; "
 
-    override fun columnTranslations(
-        data: List<RichSkillAndCollections>,
-    ): Array<XlsxColumn<RichSkillAndCollections>> {
+    override fun columnTranslations(data: List<RichSkillAndCollections>): Array<XlsxColumn<RichSkillAndCollections>> {
         val columns =
             arrayOf(
                 XlsxColumn<RichSkillAndCollections>(

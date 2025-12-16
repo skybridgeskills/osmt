@@ -13,8 +13,7 @@ data class ApiNamedReference(
     val name: String? = null,
 ) {
     companion object Factory {
-        fun fromKeyword(keyword: Keyword): ApiNamedReference =
-            ApiNamedReference(id = keyword.uri, name = keyword.value)
+        fun fromKeyword(keyword: Keyword): ApiNamedReference = ApiNamedReference(id = keyword.uri, name = keyword.value)
     }
 }
 
@@ -31,8 +30,7 @@ data class ApiAlignment(
     val isPartOf: ApiNamedReference? = null,
 ) {
     companion object Factory {
-        fun fromKeyword(keyword: Keyword): ApiAlignment =
-            fromStrings(keyword.uri, keyword.value, keyword.framework)
+        fun fromKeyword(keyword: Keyword): ApiAlignment = fromStrings(keyword.uri, keyword.value, keyword.framework)
 
         fun fromStrings(
             id: String?,

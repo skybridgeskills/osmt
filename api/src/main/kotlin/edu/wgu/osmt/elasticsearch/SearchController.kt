@@ -61,8 +61,7 @@ class SearchController
         @ResponseBody
         fun searchCollections(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -132,8 +131,7 @@ class SearchController
         @ResponseBody
         fun searchCollectionsV2(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -165,8 +163,7 @@ class SearchController
         @ResponseBody
         fun searchSkills(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -253,8 +250,7 @@ class SearchController
         @ResponseBody
         fun searchSkillsV2(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -297,8 +293,7 @@ class SearchController
         @ResponseBody
         fun collectionSkills(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -321,8 +316,7 @@ class SearchController
         @ResponseBody
         fun collectionSkillsV2(
             uriComponentsBuilder: UriComponentsBuilder,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,

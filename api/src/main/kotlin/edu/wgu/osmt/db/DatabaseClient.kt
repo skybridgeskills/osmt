@@ -25,6 +25,5 @@ class DatabaseClient
 
         @Bean
         @Primary
-        fun transactionManager(dataSource: DataSource): SpringTransactionManager =
-            SpringTransactionManager(dataSource)
+        fun transactionManager(dataSource: DataSource): SpringTransactionManager = SpringTransactionManager(dataSource)
     }

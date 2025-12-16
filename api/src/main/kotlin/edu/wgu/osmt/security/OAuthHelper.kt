@@ -45,6 +45,5 @@ class OAuthHelper {
         statuses: List<PublishStatus>,
     ): Boolean = (status == null) || statuses.any { it == status }
 
-    fun isArchiveRelated(status: PublishStatus?): Boolean =
-        hasPublishStatus(status, listOf(Archived, Unarchived))
+    fun isArchiveRelated(status: PublishStatus?): Boolean = hasPublishStatus(status, listOf(Archived, Unarchived))
 }

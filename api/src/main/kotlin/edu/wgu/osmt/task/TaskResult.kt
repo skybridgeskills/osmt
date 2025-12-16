@@ -18,7 +18,6 @@ data class TaskResult(
         get() = apiResultPath.replace("{uuid}", uuid)
 
     companion object {
-        fun fromTask(task: Task) =
-            TaskResult(task.uuid, task.contentType, task.status, task.apiResultPath)
+        fun fromTask(task: Task) = TaskResult(task.uuid, task.contentType, task.status, task.apiResultPath)
     }
 }

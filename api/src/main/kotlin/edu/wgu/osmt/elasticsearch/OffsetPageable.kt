@@ -30,8 +30,7 @@ class OffsetPageable(
 
     override fun next(): Pageable = OffsetPageable(pageSize, offset + pageSize, getSort())
 
-    fun previous(): Pageable =
-        if (hasPrevious()) OffsetPageable(pageSize, offset - pageSize, getSort()) else this
+    fun previous(): Pageable = if (hasPrevious()) OffsetPageable(pageSize, offset - pageSize, getSort()) else this
 
     override fun getPageSize(): Int = limit
 

@@ -82,9 +82,7 @@ open class RichSkillDescriptor(
             )
         }
 
-        fun getKeywordsFromSkills(
-            skills: Iterable<RichSkillDescriptor>,
-        ): Map<KeywordTypeEnum, List<KeywordCount>> {
+        fun getKeywordsFromSkills(skills: Iterable<RichSkillDescriptor>): Map<KeywordTypeEnum, List<KeywordCount>> {
             val alignments =
                 skills
                     .flatMap { it.alignments }
@@ -329,8 +327,7 @@ object RichSkillDescriptorComparisons {
     fun compareCategories(receiver: RichSkillDescriptor): String? =
         keywordsCompare(receiver, RichSkillDescriptor::categories)
 
-    fun compareAuthors(receiver: RichSkillDescriptor): String? =
-        keywordsCompare(receiver, RichSkillDescriptor::authors)
+    fun compareAuthors(receiver: RichSkillDescriptor): String? = keywordsCompare(receiver, RichSkillDescriptor::authors)
 
     fun comparePublishStatus(r: RichSkillDescriptor): String = r.publishStatus().name
 

@@ -92,8 +92,7 @@ class KeywordController
         fun getCategorySkills(
             uriComponentsBuilder: UriComponentsBuilder,
             @PathVariable identifier: String,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,
@@ -120,8 +119,7 @@ class KeywordController
         fun searchCategorySkills(
             uriComponentsBuilder: UriComponentsBuilder,
             @PathVariable identifier: String,
-            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size:
-                Int,
+            @RequestParam(required = false, defaultValue = PaginationDefaults.size.toString()) size: Int,
             @RequestParam(required = false, defaultValue = "0") from: Int,
             @RequestParam(
                 required = false,

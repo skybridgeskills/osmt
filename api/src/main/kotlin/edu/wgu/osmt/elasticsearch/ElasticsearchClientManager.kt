@@ -40,8 +40,7 @@ class ElasticsearchClientManager {
     }
 
     @Bean
-    fun elasticsearchTemplate(): ElasticsearchTemplate =
-        ElasticsearchTemplate(elasticSearchClient())
+    fun elasticsearchTemplate(): ElasticsearchTemplate = ElasticsearchTemplate(elasticSearchClient())
 
     @Bean
     @Override
@@ -57,8 +56,7 @@ class ElasticsearchClientManager {
 
     @WritingConverter
     internal class LocalDateTimeToString : Converter<LocalDateTime, String> {
-        override fun convert(source: LocalDateTime): String =
-            source.format(DateTimeFormatter.ISO_DATE_TIME)
+        override fun convert(source: LocalDateTime): String = source.format(DateTimeFormatter.ISO_DATE_TIME)
     }
 
     @ReadingConverter

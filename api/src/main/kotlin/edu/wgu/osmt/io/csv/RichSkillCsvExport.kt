@@ -10,9 +10,7 @@ class RichSkillCsvExport(
 ) : CsvResource<RichSkillAndCollections>("RichSkillCsvExport") {
     val listDelimiter = "; "
 
-    override fun columnTranslations(
-        data: List<RichSkillAndCollections>,
-    ): Array<CsvColumn<RichSkillAndCollections>> {
+    override fun columnTranslations(data: List<RichSkillAndCollections>): Array<CsvColumn<RichSkillAndCollections>> {
         val columns =
             arrayOf(
                 CsvColumn<RichSkillAndCollections>(
