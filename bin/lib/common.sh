@@ -105,9 +105,9 @@ start_osmt_docker_stack() {
   local -i rc
   echo
   echo_info "Starting OSMT ${stack_name} Docker stack. You can stop it with $(basename "${0}") -e"
-  cd "${PROJECT_DIR}/docker" || return 1
+  cd "${PROJECT_DIR}" || return 1
   # Docker stack should receive the service port variables sourced from the shell environment
-  ${DOCKER_COMPOSE_CMD} --file dev-stack.yml --project-name "${stack_name}" up --detach
+  ${DOCKER_COMPOSE_CMD} --file docker-compose.yml --profile all --project-name "${stack_name}" up db-mysql db-elasticsearch db-redis --detach
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Starting OSMT ${stack_name} Docker stack failed. Exiting..."
@@ -122,8 +122,8 @@ stop_osmt_docker_stack() {
   local -i rc
   echo
   echo_info "Stopping OSMT ${stack_name} Docker stack"
-  cd "${PROJECT_DIR}/docker" || return 1
-  ${DOCKER_COMPOSE_CMD} --file dev-stack.yml --project-name "${stack_name}" down
+  cd "${PROJECT_DIR}" || return 1
+  ${DOCKER_COMPOSE_CMD} --file docker-compose.yml --project-name "${stack_name}" down db-mysql db-elasticsearch db-redis
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo_err "Stopping OSMT ${stack_name} Docker stack failed. Exiting..."
