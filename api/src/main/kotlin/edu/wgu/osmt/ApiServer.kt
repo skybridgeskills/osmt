@@ -32,16 +32,17 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc
 class ApiServer {
     val logger: Logger = LoggerFactory.getLogger(ApiServer::class.java)
 
-    private val tableList: List<Table> = listOf(
-        AuditLogTable,
-        RichSkillDescriptorTable,
-        JobCodeTable,
-        RichSkillJobCodes,
-        KeywordTable,
-        RichSkillKeywords,
-        CollectionTable,
-        CollectionSkills
-    )
+    private val tableList: List<Table> =
+        listOf(
+            AuditLogTable,
+            RichSkillDescriptorTable,
+            JobCodeTable,
+            RichSkillJobCodes,
+            KeywordTable,
+            RichSkillKeywords,
+            CollectionTable,
+            CollectionSkills,
+        )
 
     @Autowired
     private lateinit var appConfig: AppConfig
@@ -50,12 +51,11 @@ class ApiServer {
     private lateinit var auditLogUtils: AuditLogUtils
 
     @Bean
-    fun commandLineRunner(): CommandLineRunner {
-        return CommandLineRunner {
+    fun commandLineRunner(): CommandLineRunner =
+        CommandLineRunner {
             printMissingTableAndColumnStatements()
             auditLogUtils.baseLineIfEmpty()
         }
-    }
 
     fun printMissingTableAndColumnStatements() {
         runBlocking {
@@ -64,7 +64,10 @@ class ApiServer {
                 tableList.forEach { table ->
                     transaction {
                         val statements = SchemaUtils.createStatements(table)
-                        val missingColumnStatements = SchemaUtils.addMissingColumnsStatementsPublic(table)
+                        val missingColumnStatements =
+                            SchemaUtils.addMissingColumnsStatementsPublic(
+                                table,
+                            )
                         if (statements.isNotEmpty()) {
                             missingStatements.addAll(statements)
                         }
@@ -77,7 +80,9 @@ class ApiServer {
                     logger.warn("Database out of sync with application!")
                     missingStatements.forEach { println("$it;") }
                 } else {
-                    logger.info("Tables ${tableList.map { it.tableName }} are in sync with application!")
+                    logger.info(
+                        "Tables ${tableList.map { it.tableName }} are in sync with application!",
+                    )
                 }
             }
         }

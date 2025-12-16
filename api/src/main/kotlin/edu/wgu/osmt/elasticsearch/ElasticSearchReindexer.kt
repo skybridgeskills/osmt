@@ -157,7 +157,6 @@ class ElasticSearchReindexer {
                     trace.finish()
                     exit = true
                 }
-
             }
         }
     }

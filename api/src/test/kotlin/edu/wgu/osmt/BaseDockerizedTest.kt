@@ -20,13 +20,16 @@ interface BaseDockerizedTest {
             println("Redis port")
             registry.add(
                 "db.uri",
-                { "root:password@${Containers.mysqlContainer.host}:${mySqlPort}" })
+                { "root:password@${Containers.mysqlContainer.host}:$mySqlPort" },
+            )
             registry.add(
                 "redis.uri",
-                { "${Containers.redisContainer.host}:${redisPort}" })
+                { "${Containers.redisContainer.host}:$redisPort" },
+            )
             registry.add(
                 "es.uri",
-                { "${Containers.elasticContainer.host}:${elasticPort}" })
+                { "${Containers.elasticContainer.host}:$elasticPort" },
+            )
         }
     }
 }
@@ -42,30 +45,32 @@ object Containers {
             println("Elasticsearch port: ${getMappedPort(9200)}")
         }
 
-    val redisContainer = GenericContainer<Nothing>("redis:6.0.6").apply {
-        withExposedPorts(6379)
-        start()
-        println("Redis port: ${getMappedPort(6379)}")
-    }
+    val redisContainer =
+        GenericContainer<Nothing>("redis:6.0.6").apply {
+            withExposedPorts(6379)
+            start()
+            println("Redis port: ${getMappedPort(6379)}")
+        }
 
-    val mysqlContainer = GenericContainer<Nothing>("mysql:8").apply {
-        withExposedPorts(3306)
+    val mysqlContainer =
+        GenericContainer<Nothing>("mysql:8").apply {
+            withExposedPorts(3306)
 
-        // Find init sql handling common run directories
-        val apiRelPath = "docker/mysql-init/1init.sql"
-        val initSqlFile =
-            listOf("./", "../api/", "api/")
-                .map { File(it + apiRelPath) }
-                .find { it.exists() }
-                ?: throw IllegalStateException(
-                    "Init SQL file not found at: $apiRelPath"
-                )
+            // Find init sql handling common run directories
+            val apiRelPath = "docker/mysql-init/1init.sql"
+            val initSqlFile =
+                listOf("./", "../api/", "api/")
+                    .map { File(it + apiRelPath) }
+                    .find { it.exists() }
+                    ?: throw IllegalStateException(
+                        "Init SQL file not found at: $apiRelPath",
+                    )
 
-        withCopyFileToContainer(
-            MountableFile.forHostPath(initSqlFile.toPath()),
-            "/docker-entrypoint-initdb.d/1init.sql"
-        )
-        withEnv("MYSQL_ROOT_PASSWORD", "password")
-        start()
-    }
+            withCopyFileToContainer(
+                MountableFile.forHostPath(initSqlFile.toPath()),
+                "/docker-entrypoint-initdb.d/1init.sql",
+            )
+            withEnv("MYSQL_ROOT_PASSWORD", "password")
+            start()
+        }
 }

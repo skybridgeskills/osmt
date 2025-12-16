@@ -8,20 +8,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonIgnoreProperties("apiResultPath")
 data class TaskResult(
     val uuid: String,
-
     @get:JsonProperty("content-type")
     val contentType: String,
-
     val status: TaskStatus,
-
-    val apiResultPath: String
+    val apiResultPath: String,
 ) {
-
     @get:JsonProperty("id")
     val resultUri: String
         get() = apiResultPath.replace("{uuid}", uuid)
 
     companion object {
-        fun fromTask(task: Task) = TaskResult(task.uuid, task.contentType, task.status, task.apiResultPath)
+        fun fromTask(task: Task) =
+            TaskResult(task.uuid, task.contentType, task.status, task.apiResultPath)
     }
 }

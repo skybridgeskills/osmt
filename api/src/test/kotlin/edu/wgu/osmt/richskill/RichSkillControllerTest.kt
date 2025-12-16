@@ -46,265 +46,314 @@ import java.time.Instant
 import java.util.*
 
 @Transactional
-internal class RichSkillControllerTest @Autowired constructor(
-    override val richSkillEsRepo: RichSkillEsRepo,
-    val taskMessageService: TaskMessageService,
-    val oAuthHelper: OAuthHelper,
-    val appConfig: AppConfig,
-    override val collectionEsRepo: CollectionEsRepo,
-    override val keywordEsRepo: KeywordEsRepo,
-    override val jobCodeEsRepo: JobCodeEsRepo,
-) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
-
-    var authentication: Authentication = Mockito.mock(Authentication::class.java)
-
+internal class RichSkillControllerTest
     @Autowired
-    lateinit var richSkillController: RichSkillController
+    constructor(
+        override val richSkillEsRepo: RichSkillEsRepo,
+        val taskMessageService: TaskMessageService,
+        val oAuthHelper: OAuthHelper,
+        val appConfig: AppConfig,
+        override val collectionEsRepo: CollectionEsRepo,
+        override val keywordEsRepo: KeywordEsRepo,
+        override val jobCodeEsRepo: JobCodeEsRepo,
+    ) : SpringTest(),
+        BaseDockerizedTest,
+        HasDatabaseReset,
+        HasElasticsearchReset {
+        var authentication: Authentication = Mockito.mock(Authentication::class.java)
 
-    @Autowired
-    lateinit var batchImportRichSkill: BatchImportRichSkill
+        @Autowired
+        lateinit var richSkillController: RichSkillController
 
-    private lateinit var mockData: MockData
-    val nullJwt: Jwt? = null
+        @Autowired
+        lateinit var batchImportRichSkill: BatchImportRichSkill
 
-    @BeforeAll
-    fun setup() {
-        mockData = MockData()
-        ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin")
-    }
+        private lateinit var mockData: MockData
+        val nullJwt: Jwt? = null
 
-    @Test
-    fun testAllPaginated() {
-        // Arrange
-        val size = 50
-        val listOfSkills = mockData.getRichSkillDocs()
-        richSkillEsRepo.saveAll(listOfSkills)
-
-        // Act
-        val result = richSkillController.allPaginated(
-            UriComponentsBuilder.newInstance(),
-            size,
-            0,
-            arrayOf("draft", "published"),
-            "",
-            nullJwt,
-        )
-
-        // Assert
-        assertThat(result.body?.size).isEqualTo(size)
-    }
-
-    @Test
-    fun testAllPaginatedV2() {
-        // Arrange
-        val size = 50
-        val listOfSkills = mockData.getRichSkillDocs()
-        richSkillEsRepo.saveAll(listOfSkills)
-
-        // Act
-        val result = richSkillController.allPaginatedV2(
-            UriComponentsBuilder.newInstance(),
-            size,
-            0,
-            arrayOf("draft", "published"),
-            "",
-            nullJwt,
-        )
-
-        // Assert
-        assertThat(result.body?.size).isEqualTo(size)
-    }
-
-    @Test
-    fun testAllPaginatedWithNoFilters() {
-        // Arrange
-        val size = 50
-        val listOfSkills = mockData.getRichSkillDocs()
-        richSkillEsRepo.saveAll(listOfSkills)
-
-        // Act
-        val result = richSkillController.allPaginatedWithFilters(
-            UriComponentsBuilder.newInstance(),
-            size,
-            0,
-            arrayOf("draft", "published"),
-            ApiSearch(),
-            "",
-            nullJwt,
-        )
-
-        // Assert
-        assertThat(result.body?.size).isEqualTo(size)
-    }
-
-    @Test
-    fun testAllPaginatedWithFilters() {
-        // Arrange
-        val size = 50
-        val listOfSkills = mockData.getRichSkillDocs()
-        richSkillEsRepo.saveAll(listOfSkills)
-        val filter: ApiFilteredSearch = ApiFilteredSearch(keywords = listOf(".NET Framework"))
-
-        // Act
-        val result = richSkillController.allPaginatedWithFilters(
-            UriComponentsBuilder.newInstance(),
-            size,
-            0,
-            arrayOf("draft", "published"),
-            ApiSearch(filtered = filter),
-            "",
-            nullJwt,
-        )
-
-        // Assert
-        assertThat(result.body?.size).isLessThan(size)
-        assertThat(result.body?.first()!!.searchingKeywords[0]).isEqualTo(".NET Framework")
-    }
-
-    @Test
-    fun testByUUID() {
-        // Arrange
-        val numOfSkills = 3
-        val richSkillRows = mockData.getRichSkillRows()
-        val listOfRichSkillRows = mutableListOf<RichSkillRow>()
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
-
-        for (i in 1..numOfSkills) {
-            listOfRichSkillRows.add(richSkillRows[i])
+        @BeforeAll
+        fun setup() {
+            mockData = MockData()
+            ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin")
         }
 
-        batchImportRichSkill.handleRows(listOfRichSkillRows)
+        @Test
+        fun testAllPaginated() {
+            // Arrange
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs()
+            richSkillEsRepo.saveAll(listOfSkills)
 
-        // Act
-        val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUID(skillResult.searchHits[0].id.toString(), jwt)
+            // Act
+            val result =
+                richSkillController.allPaginated(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("draft", "published"),
+                    "",
+                    nullJwt,
+                )
 
-        // Assert
-        assertThat(result?.uuid).isEqualTo(skillResult.searchHits[0].id.toString())
-    }
-
-    @Test
-    fun testByUUIDHtmlView() {
-        // Arrange
-        val numOfSkills = 3
-        val richSkillRows = mockData.getRichSkillRows()
-        val listOfRichSkillRows = mutableListOf<RichSkillRow>()
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
-
-        for (i in 1..numOfSkills) {
-            listOfRichSkillRows.add(richSkillRows[i])
+            // Assert
+            assertThat(result.body?.size).isEqualTo(size)
         }
 
-        batchImportRichSkill.handleRows(listOfRichSkillRows)
+        @Test
+        fun testAllPaginatedV2() {
+            // Arrange
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs()
+            richSkillEsRepo.saveAll(listOfSkills)
 
-        // Act
-        val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUIDHtmlView(skillResult.searchHits[0].id.toString(), jwt)
+            // Act
+            val result =
+                richSkillController.allPaginatedV2(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("draft", "published"),
+                    "",
+                    nullJwt,
+                )
 
-        // Assert
-        assertThat(result).isEqualTo("forward:/v3/skills/" + skillResult.searchHits[0].id.toString())
-    }
-
-    @Test
-    fun testByUUIDHtmlViewV2() {
-        // Arrange
-        val numOfSkills = 3
-        val richSkillRows = mockData.getRichSkillRows()
-        val listOfRichSkillRows = mutableListOf<RichSkillRow>()
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
-
-        for (i in 1..numOfSkills) {
-            listOfRichSkillRows.add(richSkillRows[i])
+            // Assert
+            assertThat(result.body?.size).isEqualTo(size)
         }
 
-        batchImportRichSkill.handleRows(listOfRichSkillRows)
+        @Test
+        fun testAllPaginatedWithNoFilters() {
+            // Arrange
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs()
+            richSkillEsRepo.saveAll(listOfSkills)
 
-        // Act
-        val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUIDHtmlViewV2(skillResult.searchHits[0].id.toString(), jwt)
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("draft", "published"),
+                    ApiSearch(),
+                    "",
+                    nullJwt,
+                )
 
-        // Assert
-        assertThat(result).isEqualTo("forward:/v2/skills/" + skillResult.searchHits[0].id.toString())
-    }
-
-    @Test
-    fun testByUUIDCsvView() {
-        // Arrange
-        val numOfSkills = 3
-        val richSkillRows = mockData.getRichSkillRows()
-        val listOfRichSkillRows = mutableListOf<RichSkillRow>()
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("foo", "foo").build()
-
-        for (i in 1..numOfSkills) {
-            listOfRichSkillRows.add(richSkillRows[i])
+            // Assert
+            assertThat(result.body?.size).isEqualTo(size)
         }
 
-        batchImportRichSkill.handleRows(listOfRichSkillRows)
+        @Test
+        fun testAllPaginatedWithFilters() {
+            // Arrange
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs()
+            richSkillEsRepo.saveAll(listOfSkills)
+            val filter: ApiFilteredSearch = ApiFilteredSearch(keywords = listOf(".NET Framework"))
 
-        // Act
-        val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.byUUIDCsvView(StringUtils.EMPTY, skillResult.searchHits[0].id.toString(), jwt)
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("draft", "published"),
+                    ApiSearch(filtered = filter),
+                    "",
+                    nullJwt,
+                )
 
-        // Assert
-        assertThat(result.body.toString()).contains(skillResult.searchHits[0].id.toString())
-    }
-
-    @Test
-    fun testSkillAuditLog() {
-        // Arrange
-        val numOfSkills = 3
-        val richSkillRows = mockData.getRichSkillRows()
-        val listOfRichSkillRows = mutableListOf<RichSkillRow>()
-
-        for (i in 1..numOfSkills) {
-            listOfRichSkillRows.add(richSkillRows[i])
+            // Assert
+            assertThat(result.body?.size).isLessThan(size)
+            assertThat(result.body?.first()!!.searchingKeywords[0]).isEqualTo(".NET Framework")
         }
 
-        batchImportRichSkill.handleRows(listOfRichSkillRows)
+        @Test
+        fun testByUUID() {
+            // Arrange
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("foo", "foo")
+                    .build()
 
-        // Act
-        val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
-        val result = richSkillController.skillAuditLog(skillResult.searchHits[0].id.toString())
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
 
-        // Assert
-        assertThat(result.body?.get(0)?.operationType).isEqualTo("Insert")
-        assertThat(result.body?.get(0)?.user).isEqualTo("Batch Import")
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            // Act
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val result = richSkillController.byUUID(skillResult.searchHits[0].id.toString(), jwt)
+
+            // Assert
+            assertThat(result?.uuid).isEqualTo(skillResult.searchHits[0].id.toString())
+        }
+
+        @Test
+        fun testByUUIDHtmlView() {
+            // Arrange
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("foo", "foo")
+                    .build()
+
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
+
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            // Act
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val result =
+                richSkillController.byUUIDHtmlView(
+                    skillResult.searchHits[0].id.toString(),
+                    jwt,
+                )
+
+            // Assert
+            assertThat(
+                result,
+            ).isEqualTo("forward:/v3/skills/" + skillResult.searchHits[0].id.toString())
+        }
+
+        @Test
+        fun testByUUIDHtmlViewV2() {
+            // Arrange
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("foo", "foo")
+                    .build()
+
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
+
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            // Act
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val result =
+                richSkillController.byUUIDHtmlViewV2(
+                    skillResult.searchHits[0].id.toString(),
+                    jwt,
+                )
+
+            // Assert
+            assertThat(
+                result,
+            ).isEqualTo("forward:/v2/skills/" + skillResult.searchHits[0].id.toString())
+        }
+
+        @Test
+        fun testByUUIDCsvView() {
+            // Arrange
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("foo", "foo")
+                    .build()
+
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
+
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            // Act
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val result =
+                richSkillController.byUUIDCsvView(
+                    StringUtils.EMPTY,
+                    skillResult.searchHits[0].id.toString(),
+                    jwt,
+                )
+
+            // Assert
+            assertThat(result.body.toString()).contains(skillResult.searchHits[0].id.toString())
+        }
+
+        @Test
+        fun testSkillAuditLog() {
+            // Arrange
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
+
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            // Act
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val result = richSkillController.skillAuditLog(skillResult.searchHits[0].id.toString())
+
+            // Assert
+            assertThat(result.body?.get(0)?.operationType).isEqualTo("Insert")
+            assertThat(result.body?.get(0)?.user).isEqualTo("Batch Import")
+        }
+
+        @Disabled
+        @Test
+        fun testExportLibrary() {
+            val securityContext: SecurityContext = Mockito.mock(SecurityContext::class.java)
+            SecurityContextHolder.setContext(securityContext)
+
+            val attributes: MutableMap<String, Any> = HashMap()
+            attributes["email"] = "j.chavez@wgu.edu"
+
+            val authority: GrantedAuthority = OAuth2UserAuthority("ROLE_Osmt_Admin", attributes)
+            val authorities: MutableSet<GrantedAuthority> = HashSet()
+            authorities.add(authority)
+            Mockito.`when`(securityContext.authentication).thenReturn(authentication)
+            Mockito
+                .`when`(
+                    SecurityContextHolder.getContext().authentication.authorities,
+                ).thenReturn(authorities)
+
+            val responseHeaders = HttpHeaders()
+            responseHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            val headers: MutableMap<String, Any> = HashMap()
+            headers["key"] = "value"
+            val notNullJwt: Jwt? = Jwt("tokenValue", Instant.MIN, Instant.MAX, headers, headers)
+            val csvTaskResult =
+                TaskResult(
+                    UUID.randomUUID().toString(),
+                    MediaType.APPLICATION_JSON_VALUE,
+                    TaskStatus.Processing,
+                    "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.EXPORT_LIBRARY_CSV}",
+                )
+
+            val service = mockk<TaskMessageService>()
+            every { service.enqueueJob(any(), any()) } returns Unit
+            mockkStatic(CsvTask::class)
+            mockkStatic(TaskResult::class)
+            every { Task.processingResponse(any()) } returns HttpEntity(csvTaskResult)
+
+            val result = richSkillController.exportLibraryCsv(user = notNullJwt)
+            assertThat(result.body?.uuid).isNotBlank()
+        }
     }
-
-    @Disabled
-    @Test
-    fun testExportLibrary() {
-        val securityContext: SecurityContext = Mockito.mock(SecurityContext::class.java)
-        SecurityContextHolder.setContext(securityContext)
-
-        val attributes: MutableMap<String, Any> = HashMap()
-        attributes["email"] = "j.chavez@wgu.edu"
-
-        val authority: GrantedAuthority = OAuth2UserAuthority("ROLE_Osmt_Admin", attributes)
-        val authorities: MutableSet<GrantedAuthority> = HashSet()
-        authorities.add(authority)
-        Mockito.`when`(securityContext.authentication).thenReturn(authentication)
-        Mockito.`when`(SecurityContextHolder.getContext().authentication.authorities).thenReturn(authorities)
-
-        val responseHeaders = HttpHeaders()
-        responseHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-        val headers: MutableMap<String, Any> = HashMap()
-        headers["key"] = "value"
-        val notNullJwt: Jwt? = Jwt("tokenValue", Instant.MIN, Instant.MAX, headers, headers)
-        val csvTaskResult = TaskResult(
-            UUID.randomUUID().toString(),
-            MediaType.APPLICATION_JSON_VALUE,
-            TaskStatus.Processing,
-            "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.EXPORT_LIBRARY_CSV}",
-        )
-
-        val service = mockk<TaskMessageService>()
-        every { service.enqueueJob(any(), any()) } returns Unit
-        mockkStatic(CsvTask::class)
-        mockkStatic(TaskResult::class)
-        every { Task.processingResponse(any()) } returns HttpEntity(csvTaskResult)
-
-        val result = richSkillController.exportLibraryCsv(user = notNullJwt)
-        assertThat(result.body?.uuid).isNotBlank()
-    }
-}

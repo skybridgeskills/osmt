@@ -1,7 +1,9 @@
 package edu.wgu.osmt.security
 
 import edu.wgu.osmt.RoutePaths
-import org.springframework.http.HttpMethod.*
+import org.springframework.http.HttpMethod.DELETE
+import org.springframework.http.HttpMethod.GET
+import org.springframework.http.HttpMethod.POST
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 
 /**
@@ -14,20 +16,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
  * security profiles.
  */
 object SecurityConfigHelper {
-
     /**
      * Builds API path for all versions (v2, v3, unversioned).
      *
      * @param endpoint The endpoint path (e.g., RoutePaths.SKILL_AUDIT_LOG)
      * @return Array of three paths: [v3 path, v2 path, unversioned path]
      */
-    fun buildAllVersions(endpoint: String): Array<String> {
-        return arrayOf(
-                RoutePaths.API + RoutePaths.API_V3 + endpoint,
-                RoutePaths.API + RoutePaths.API_V2 + endpoint,
-                RoutePaths.API + RoutePaths.UNVERSIONED + endpoint,
+    fun buildAllVersions(endpoint: String): Array<String> =
+        arrayOf(
+            RoutePaths.API + RoutePaths.API_V3 + endpoint,
+            RoutePaths.API + RoutePaths.API_V2 + endpoint,
+            RoutePaths.API + RoutePaths.UNVERSIONED + endpoint,
         )
-    }
 
     /**
      * Configures public endpoints that require no authentication.
@@ -43,32 +43,30 @@ object SecurityConfigHelper {
      * @param http HttpSecurity builder to configure
      * @return HttpSecurity builder for method chaining
      */
-    fun configurePublicEndpoints(http: HttpSecurity): HttpSecurity {
-        return http.authorizeHttpRequests { auth ->
+    fun configurePublicEndpoints(http: HttpSecurity): HttpSecurity =
+        http.authorizeHttpRequests { auth ->
             auth
-                    // Public search endpoints
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_SKILLS))
-                    .permitAll()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_COLLECTIONS))
-                    .permitAll()
-
-                    // Public canonical URL endpoints
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_DETAIL))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_DETAIL))
-                    .permitAll()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_CSV))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_XLSX))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_TEXT))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_MEDIA))
-                    .permitAll()
+                // Public search endpoints
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_SKILLS))
+                .permitAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_COLLECTIONS))
+                .permitAll()
+                // Public canonical URL endpoints
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_DETAIL))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_DETAIL))
+                .permitAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_CSV))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_XLSX))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_TEXT))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_MEDIA))
+                .permitAll()
         }
-    }
 
     /**
      * Configures endpoints that require authentication (but no specific roles).
@@ -81,22 +79,22 @@ object SecurityConfigHelper {
      * @param http HttpSecurity builder to configure
      * @return HttpSecurity builder for method chaining
      */
-    fun configureAuthenticatedEndpoints(http: HttpSecurity): HttpSecurity {
-        return http.authorizeHttpRequests { auth ->
-            auth.requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_AUDIT_LOG))
-                    .authenticated()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_AUDIT_LOG))
-                    .authenticated()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_SKILLS))
-                    .authenticated()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_BATCH))
-                    .authenticated()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_JOBCODES_PATH))
-                    .authenticated()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_KEYWORDS_PATH))
-                    .authenticated()
+    fun configureAuthenticatedEndpoints(http: HttpSecurity): HttpSecurity =
+        http.authorizeHttpRequests { auth ->
+            auth
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_AUDIT_LOG))
+                .authenticated()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_AUDIT_LOG))
+                .authenticated()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_SKILLS))
+                .authenticated()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_BATCH))
+                .authenticated()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_JOBCODES_PATH))
+                .authenticated()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_KEYWORDS_PATH))
+                .authenticated()
         }
-    }
 
     /**
      * Configures list endpoints with role-based or public access.
@@ -111,27 +109,28 @@ object SecurityConfigHelper {
      * @return HttpSecurity builder for method chaining
      */
     fun configureListEndpoints(
-            http: HttpSecurity,
-            allowPublic: Boolean,
-            admin: String,
-            curator: String,
-            view: String,
-            read: String
-    ): HttpSecurity {
-        return http.authorizeHttpRequests { auth ->
+        http: HttpSecurity,
+        allowPublic: Boolean,
+        admin: String,
+        curator: String,
+        view: String,
+        read: String,
+    ): HttpSecurity =
+        http.authorizeHttpRequests { auth ->
             if (allowPublic) {
-                auth.requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
-                        .permitAll()
-                        .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
-                        .permitAll()
+                auth
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
+                    .permitAll()
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
+                    .permitAll()
             } else {
-                auth.requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
-                        .hasAnyAuthority(admin, curator, view, read)
-                        .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
-                        .hasAnyAuthority(admin, curator, view, read)
+                auth
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
+                    .hasAnyAuthority(admin, curator, view, read)
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
+                    .hasAnyAuthority(admin, curator, view, read)
             }
         }
-    }
 
     /**
      * Configures role-based endpoints for write operations.
@@ -153,45 +152,41 @@ object SecurityConfigHelper {
      * @return HttpSecurity builder for method chaining
      */
     fun configureRoleBasedEndpoints(
-            http: HttpSecurity,
-            admin: String,
-            curator: String,
-            view: String,
-            read: String
-    ): HttpSecurity {
-        return http.authorizeHttpRequests { auth ->
+        http: HttpSecurity,
+        admin: String,
+        curator: String,
+        view: String,
+        read: String,
+    ): HttpSecurity =
+        http.authorizeHttpRequests { auth ->
             auth
-                    // Skill operations
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_UPDATE))
-                    .hasAnyAuthority(admin, curator)
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_CREATE))
-                    .hasAnyAuthority(admin, curator)
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_PUBLISH))
-                    .hasAnyAuthority(admin)
-
-                    // Collection operations
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_CREATE))
-                    .hasAnyAuthority(admin, curator)
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_PUBLISH))
-                    .hasAnyAuthority(admin)
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_UPDATE))
-                    .hasAnyAuthority(admin, curator)
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS_UPDATE))
-                    .hasAnyAuthority(admin, curator)
-                    .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
-                    .hasAnyAuthority(admin)
-
-                    // Workspace
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.WORKSPACE_PATH))
-                    .hasAnyAuthority(admin, curator)
-
-                    // Catch-all for other API endpoints
-                    .requestMatchers("/api/**")
-                    .hasAnyAuthority(admin, curator, view, read)
-                    .requestMatchers("/**")
-                    .permitAll()
+                // Skill operations
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_UPDATE))
+                .hasAnyAuthority(admin, curator)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_CREATE))
+                .hasAnyAuthority(admin, curator)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_PUBLISH))
+                .hasAnyAuthority(admin)
+                // Collection operations
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_CREATE))
+                .hasAnyAuthority(admin, curator)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_PUBLISH))
+                .hasAnyAuthority(admin)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_UPDATE))
+                .hasAnyAuthority(admin, curator)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS_UPDATE))
+                .hasAnyAuthority(admin, curator)
+                .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
+                .hasAnyAuthority(admin)
+                // Workspace
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.WORKSPACE_PATH))
+                .hasAnyAuthority(admin, curator)
+                // Catch-all for other API endpoints
+                .requestMatchers("/api/**")
+                .hasAnyAuthority(admin, curator, view, read)
+                .requestMatchers("/**")
+                .permitAll()
         }
-    }
 
     /**
      * Configures endpoints for no-role mode (simple authentication only).
@@ -205,38 +200,34 @@ object SecurityConfigHelper {
      * @param http HttpSecurity builder to configure
      * @return HttpSecurity builder for method chaining
      */
-    fun configureNoRoleEndpoints(http: HttpSecurity): HttpSecurity {
-        return http.authorizeHttpRequests { auth ->
+    fun configureNoRoleEndpoints(http: HttpSecurity): HttpSecurity =
+        http.authorizeHttpRequests { auth ->
             auth
-                    // Lists are public
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
-                    .permitAll()
-                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
-                    .permitAll()
-
-                    // Write operations require authentication
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_UPDATE))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_CREATE))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_PUBLISH))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_CREATE))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_PUBLISH))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_UPDATE))
-                    .authenticated()
-                    .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS_UPDATE))
-                    .authenticated()
-
-                    // Collection delete is denied
-                    .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
-                    .denyAll()
-
-                    // Fall-through: all other endpoints are public
-                    .requestMatchers("/**")
-                    .permitAll()
+                // Lists are public
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
+                .permitAll()
+                // Write operations require authentication
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_UPDATE))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_CREATE))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_PUBLISH))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_CREATE))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_PUBLISH))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_UPDATE))
+                .authenticated()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS_UPDATE))
+                .authenticated()
+                // Collection delete is denied
+                .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
+                .denyAll()
+                // Fall-through: all other endpoints are public
+                .requestMatchers("/**")
+                .permitAll()
         }
-    }
 }

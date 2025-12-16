@@ -12,66 +12,47 @@ import org.springframework.stereotype.Component
 class AppConfig(
     @Value("\${app.baseDomain}")
     val baseDomain: String,
-
     @Value("\${app.baseUrl}")
     val baseUrl: String,
-
     @Value("\${app.defaultAuthorName}")
     val defaultAuthorName: String,
-
     @Value("\${app.defaultAuthorUri}")
     val defaultAuthorUri: String,
-
     @Value("\${app.defaultCreatorUri}")
     val defaultCreatorUri: String,
-
     @Value("\${app.frontendUrl}")
     val frontendUrl: String,
-
     @Value("\${app.loginSuccessRedirectUrl}")
     val loginSuccessRedirectUrl: String,
-
     @Value("\${app.userName:name}")
     val userName: String,
-
     @Value("\${app.userIdentifier:email}")
     val userIdentifier: String,
-
     @Value("\${app.allowPublicSearching}")
     val allowPublicSearching: Boolean = true,
-
     @Value("\${app.allowPublicLists}")
     val allowPublicLists: Boolean = true,
-
     @Value("\${app.enableRoles}")
     val enableRoles: Boolean = false,
-
     @Value("\${app.baseLineAuditLogIfEmpty}")
     val baseLineAuditLogIfEmpty: Boolean,
-
     @Value("\${app.rsd-context-url}")
     val rsdContextUrl: String,
-
     @Value("\${app.security.cors.allowedOrigins}")
     val corsAllowedOrigins: String,
-
-    //This next values are WGU specific.
+    // This next values are WGU specific.
     @Value("\${osmt.security.role.admin:Osmt_Admin}")
     val roleAdmin: String,
-
     @Value("\${osmt.security.role.curator:Osmt_Curator}")
     val roleCurator: String,
-
     @Value("\${osmt.security.role.view:Osmt_View}")
     val roleView: String,
-
     @Value("\${osmt.security.scope.read:SCOPE_osmt.read}")
-    val scopeRead: String
+    val scopeRead: String,
 ) {
     @Autowired
     lateinit var environment: Environment
 
     @Autowired
     lateinit var dbConfig: DbConfig
-
 }

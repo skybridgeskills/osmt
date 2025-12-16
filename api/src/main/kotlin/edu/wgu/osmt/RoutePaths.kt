@@ -3,7 +3,6 @@ package edu.wgu.osmt
 import org.apache.commons.lang3.StringUtils
 
 object RoutePaths {
-    
     const val API_V2 = "/v2"
     const val API_V3 = "/v3"
     const val DEFAULT = API_V3
@@ -12,7 +11,7 @@ object RoutePaths {
     const val API = "/api"
     private const val SEARCH_PATH = "/search"
 
-    //export
+    // export
     private const val EXPORT = "/export"
     const val SEARCH_SKILLS = "$SEARCH_PATH/skills"
     const val EXPORT_LIBRARY = "$EXPORT/library"
@@ -26,7 +25,7 @@ object RoutePaths {
     const val SEARCH_SIMILARITIES_RESULTS = "${SEARCH_SIMILARITIES}/results"
     const val SEARCH_COLLECTIONS = "$SEARCH_PATH/collections"
 
-    //skills
+    // skills
     private const val SKILLS_PATH = "/skills"
     const val SKILLS_LIST = SKILLS_PATH
     const val SKILLS_CREATE = SKILLS_PATH
@@ -36,13 +35,13 @@ object RoutePaths {
     const val SKILL_UPDATE = "$SKILL_DETAIL/update"
     const val SKILL_AUDIT_LOG = "$SKILL_DETAIL/log"
 
-    //categories
+    // categories
     private const val CATEGORY_PATH = "/categories"
     const val CATEGORY_LIST = CATEGORY_PATH
     const val CATEGORY_DETAIL = "$CATEGORY_PATH/{identifier}"
     const val CATEGORY_SKILLS = "$CATEGORY_DETAIL/skills"
 
-    //collections
+    // collections
     private const val COLLECTIONS_PATH = "/collections"
     const val COLLECTIONS_LIST = COLLECTIONS_PATH
     const val COLLECTION_CREATE = COLLECTIONS_PATH

@@ -28,91 +28,128 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Transactional
-internal class CollectionControllerTest @Autowired constructor(
-    val collectionRepository: CollectionRepository,
-    val appConfig: AppConfig,
-    override val collectionEsRepo: CollectionEsRepo,
-    override val keywordEsRepo: KeywordEsRepo,
-    override val jobCodeEsRepo: JobCodeEsRepo,
-    override val richSkillEsRepo: RichSkillEsRepo,
-) : SpringTest(), BaseDockerizedTest, HasDatabaseReset, HasElasticsearchReset {
-
+internal class CollectionControllerTest
     @Autowired
-    lateinit var collectionController: CollectionController
+    constructor(
+        val collectionRepository: CollectionRepository,
+        val appConfig: AppConfig,
+        override val collectionEsRepo: CollectionEsRepo,
+        override val keywordEsRepo: KeywordEsRepo,
+        override val jobCodeEsRepo: JobCodeEsRepo,
+        override val richSkillEsRepo: RichSkillEsRepo,
+    ) : SpringTest(),
+        BaseDockerizedTest,
+        HasDatabaseReset,
+        HasElasticsearchReset {
+        @Autowired
+        lateinit var collectionController: CollectionController
 
-    var authentication: Authentication = mockk()
+        var authentication: Authentication = mockk()
 
-    private lateinit var mockData: MockData
+        private lateinit var mockData: MockData
 
-    val userString = "unittestuser"
+        val userString = "unittestuser"
 
-    val userEmail = "unit@test.user"
+        val userEmail = "unit@test.user"
 
-    @BeforeAll
-    fun setup() {
-        ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin")
-        val securityContext: SecurityContext = mockk()
+        @BeforeAll
+        fun setup() {
+            ReflectionTestUtils.setField(appConfig, "roleAdmin", "ROLE_Osmt_Admin")
+            val securityContext: SecurityContext = mockk()
 
-        SecurityContextHolder.setContext(securityContext)
+            SecurityContextHolder.setContext(securityContext)
 
-        val attributes: MutableMap<String, Any> = HashMap()
-        attributes["email"] = userEmail
+            val attributes: MutableMap<String, Any> = HashMap()
+            attributes["email"] = userEmail
 
-        val authority: GrantedAuthority = OAuth2UserAuthority("ROLE_Osmt_Admin", attributes)
-        val authorities: MutableSet<GrantedAuthority> = HashSet()
-        authorities.add(authority)
+            val authority: GrantedAuthority = OAuth2UserAuthority("ROLE_Osmt_Admin", attributes)
+            val authorities: MutableSet<GrantedAuthority> = HashSet()
+            authorities.add(authority)
 
-        every { securityContext.authentication }.returns(authentication)
-        every { authentication.authorities }.returns(authorities)
+            every { securityContext.authentication }.returns(authentication)
+            every { authentication.authorities }.returns(authorities)
+        }
+
+        @Test
+        fun `workspaceByOwner() should retrieve an existing workspace`() {
+            // arrange
+            collectionRepository.create(
+                CollectionUpdateObject(
+                    12345,
+                    "testCollection",
+                    null,
+                    null,
+                    null,
+                    PublishStatus.Workspace,
+                ),
+                userString,
+                userEmail,
+            )
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("email", userEmail)
+                    .build()
+
+            // act
+            val result = collectionController.getOrCreateWorkspace(jwt)
+
+            // assert
+            Assertions.assertThat(result).isNotNull
+        }
+
+        @Test
+        fun `workspaceByOwner() should create a workspace if it does not exist`() {
+            // arrange
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("email", userEmail)
+                    .build()
+
+            // act
+            Assertions.assertThat(collectionRepository.findAll().toList()).hasSize(0)
+            val result = collectionController.getOrCreateWorkspace(jwt)
+
+            // assert
+            Assertions.assertThat(collectionRepository.findAll().toList()).hasSize(1)
+            Assertions.assertThat(result).isNotNull
+        }
+
+        @Test
+        fun `updateCollection() should return a collection to draft status when providing an Unarchived status and update the archived date`() {
+            // arrange
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("email", userEmail)
+                    .build()
+            val update =
+                ApiCollectionUpdate(
+                    name = "newName",
+                    description = "newDescription",
+                    publishStatus = PublishStatus.Unarchived,
+                    author = "newAuthor",
+                )
+            val collection =
+                collectionRepository.create(
+                    name = "name",
+                    user = "user",
+                    email = "user@xmail.com",
+                    description = "description",
+                )
+            collection!!.status = PublishStatus.Archived
+            collection.archiveDate = LocalDateTime.now()
+
+            // act
+            val result = collectionController.updateCollection(collection.uuid, update, jwt)
+
+            // assert
+            Assertions.assertThat(result).isNotNull
+            Assertions.assertThat(result.status).isEqualTo(PublishStatus.Draft)
+            Assertions.assertThat(result.archiveDate).isNull()
+        }
     }
-
-    @Test
-    fun `workspaceByOwner() should retrieve an existing workspace`() {
-        // arrange
-        collectionRepository.create(CollectionUpdateObject(12345, "testCollection", null, null, null, PublishStatus.Workspace), userString, userEmail)
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("email", userEmail).build()
-
-        // act
-        val result = collectionController.getOrCreateWorkspace(jwt)
-
-        // assert
-        Assertions.assertThat(result).isNotNull
-    }
-
-    @Test
-    fun `workspaceByOwner() should create a workspace if it does not exist`() {
-        // arrange
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("email", userEmail).build()
-
-        // act
-        Assertions.assertThat(collectionRepository.findAll().toList()).hasSize(0)
-        val result = collectionController.getOrCreateWorkspace(jwt)
-
-        // assert
-        Assertions.assertThat(collectionRepository.findAll().toList()).hasSize(1)
-        Assertions.assertThat(result).isNotNull
-    }
-
-    @Test
-    fun `updateCollection() should return a collection to draft status when providing an Unarchived status and update the archived date`() {
-        // arrange
-        val jwt = Jwt.withTokenValue("foo").header("foo", "foo").claim("email", userEmail).build()
-        val update = ApiCollectionUpdate(
-            name = "newName",
-            description = "newDescription",
-            publishStatus = PublishStatus.Unarchived,
-            author = "newAuthor",
-        )
-        val collection = collectionRepository.create(name = "name", user = "user", email = "user@xmail.com", description = "description")
-        collection!!.status = PublishStatus.Archived
-        collection.archiveDate = LocalDateTime.now()
-
-        // act
-        val result = collectionController.updateCollection(collection.uuid, update, jwt)
-
-        // assert
-        Assertions.assertThat(result).isNotNull
-        Assertions.assertThat(result.status).isEqualTo(PublishStatus.Draft)
-        Assertions.assertThat(result.archiveDate).isNull()
-    }
-}

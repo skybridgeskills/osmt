@@ -12,13 +12,16 @@ indent_size = 2
 
 [*.{kt,kts}]
 indent_size = 4
-max_line_length = 500
+max_line_length = 100
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_property-naming = disabled
 
-# ktlint configuration
-[*.kt]
-ktlint_disabled_rules = no-wildcard-imports
+[**/test/**/*.{kt,kts}]
+ktlint_standard_max-line-length = off
 
 [*.md]
 max_line_length = off
 trim_trailing_whitespace = false
 
+[*/target/**]
+ktlint_standard = disabled
