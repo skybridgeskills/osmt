@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters
@@ -19,6 +20,7 @@ class WebMvcConfig : WebMvcConfigurer {
     fun objectMapper(): ObjectMapper =
         ObjectMapper()
             .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
+            .registerModule(KotlinModule.Builder().build())
             .registerModule(JavaTimeModule())
             .setDateFormat(StdDateFormat())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

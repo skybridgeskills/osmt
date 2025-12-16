@@ -1,6 +1,7 @@
 export interface IAppConfig {
   baseApiUrl: string;
   loginUrl: string;
+  authMode?: string;
   editableAuthor: boolean;
   defaultAuthorValue: string;
   toolName: string;

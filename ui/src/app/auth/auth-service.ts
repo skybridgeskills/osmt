@@ -1,6 +1,7 @@
 import { ENABLE_ROLES, ButtonAction, ActionByRoles } from './auth-roles';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
 import { Whitelabelled } from '../../whitelabel';
@@ -9,6 +10,7 @@ import { IAuthService } from './iauth-service';
 export const STORAGE_KEY_TOKEN = 'OSMT.AuthService.accessToken';
 export const STORAGE_KEY_RETURN = 'OSMT.AuthService.return';
 export const STORAGE_KEY_ROLE = 'OSMT.AuthService.role';
+export const STORAGE_KEY_NOAUTH = 'OSMT.AuthService.noauth';
 
 @Injectable()
 export class AuthService extends Whitelabelled implements IAuthService {
@@ -16,6 +18,7 @@ export class AuthService extends Whitelabelled implements IAuthService {
 
   constructor(
     private router: Router,
+    private http: HttpClient,
     private idle: Idle,
     private keepalive: Keepalive
   ) {
@@ -36,17 +39,60 @@ export class AuthService extends Whitelabelled implements IAuthService {
 
   storeToken(accessToken: string): void {
     localStorage.setItem(STORAGE_KEY_TOKEN, accessToken);
-    localStorage.setItem(
-      STORAGE_KEY_ROLE,
-      JSON.parse(atob(accessToken.split('.')[1]))?.roles
-    );
+    try {
+      const decoded = JSON.parse(atob(accessToken.split('.')[1]));
+      if (decoded?.roles) {
+        localStorage.setItem(STORAGE_KEY_ROLE, decoded.roles);
+      }
+    } catch (e) {
+      // Token may not be a JWT, ignore
+    }
+  }
+
+  /**
+   * Authenticates admin user with username/password.
+   *
+   * Calls the login API endpoint and stores the returned JWT token.
+   * On successful login, stores the token and admin role in localStorage.
+   *
+   * @param username - Admin username
+   * @param password - Admin password
+   * @returns Promise that resolves on successful login, rejects on failure
+   */
+  async login(username: string, password: string): Promise<void> {
+    try {
+      const response = await this.http
+        .post<{
+          token: string;
+          expiresIn: number;
+          tokenType: string;
+        }>('/api/auth/login', { username, password })
+        .toPromise();
+
+      if (response?.token) {
+        // Store the JWT token
+        this.storeToken(response.token);
+        // Store admin role for UI authorization checks
+        localStorage.setItem(STORAGE_KEY_ROLE, 'ROLE_Osmt_Admin');
+        localStorage.setItem(STORAGE_KEY_NOAUTH, 'true'); // Keep for backward compatibility
+      } else {
+        throw new Error('No token received from server');
+      }
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        throw error;
+      }
+      throw new Error('Login failed');
+    }
   }
 
   storeReturn(returnRoute: string): void {
     localStorage.setItem(STORAGE_KEY_RETURN, returnRoute);
   }
 
-  restoreReturnAsync(): void {}
+  restoreReturnAsync(): void {
+    // Implementation not needed for current auth flow
+  }
 
   popReturn(): string | null {
     const ret = localStorage.getItem(STORAGE_KEY_RETURN);
@@ -56,6 +102,8 @@ export class AuthService extends Whitelabelled implements IAuthService {
 
   logout(): void {
     localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_NOAUTH);
+    localStorage.removeItem(STORAGE_KEY_ROLE);
   }
 
   currentAuthToken(): string | null {
@@ -63,6 +111,10 @@ export class AuthService extends Whitelabelled implements IAuthService {
   }
 
   isAuthenticated(): boolean {
+    // In single-auth mode, check if admin auth is set
+    if (localStorage.getItem(STORAGE_KEY_NOAUTH) === 'true') {
+      return !this.serverIsDown && this.getRole() !== null;
+    }
     return !this.serverIsDown && this.currentAuthToken() !== null;
   }
 

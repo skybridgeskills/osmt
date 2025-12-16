@@ -128,7 +128,7 @@ fix_java_pom() {
   local target_version="$1"
   if [ -f "pom.xml" ]; then
     local temp_file=$(mktemp)
-    sed -E "s/(<java\.version>)[^<]*(<\/java\.version>)/\1${target_version}\2/" pom.xml >"$temp_file"
+    sed -E "s/(<java\.version>)[^<]*(<\/java\.version>)/\1${target_version}\2/" pom.xml > "$temp_file"
     mv "$temp_file" pom.xml
     fix_info "Updated pom.xml: java.version -> $target_version"
     FIX_COUNT=$((FIX_COUNT + 1)) || true
@@ -141,7 +141,7 @@ fix_java_workflows() {
   for file in $workflow_files; do
     if grep -q "java-version:" "$file" 2>/dev/null; then
       local temp_file=$(mktemp)
-      sed -E "s/(java-version:[[:space:]]*['\"])[0-9]+(['\"])/\1${target_version}\2/" "$file" >"$temp_file"
+      sed -E "s/(java-version:[[:space:]]*['\"])[0-9]+(['\"])/\1${target_version}\2/" "$file" > "$temp_file"
       mv "$temp_file" "$file"
       fix_info "Updated $file: java-version -> $target_version"
       FIX_COUNT=$((FIX_COUNT + 1)) || true
@@ -160,7 +160,7 @@ fix_node_dockerfile() {
     fi
     local new_tag="${target_version}-${base_image}"
     local temp_file=$(mktemp)
-    sed "s|FROM node:.*|FROM node:${new_tag} AS build|" ui/Dockerfile >"$temp_file"
+    sed "s|FROM node:.*|FROM node:${new_tag} AS build|" ui/Dockerfile > "$temp_file"
     mv "$temp_file" ui/Dockerfile
     fix_info "Updated ui/Dockerfile: node -> $new_tag"
     FIX_COUNT=$((FIX_COUNT + 1)) || true
@@ -171,7 +171,7 @@ fix_node_pom() {
   local target_version="$1"
   if [ -f "ui/pom.xml" ]; then
     local temp_file=$(mktemp)
-    sed -E "s/(<nodeVersion>v?)[^<]*(<\/nodeVersion>)/\1${target_version}\2/" ui/pom.xml >"$temp_file"
+    sed -E "s/(<nodeVersion>v?)[^<]*(<\/nodeVersion>)/\1${target_version}\2/" ui/pom.xml > "$temp_file"
     mv "$temp_file" ui/pom.xml
     fix_info "Updated ui/pom.xml: nodeVersion -> v${target_version}"
     FIX_COUNT=$((FIX_COUNT + 1)) || true
@@ -182,7 +182,7 @@ fix_maven_dockerfile() {
   local target_version="$1"
   if [ -f "api/Dockerfile" ]; then
     local temp_file=$(mktemp)
-    sed -E "s/(ENV M2_VERSION=)[0-9.]+/\1${target_version}/" api/Dockerfile >"$temp_file"
+    sed -E "s/(ENV M2_VERSION=)[0-9.]+/\1${target_version}/" api/Dockerfile > "$temp_file"
     mv "$temp_file" api/Dockerfile
     fix_info "Updated api/Dockerfile: M2_VERSION -> $target_version"
     FIX_COUNT=$((FIX_COUNT + 1)) || true
@@ -193,9 +193,20 @@ fix_kotlin_pom() {
   local target_version="$1"
   if [ -f "api/pom.xml" ]; then
     local temp_file=$(mktemp)
-    sed -E "s/(<kotlin\.version>)[^<]*(<\/kotlin\.version>)/\1${target_version}\2/" api/pom.xml >"$temp_file"
+    sed -E "s/(<kotlin\.version>)[^<]*(<\/kotlin\.version>)/\1${target_version}\2/" api/pom.xml > "$temp_file"
     mv "$temp_file" api/pom.xml
     fix_info "Updated api/pom.xml: kotlin.version -> $target_version"
+    FIX_COUNT=$((FIX_COUNT + 1)) || true
+  fi
+}
+
+fix_kotlin_vscode_settings() {
+  local target_version="$1"
+  if [ -f ".vscode/settings.json" ]; then
+    local temp_file=$(mktemp)
+    sed -E "s/(\"kotlin\.compiler\.jvm\.target\":[[:space:]]*\")([0-9]+)(\")/\1${target_version}\3/" .vscode/settings.json > "$temp_file"
+    mv "$temp_file" .vscode/settings.json
+    fix_info "Updated .vscode/settings.json: kotlin.compiler.jvm.target -> $target_version"
     FIX_COUNT=$((FIX_COUNT + 1)) || true
   fi
 }
@@ -204,13 +215,13 @@ fix_kotlin_pom() {
 if [ "$FIX_MODE" = false ]; then
   echo "## 🔍 Version Consistency Validation" >&2
   if [ -n "$GITHUB_OUTPUT" ]; then
-    echo "## 🔍 Version Consistency Validation" >>"$GITHUB_OUTPUT"
+    echo "## 🔍 Version Consistency Validation" >> "$GITHUB_OUTPUT"
   fi
   echo "" >&2
 else
   echo "## 🔧 Fixing Version Inconsistencies" >&2
   if [ -n "$GITHUB_OUTPUT" ]; then
-    echo "## 🔧 Fixing Version Inconsistencies" >>"$GITHUB_OUTPUT"
+    echo "## 🔧 Fixing Version Inconsistencies" >> "$GITHUB_OUTPUT"
   fi
   echo "" >&2
   echo "Using .sdkmanrc and .nvmrc as source of truth..." >&2
@@ -290,6 +301,12 @@ else
   KOTLIN_POM=""
 fi
 
+if [ -f ".vscode/settings.json" ]; then
+  KOTLIN_VSCODE_TARGET=$(grep "\"kotlin.compiler.jvm.target\"" .vscode/settings.json | sed -E 's/.*"kotlin\.compiler\.jvm\.target":[[:space:]]*"([0-9]+)".*/\1/' | head -1 || echo "")
+else
+  KOTLIN_VSCODE_TARGET=""
+fi
+
 # Build markdown output for GitHub
 if [ "$FIX_MODE" = false ]; then
   {
@@ -307,26 +324,28 @@ if [ "$FIX_MODE" = false ]; then
     [ -n "$MAVEN_DOCKERFILE" ] && echo "| | api/Dockerfile | \`$MAVEN_DOCKERFILE\` |" >&2
     echo "| **Kotlin** | .sdkmanrc | \`$KOTLIN_SDKMANRC\` |" >&2
     [ -n "$KOTLIN_POM" ] && echo "| | api/pom.xml | \`$KOTLIN_POM\` |" >&2
+    [ -n "$KOTLIN_VSCODE_TARGET" ] && echo "| | .vscode/settings.json (JVM target) | \`$KOTLIN_VSCODE_TARGET\` |" >&2
     echo "" >&2
   }
   if [ -n "$GITHUB_OUTPUT" ]; then
-    cat >"$GITHUB_OUTPUT" <<EOF
+    cat > "$GITHUB_OUTPUT" <<EOF
 ### Detected Versions
 
 | Tool | Source File | Version |
 |------|-------------|---------|
 | **Java** | .sdkmanrc | \`$JAVA_SDKMANRC\` (major: \`$JAVA_MAJOR_SDKMANRC\`) |
 EOF
-    [ -n "$JAVA_POM" ] && echo "| | pom.xml | \`$JAVA_POM\` |" >>"$GITHUB_OUTPUT"
-    [ -n "$JAVA_WORKFLOWS" ] && echo "| | GitHub workflows | \`$JAVA_WORKFLOWS\` |" >>"$GITHUB_OUTPUT"
-    echo "| **Node.js** | .nvmrc | \`$NODE_NVMRC\` (major.minor: \`$NODE_MAJOR_MINOR_NVMRC\`) |" >>"$GITHUB_OUTPUT"
-    [ -n "$NODE_DOCKERFILE" ] && echo "| | ui/Dockerfile | \`$NODE_DOCKERFILE\` (major.minor: \`$NODE_MAJOR_MINOR_DOCKERFILE\`) |" >>"$GITHUB_OUTPUT"
-    [ -n "$NODE_POM" ] && echo "| | ui/pom.xml | \`$NODE_POM\` (major.minor: \`$NODE_MAJOR_MINOR_POM\`) |" >>"$GITHUB_OUTPUT"
-    echo "| **Maven** | .sdkmanrc | \`$MAVEN_SDKMANRC\` |" >>"$GITHUB_OUTPUT"
-    [ -n "$MAVEN_DOCKERFILE" ] && echo "| | api/Dockerfile | \`$MAVEN_DOCKERFILE\` |" >>"$GITHUB_OUTPUT"
-    echo "| **Kotlin** | .sdkmanrc | \`$KOTLIN_SDKMANRC\` |" >>"$GITHUB_OUTPUT"
-    [ -n "$KOTLIN_POM" ] && echo "| | api/pom.xml | \`$KOTLIN_POM\` |" >>"$GITHUB_OUTPUT"
-    echo "" >>"$GITHUB_OUTPUT"
+    [ -n "$JAVA_POM" ] && echo "| | pom.xml | \`$JAVA_POM\` |" >> "$GITHUB_OUTPUT"
+    [ -n "$JAVA_WORKFLOWS" ] && echo "| | GitHub workflows | \`$JAVA_WORKFLOWS\` |" >> "$GITHUB_OUTPUT"
+    echo "| **Node.js** | .nvmrc | \`$NODE_NVMRC\` (major.minor: \`$NODE_MAJOR_MINOR_NVMRC\`) |" >> "$GITHUB_OUTPUT"
+    [ -n "$NODE_DOCKERFILE" ] && echo "| | ui/Dockerfile | \`$NODE_DOCKERFILE\` (major.minor: \`$NODE_MAJOR_MINOR_DOCKERFILE\`) |" >> "$GITHUB_OUTPUT"
+    [ -n "$NODE_POM" ] && echo "| | ui/pom.xml | \`$NODE_POM\` (major.minor: \`$NODE_MAJOR_MINOR_POM\`) |" >> "$GITHUB_OUTPUT"
+    echo "| **Maven** | .sdkmanrc | \`$MAVEN_SDKMANRC\` |" >> "$GITHUB_OUTPUT"
+    [ -n "$MAVEN_DOCKERFILE" ] && echo "| | api/Dockerfile | \`$MAVEN_DOCKERFILE\` |" >> "$GITHUB_OUTPUT"
+    echo "| **Kotlin** | .sdkmanrc | \`$KOTLIN_SDKMANRC\` |" >> "$GITHUB_OUTPUT"
+    [ -n "$KOTLIN_POM" ] && echo "| | api/pom.xml | \`$KOTLIN_POM\` |" >> "$GITHUB_OUTPUT"
+    [ -n "$KOTLIN_VSCODE_TARGET" ] && echo "| | .vscode/settings.json (JVM target) | \`$KOTLIN_VSCODE_TARGET\` |" >> "$GITHUB_OUTPUT"
+    echo "" >> "$GITHUB_OUTPUT"
   fi
 fi
 
@@ -334,8 +353,8 @@ fi
 echo "" >&2
 echo "### Validation Results" >&2
 if [ -n "$GITHUB_OUTPUT" ]; then
-  echo "" >>"$GITHUB_OUTPUT"
-  echo "### Validation Results" >>"$GITHUB_OUTPUT"
+  echo "" >> "$GITHUB_OUTPUT"
+  echo "### Validation Results" >> "$GITHUB_OUTPUT"
 fi
 
 # Validate/Fix Java versions
@@ -390,6 +409,15 @@ if [ -n "$KOTLIN_POM" ] && [ "$KOTLIN_SDKMANRC" != "$KOTLIN_POM" ]; then
   fi
 fi
 
+# Validate/Fix Kotlin JVM target in VS Code settings
+if [ -n "$KOTLIN_VSCODE_TARGET" ] && [ "$JAVA_MAJOR_SDKMANRC" != "$KOTLIN_VSCODE_TARGET" ]; then
+  if [ "$FIX_MODE" = true ]; then
+    fix_kotlin_vscode_settings "$JAVA_MAJOR_SDKMANRC"
+  else
+    error "Kotlin JVM target mismatch: .sdkmanrc Java major=$JAVA_MAJOR_SDKMANRC, .vscode/settings.json kotlin.compiler.jvm.target=$KOTLIN_VSCODE_TARGET" ".vscode/settings.json" "5"
+  fi
+fi
+
 # Summary
 echo "" >&2
 echo "---" >&2
@@ -397,17 +425,17 @@ if [ "$FIX_MODE" = true ]; then
   if [ $FIX_COUNT -gt 0 ]; then
     echo "✅ **Fixed $FIX_COUNT version inconsistency(ies)**" >&2
     if [ -n "$GITHUB_OUTPUT" ]; then
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "---" >>"$GITHUB_OUTPUT"
-      echo "✅ **Fixed $FIX_COUNT version inconsistency(ies)**" >>"$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "---" >> "$GITHUB_OUTPUT"
+      echo "✅ **Fixed $FIX_COUNT version inconsistency(ies)**" >> "$GITHUB_OUTPUT"
     fi
     exit 0
   else
     echo "✅ **No fixes needed - all versions are consistent!**" >&2
     if [ -n "$GITHUB_OUTPUT" ]; then
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "---" >>"$GITHUB_OUTPUT"
-      echo "✅ **No fixes needed - all versions are consistent!**" >>"$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "---" >> "$GITHUB_OUTPUT"
+      echo "✅ **No fixes needed - all versions are consistent!**" >> "$GITHUB_OUTPUT"
     fi
     exit 0
   fi
@@ -415,17 +443,17 @@ else
   if [ $ERROR_COUNT -eq 0 ] && [ $WARNING_COUNT -eq 0 ]; then
     echo "✅ **All versions are consistent!**" >&2
     if [ -n "$GITHUB_OUTPUT" ]; then
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "---" >>"$GITHUB_OUTPUT"
-      echo "✅ **All versions are consistent!**" >>"$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "---" >> "$GITHUB_OUTPUT"
+      echo "✅ **All versions are consistent!**" >> "$GITHUB_OUTPUT"
     fi
     exit 0
   elif [ $ERROR_COUNT -eq 0 ]; then
     echo "⚠️ **Versions are consistent, but $WARNING_COUNT warning(s) were found**" >&2
     if [ -n "$GITHUB_OUTPUT" ]; then
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "---" >>"$GITHUB_OUTPUT"
-      echo "⚠️ **Versions are consistent, but $WARNING_COUNT warning(s) were found**" >>"$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "---" >> "$GITHUB_OUTPUT"
+      echo "⚠️ **Versions are consistent, but $WARNING_COUNT warning(s) were found**" >> "$GITHUB_OUTPUT"
     fi
     exit 0
   else
@@ -433,17 +461,17 @@ else
     echo "" >&2
     echo "💡 **To automatically fix these issues, run:**" >&2
     echo "   \`\`\`bash" >&2
-    echo "   ./bin/validate-versions.sh --fix" >&2
+    echo "   ./scripts/validate-versions.sh --fix" >&2
     echo "   \`\`\`" >&2
     if [ -n "$GITHUB_OUTPUT" ]; then
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "---" >>"$GITHUB_OUTPUT"
-      echo "❌ **Found $ERROR_COUNT error(s) and $WARNING_COUNT warning(s)**" >>"$GITHUB_OUTPUT"
-      echo "" >>"$GITHUB_OUTPUT"
-      echo "💡 **To automatically fix these issues, run:**" >>"$GITHUB_OUTPUT"
-      echo "\`\`\`bash" >>"$GITHUB_OUTPUT"
-      echo "./bin/validate-versions.sh --fix" >>"$GITHUB_OUTPUT"
-      echo "\`\`\`" >>"$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "---" >> "$GITHUB_OUTPUT"
+      echo "❌ **Found $ERROR_COUNT error(s) and $WARNING_COUNT warning(s)**" >> "$GITHUB_OUTPUT"
+      echo "" >> "$GITHUB_OUTPUT"
+      echo "💡 **To automatically fix these issues, run:**" >> "$GITHUB_OUTPUT"
+      echo "\`\`\`bash" >> "$GITHUB_OUTPUT"
+      echo "./scripts/validate-versions.sh --fix" >> "$GITHUB_OUTPUT"
+      echo "\`\`\`" >> "$GITHUB_OUTPUT"
     fi
     exit 1
   fi
