@@ -1,0 +1,35 @@
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_availability_zones" "zones" {
+  state = "available"
+}
+
+data "aws_route53_zone" "default" {
+  name = local.base_domain
+}
+
+data "aws_iam_roles" "administrators" {
+  name_regex = "AWSReservedSSO_AdministratorAccess_*"
+}
+
+// Load the DB password
+data "aws_secretsmanager_secret" "db_password" {
+  name = module.rds.db_instance_master_user_secret_arn
+}
+
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = data.aws_secretsmanager_secret.db_password.id
+}
+
+// Load the Sendgrid API Key
+data "aws_secretsmanager_secret" "sendgrid_api_key" {
+  name = "platform/secrets/sendgrid_api_key"
+}
+
+// Load the Tenant Admin Password
+data "aws_secretsmanager_secret" "tenant_admin_password" {
+  name = "platform/secrets/tenant_admin_password"
+}
+

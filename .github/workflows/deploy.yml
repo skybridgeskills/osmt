@@ -1,0 +1,278 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        default: "staging"
+        options:
+          - dev
+          - staging
+          - production
+      app_version:
+        description: "App version to deploy"
+        required: true
+        type: string
+        default: "latest"
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: string
+      app_version:
+        description: "App version to deploy"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
+
+jobs:
+  migrate:
+    name: migrate
+    runs-on: ubuntu-latest-2-arm
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          pnpm install --frozen-lockfile
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Create GitHub Deployment
+        uses: actions/github-script@v8
+        id: deployment
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ inputs.environment }}',
+              description: 'Database migrations for ${{ inputs.app_version }}',
+              auto_merge: false,
+              required_contexts: []
+            });
+            return deployment.data.id;
+
+      - name: Run Migrations
+        run: |
+          cd scripts
+          pnpm tsx deploy-migrations.script.ts "${{ inputs.environment }}" "${{ inputs.app_version }}"
+        env:
+          FORCE_COLOR: "1"
+
+      - name: Update Deployment Status
+        if: always() && steps.deployment.outcome == 'success'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+              environment_url: 'https://osmt.${{ inputs.environment }}.prettygoodskills.com',
+              description: 'Migration ${{ job.status }}'
+            });
+
+      - name: Add job summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            STATUS="✅ Success"
+          else
+            STATUS="❌ Failed"
+          fi
+          echo "## 🗄️ Database Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ inputs.app_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${STATUS}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-api:
+    name: osmt-api
+    needs: migrate
+    runs-on: ubuntu-latest-2-arm
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          pnpm install --frozen-lockfile
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Create GitHub Deployment
+        uses: actions/github-script@v8
+        id: deployment
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ inputs.environment }}-osmt-api',
+              description: 'OSMT API deployment ${{ inputs.app_version }}',
+              auto_merge: false,
+              required_contexts: []
+            });
+            return deployment.data.id;
+
+      - name: Deploy OSMT API Service
+        run: |
+          cd scripts
+          pnpm tsx deploy-service.script.ts "${{ inputs.environment }}" osmt-api "${{ inputs.app_version }}"
+        env:
+          FORCE_COLOR: "1"
+
+      - name: Update Deployment Status
+        if: always() && steps.deployment.outcome == 'success'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+              environment_url: 'https://osmt.${{ inputs.environment }}.prettygoodskills.com',
+              description: 'OSMT API ${{ job.status }}'
+            });
+
+      - name: Add job summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            STATUS="✅ Success"
+          else
+            STATUS="❌ Failed"
+          fi
+          echo "## 🚀 OSMT API Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ inputs.app_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://osmt.${{ inputs.environment }}.prettygoodskills.com" >> $GITHUB_STEP_SUMMARY
+
+  setup-initial-data:
+    name: setup-initial-data
+    runs-on: ubuntu-latest-2-arm
+    environment: ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.setup_initial_data == 'true'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          pnpm install --frozen-lockfile
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Create GitHub Deployment
+        uses: actions/github-script@v8
+        id: deployment
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ inputs.environment }}-initial-data',
+              description: 'Initial data setup',
+              auto_merge: false,
+              required_contexts: []
+            });
+            return deployment.data.id;
+
+      - name: Setup Initial Data
+        run: |
+          cd scripts
+          pnpm tsx deploy-initial-data.script.ts "${{ inputs.environment }}"
+        env:
+          FORCE_COLOR: "1"
+
+      - name: Update Deployment Status
+        if: always() && steps.deployment.outcome == 'success'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.owner,
+              deployment_id: ${{ steps.deployment.outputs.result }},
+              state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+              environment_url: 'https://osmt.${{ inputs.environment }}.prettygoodskills.com',
+              description: 'Initial data setup ${{ job.status }}'
+            });
+
+      - name: Add job summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            STATUS="✅ Success"
+          else
+            STATUS="❌ Failed"
+          fi
+          echo "## 📊 Initial Data Setup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`${{ inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${STATUS}" >> $GITHUB_STEP_SUMMARY
+
