@@ -58,8 +58,7 @@ object SecurityConfigHelper {
                     "/*.ico",
                     "/*.png",
                     "/*.svg",
-                )
-                .permitAll()
+                ).permitAll()
                 // Whitelabel config endpoint (needed for frontend initialization)
                 .requestMatchers(GET, "/whitelabel/**")
                 .permitAll()

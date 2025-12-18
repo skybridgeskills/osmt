@@ -25,19 +25,19 @@ class SingleAuthEntryPoint
     constructor(
         private val objectMapper: ObjectMapper,
     ) : AuthenticationEntryPoint {
-    override fun commence(
-        request: HttpServletRequest?,
-        response: HttpServletResponse?,
-        authException: AuthenticationException?,
-    ) {
-        response?.let {
-            it.status = HttpServletResponse.SC_UNAUTHORIZED
-            it.contentType = "application/json"
-            it.characterEncoding = "UTF-8"
-            // Explicitly don't set WWW-Authenticate header to prevent browser dialog
-            val apiError = ApiError("Unauthorized")
-            objectMapper.writeValue(it.writer, apiError)
-            it.flushBuffer()
+        override fun commence(
+            request: HttpServletRequest?,
+            response: HttpServletResponse?,
+            authException: AuthenticationException?,
+        ) {
+            response?.let {
+                it.status = HttpServletResponse.SC_UNAUTHORIZED
+                it.contentType = "application/json"
+                it.characterEncoding = "UTF-8"
+                // Explicitly don't set WWW-Authenticate header to prevent browser dialog
+                val apiError = ApiError("Unauthorized")
+                objectMapper.writeValue(it.writer, apiError)
+                it.flushBuffer()
+            }
         }
     }
-}

@@ -3,7 +3,11 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-interactive1) 0%, var(--color-interactive2) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-interactive1) 0%,
+    var(--color-interactive2) 100%
+  );
 }
 
 .single-auth-login {
