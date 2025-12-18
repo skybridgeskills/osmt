@@ -6,29 +6,33 @@
     <form (ngSubmit)="onLogin($event)" class="login-form">
       <div class="form-group">
         <label for="username">Username:</label>
-        <input
-          id="username"
-          type="text"
-          [(ngModel)]="username"
-          name="username"
-          placeholder="Enter username"
-          required
-          [disabled]="isLoading"
-        />
+        <div class="m-text">
+          <input
+            id="username"
+            type="text"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Enter username"
+            required
+            [disabled]="isLoading"
+          />
+        </div>
       </div>
 
       <div class="form-group">
         <label for="password">Password:</label>
-        <input
-          id="password"
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="Enter password"
-          required
-          [disabled]="isLoading"
-          (keyup.enter)="onLogin($event)"
-        />
+        <div class="m-text">
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter password"
+            required
+            [disabled]="isLoading"
+            (keyup.enter)="onLogin($event)"
+          />
+        </div>
       </div>
 
       <div *ngIf="loginError" class="error-message">
@@ -37,11 +41,14 @@
 
       <button
         type="submit"
-        class="login-btn"
+        class="m-button login-btn"
         [disabled]="isLoading || !username || !password"
       >
-        <span *ngIf="isLoading">Logging in...</span>
-        <span *ngIf="!isLoading">Login</span>
+        <span *ngIf="isLoading" class="m-button-x-loader">
+          <span class="m-loaderGraphic m-loaderGraphic-medium"></span>
+        </span>
+        <span *ngIf="!isLoading" class="m-button-x-text">Login</span>
+        <span *ngIf="isLoading" class="m-button-x-text">Logging in...</span>
       </button>
     </form>
 

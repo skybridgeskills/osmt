@@ -218,70 +218,63 @@ If you want to enable OSMT user permissions by roles, see additional details in 
 
 **⚠️ SECURITY WARNING**: The `single-auth` profile is intended **ONLY** for local development and testing environments. **DO NOT** use this profile in production, staging, or any environment accessible from the internet. The single-auth profile provides simple admin authentication and should never be used where security is a concern.
 
-OSMT supports a `single-auth` profile that allows local development and testing with simple admin authentication. This is ideal for:
+OSMT supports a `single-auth` profile that allows local development and testing with simple admin username/password authentication. This is ideal for:
 
 - Quick local setup without OAuth provider configuration
-- Testing authorization logic with different roles
+- Testing authorization logic with admin role
 - CI/CD pipelines without OAuth secrets
 - Development when OAuth provider is unavailable
 
 **How it works:**
 
-- OSMT automatically detects when OAuth credentials are missing and uses the `single-auth` profile
-- Test roles are injected via HTTP headers, query parameters, or environment variables
-- Authorization rules are still enforced using the same role-based logic as OAuth2 mode
-- Default role is `ROLE_Osmt_Admin` but can be customized
+- OSMT automatically detects when OAuth credentials are missing and defaults to the `single-auth` profile
+- Admin credentials can be configured via properties or environment variables (defaults to `admin`/`admin`)
+- Authentication supports HTTP Basic Auth or Bearer tokens from the `/api/auth/login` endpoint
+- Authenticated users receive `ROLE_Osmt_Admin` and authorization rules are enforced using the same role-based logic as OAuth2 mode
 
-**Starting with single-auth mode:**
+**Starting with single-auth mode (default for local development):**
 
 1. Leave OAuth values as `xxxxxx` in your environment files, or omit them entirely
-2. Start OSMT normally:
+2. Start OSMT:
 
    ```bash
    ./osmt_cli.sh -s
    ```
 
-   OSMT will automatically detect missing OAuth credentials and use `single-auth` profile
+   OSMT will automatically detect missing OAuth credentials and use the `single-auth` profile with `dev` profile
 
-3. **Testing with different roles:**
+3. **Authenticating with single-auth:**
 
-   - **Via HTTP header:**
+   - **Via HTTP Basic Auth:**
 
      ```bash
-     curl -H "X-Test-Role: ROLE_Osmt_Admin" http://localhost:8080/api/v3/skills
-     curl -H "X-Test-Role: ROLE_Osmt_Curator" http://localhost:8080/api/v3/skills
+     curl -u admin:admin http://localhost:8080/api/v3/skills
      ```
 
-   - **Via query parameter:**
+   - **Via login endpoint (get Bearer token):**
 
      ```bash
-     curl "http://localhost:8080/api/v3/skills?testRole=ROLE_Osmt_View"
-     ```
-
-   - **Via environment variable:**
-     ```bash
-     export TEST_ROLE=ROLE_Osmt_Admin
-     curl http://localhost:8080/api/v3/skills
+     curl -X POST http://localhost:8080/api/auth/login \
+       -H "Content-Type: application/json" \
+       -d '{"username":"admin","password":"admin"}'
+     
+     # Use the returned token:
+     curl -H "Authorization: Bearer <token>" http://localhost:8080/api/v3/skills
      ```
 
 4. **UI development with single-auth:**
    - Start backend: `./osmt_cli.sh -s` (auto-detects single-auth)
    - Start UI: `cd ui && npm start`
    - Access UI at `http://localhost:4200`
-   - Login with test role: `http://localhost:4200/login?testRole=ROLE_Osmt_Admin`
-
-**Available roles:**
-
-- `ROLE_Osmt_Admin` - Full administrative access
-- `ROLE_Osmt_Curator` - Can create and update skills/collections
-- `ROLE_Osmt_View` - Read-only access
-- `SCOPE_osmt.read` - Basic read scope
+   - Login with admin credentials (default: `admin`/`admin`)
 
 **Configuration:**
 
-- Default test role: Set via `TEST_ROLE` environment variable or `app.test.defaultRole` property
-- Test user info: Set via `TEST_USER_NAME` and `TEST_USER_EMAIL` environment variables
+- Admin username: Set via `app.single-auth.admin-username` property or `SINGLE_AUTH_ADMIN_USERNAME` environment variable (default: `admin`)
+- Admin password: Set via `app.single-auth.admin-password` property or `SINGLE_AUTH_ADMIN_PASSWORD` environment variable (default: `admin`)
 - See `api/src/main/resources/config/application-single-auth.properties` for all configuration options
+
+**Note:** The `single-auth` profile is automatically used when OAuth credentials are missing. The CLI script (`./osmt_cli.sh -s`) uses `dev` and `single-auth` profiles by default for local development.
 
 ### Environment Files for Development and API Tests Stacks
 
