@@ -1,4 +1,10 @@
-import { Component, Inject, LOCALE_ID, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  LOCALE_ID,
+  OnInit,
+} from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -6,7 +12,7 @@ import { AuthService } from '../auth/auth-service';
 import { ExtrasSelectedSkillsState } from '../collection/add-skills-collection.component';
 import { CollectionService } from '../collection/service/collection.service';
 import { ExportRsdComponent } from '../export/export-rsd.component';
-import { determineFilters } from '../PublishStatus';
+import { determineFilters, PublishStatus } from '../PublishStatus';
 import { ApiSkillSummary } from '../richskill/ApiSkillSummary';
 import { SkillsListComponent } from '../richskill/list/skills-list.component';
 import { RichSkillService } from '../richskill/service/rich-skill.service';
@@ -50,14 +56,16 @@ export class RichSkillSearchResultsComponent
     protected route: ActivatedRoute,
     protected titleService: Title,
     protected authService: AuthService,
-    @Inject(LOCALE_ID) protected locale: string
+    @Inject(LOCALE_ID) protected locale: string,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
       richSkillService,
       collectionService,
       toastService,
-      authService
+      authService,
+      cdr
     );
     this.searchService.searchQuery$.subscribe(apiSearch =>
       this.handleNewSearch(apiSearch)
@@ -66,6 +74,17 @@ export class RichSkillSearchResultsComponent
 
   ngOnInit(): void {
     this.titleService.setTitle(`Search Results | ${this.whitelabel.toolName}`);
+
+    // Check authentication status and adjust behavior
+    if (!this.authService.isAuthenticated()) {
+      this.isPublicView = true;
+      // Filter to only show Published and Archived skills for public users
+      this.selectedFilters = new Set([
+        PublishStatus.Published,
+        PublishStatus.Archived,
+      ]);
+    }
+
     if (history.state?.advanced) {
       this.searchService.latestSearch = new ApiSearch(history.state);
     }

@@ -10,6 +10,7 @@ import edu.wgu.osmt.api.model.ApiFilteredSearch
 import edu.wgu.osmt.api.model.ApiSearch
 import edu.wgu.osmt.collection.CollectionEsRepo
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.io.csv.BatchImportRichSkill
 import edu.wgu.osmt.io.csv.RichSkillRow
 import edu.wgu.osmt.jobcode.JobCodeEsRepo
@@ -471,7 +472,12 @@ internal class RichSkillControllerTest
             val deletedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Deleted, uuid = "deleted-skill")
             richSkillEsRepo.saveAll(listOf(draftSkill, publishedSkill, archivedSkill, deletedSkill))
 
-            val jwt = Jwt.withTokenValue("test-token").header("alg", "RS256").build()
+            val jwt =
+                Jwt
+                    .withTokenValue("test-token")
+                    .header("alg", "RS256")
+                    .claim("sub", "test-user")
+                    .build()
 
             // Act
             val result =

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   ApiSearch,
@@ -51,14 +51,16 @@ export class CollectionSkillSearchComponent
     protected collectionService: CollectionService,
     protected richSkillService: RichSkillService,
     protected toastService: ToastService,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
       richSkillService,
       collectionService,
       toastService,
-      authService
+      authService,
+      cdr
     );
     this.titleService.setTitle(
       `Add RSDs to Collection | ${this.whitelabel.toolName}`
