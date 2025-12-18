@@ -28,19 +28,43 @@ function validate() {
     "DB_URI"
     "REDIS_URI"
     "ELASTICSEARCH_URI"
-    "OAUTH_ISSUER"
-    "OAUTH_CLIENTID"
-    "OAUTH_CLIENTSECRET"
-    "OAUTH_AUDIENCE"
   )
 
   for arg in "${required_args[@]}"
   do
-    if [[ -z ${arg} ]]; then
+    if [[ -z ${!arg} ]]; then
       missing_args++
       echo_err "Missing environment ${arg}"
     fi
   done
+
+  # OAuth variables are optional - if missing, single-auth profile will be used
+  # Note: This script runs in Docker and cannot source common.sh, so it implements
+  # the same profile detection logic inline to ensure consistency.
+  # IMPORTANT: This logic MUST be kept in sync with detect_security_profile() in bin/lib/common.sh
+  # Any changes to profile detection logic must be made in both places.
+  # The logic matches detect_security_profile() in bin/lib/common.sh
+  local -i missing_oauth=0
+  if [[ -z "${OAUTH_ISSUER:-}" ]] || [[ -z "${OAUTH_CLIENTID:-}" ]] || \
+     [[ -z "${OAUTH_CLIENTSECRET:-}" ]] || [[ -z "${OAUTH_AUDIENCE:-}" ]]; then
+    missing_oauth=1
+  fi
+
+  if [[ ${missing_oauth} -eq 1 ]]; then
+    echo_info "OAuth credentials not provided - will use single-auth profile"
+    # Append single-auth to ENVIRONMENT if not already present
+    if [[ "${ENVIRONMENT}" != *"single-auth"* ]]; then
+      ENVIRONMENT="${ENVIRONMENT},single-auth"
+      echo_info "Updated ENVIRONMENT to: ${ENVIRONMENT}"
+    fi
+  else
+    echo_info "OAuth credentials provided - will use oauth2-okta profile"
+    # Ensure oauth2-okta is in ENVIRONMENT if not present
+    if [[ "${ENVIRONMENT}" != *"oauth2-okta"* ]] && [[ "${ENVIRONMENT}" != *"single-auth"* ]]; then
+      ENVIRONMENT="${ENVIRONMENT},oauth2-okta"
+      echo_info "Updated ENVIRONMENT to: ${ENVIRONMENT}"
+    fi
+  fi
 
   # optional args
   if [[ -z "${MIGRATIONS_ENABLED}" ]]; then
@@ -150,11 +174,36 @@ function start_spring_app() {
       -Dapp.frontendUrl=${FRONTEND_URL}
       -Dredis.uri=${REDIS_URI}
       -Ddb.uri=${DB_URI}
-      -Des.uri=${ELASTICSEARCH_URI}
+      -Des.uri=${ELASTICSEARCH_URI}"
+
+    # Only add OAuth JVM arguments if OAuth credentials are provided
+    if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] && \
+       [[ -n "${OAUTH_CLIENTSECRET:-}" ]] && [[ -n "${OAUTH_AUDIENCE:-}" ]]; then
+      java_cmd="${java_cmd}
       -Dokta.oauth2.issuer=${OAUTH_ISSUER}
       -Dokta.oauth2.clientId=${OAUTH_CLIENTID}
       -Dokta.oauth2.clientSecret=${OAUTH_CLIENTSECRET}
-      -Dokta.oauth2.audience=${OAUTH_AUDIENCE}
+      -Dokta.oauth2.audience=${OAUTH_AUDIENCE}"
+    fi
+
+    # Add admin auth variables if using single-auth profile
+    if [[ "${ENVIRONMENT}" == *"single-auth"* ]]; then
+      if [[ -n "${TEST_ROLE:-}" ]]; then
+        java_cmd="${java_cmd}
+      -DTEST_ROLE=${TEST_ROLE}"
+        echo_info "Using test role: ${TEST_ROLE}"
+      fi
+      if [[ -n "${TEST_USER_NAME:-}" ]]; then
+        java_cmd="${java_cmd}
+      -DTEST_USER_NAME=${TEST_USER_NAME}"
+      fi
+      if [[ -n "${TEST_USER_EMAIL:-}" ]]; then
+        java_cmd="${java_cmd}
+      -DTEST_USER_EMAIL=${TEST_USER_EMAIL}"
+      fi
+    fi
+
+    java_cmd="${java_cmd}
       -Dspring.flyway.enabled=${MIGRATIONS_ENABLED}
       -jar ${OSMT_JAR}"
 

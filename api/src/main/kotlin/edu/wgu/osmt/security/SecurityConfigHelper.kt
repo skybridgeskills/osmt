@@ -7,12 +7,12 @@ import org.springframework.http.HttpMethod.POST
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 
 /**
- * Helper utility for shared security configuration between OAuth2 and noauth profiles.
+ * Helper utility for shared security configuration between OAuth2 and single-auth profiles.
  *
  * This class provides a single source of truth for all authorization rules, eliminating duplication
- * between [SecurityConfig] and [NoAuthSecurityConfig].
+ * between [SecurityConfig] and [SingleAuthSecurityConfig].
  *
- * All authorization rules are centralized here to ensure consistency between OAuth2 and noauth
+ * All authorization rules are centralized here to ensure consistency between OAuth2 and single-auth
  * security profiles.
  */
 object SecurityConfigHelper {
@@ -46,6 +46,25 @@ object SecurityConfigHelper {
     fun configurePublicEndpoints(http: HttpSecurity): HttpSecurity =
         http.authorizeHttpRequests { auth ->
             auth
+                // UI routes - must be public to allow login page and static resources
+                .requestMatchers("/", "/login", "/login/**", "/login/success")
+                .permitAll()
+                .requestMatchers(
+                    "/assets/**",
+                    "/config/**",
+                    "/*.js",
+                    "/*.css",
+                    "/*.html",
+                    "/*.ico",
+                    "/*.png",
+                    "/*.svg",
+                ).permitAll()
+                // Whitelabel config endpoint (needed for frontend initialization)
+                .requestMatchers(GET, "/whitelabel/**")
+                .permitAll()
+                // Login endpoint for single-auth profile
+                .requestMatchers(POST, "/api/auth/login")
+                .permitAll()
                 // Public search endpoints
                 .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_SKILLS))
                 .permitAll()

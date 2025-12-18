@@ -297,6 +297,8 @@ class MockData {
             "https://osmt.wgu.edu/author",
             "https://osmt.wgu.edu/credentialengineerregistry",
             "http://localhost:4200",
+            "",
+            "oauth2",
             "http://localhost:4200/login/success",
             "user",
             "user@email.com",
@@ -306,6 +308,8 @@ class MockData {
             true,
             "https://rsd.openskillsnetwork.org/context-v1.json",
             "http://localhost:4200",
+            null, // singleAuthAdminUsername
+            null, // singleAuthAdminPassword
             "Osmt_Admin",
             "Osmt_Curator",
             "Osmt_View",

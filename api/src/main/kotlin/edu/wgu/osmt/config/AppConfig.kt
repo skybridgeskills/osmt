@@ -22,6 +22,10 @@ class AppConfig(
     val defaultCreatorUri: String,
     @Value("\${app.frontendUrl}")
     val frontendUrl: String,
+    @Value("\${app.loginUrl:}")
+    val loginUrl: String,
+    @Value("\${app.authMode:oauth2}")
+    val authMode: String,
     @Value("\${app.loginSuccessRedirectUrl}")
     val loginSuccessRedirectUrl: String,
     @Value("\${app.userName:name}")
@@ -40,6 +44,11 @@ class AppConfig(
     val rsdContextUrl: String,
     @Value("\${app.security.cors.allowedOrigins}")
     val corsAllowedOrigins: String,
+    // Single-auth profile admin credentials
+    @Value("\${app.single-auth.admin-username:#{null}}")
+    val singleAuthAdminUsername: String?,
+    @Value("\${app.single-auth.admin-password:#{null}}")
+    val singleAuthAdminPassword: String?,
     // This next values are WGU specific.
     @Value("\${osmt.security.role.admin:Osmt_Admin}")
     val roleAdmin: String,

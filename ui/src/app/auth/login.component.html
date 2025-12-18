@@ -1,9 +1,74 @@
-<div class="l-loader-x-loader">
-  <div class="m-loader">
-    <div class="m-loader-x-body">
-      <div class="m-loader-x-loader">
-        <div class="m-loaderGraphic m-loaderGraphic-large"></div>
+<div class="login-container">
+  <div *ngIf="isSingleAuthMode; else oauthLoader" class="single-auth-login">
+    <h2>Admin Login</h2>
+    <p>Enter your admin credentials to continue:</p>
+
+    <form (ngSubmit)="onLogin($event)" class="login-form">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <div class="m-text">
+          <input
+            id="username"
+            type="text"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Enter username"
+            required
+            [disabled]="isLoading"
+          />
+        </div>
       </div>
+
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <div class="m-text">
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter password"
+            required
+            [disabled]="isLoading"
+            (keyup.enter)="onLogin($event)"
+          />
+        </div>
+      </div>
+
+      <div *ngIf="loginError" class="error-message">
+        {{ loginError }}
+      </div>
+
+      <button
+        type="submit"
+        class="m-button login-btn"
+        [disabled]="isLoading || !username || !password"
+      >
+        <span *ngIf="isLoading" class="m-button-x-loader">
+          <span class="m-loaderGraphic m-loaderGraphic-medium"></span>
+        </span>
+        <span *ngIf="!isLoading" class="m-button-x-text">Login</span>
+        <span *ngIf="isLoading" class="m-button-x-text">Logging in...</span>
+      </button>
+    </form>
+
+    <div class="single-auth-notice">
+      <small>
+        <strong>Single-Auth Mode:</strong> Simple admin authentication. This
+        mode is for local development and simple deployments.
+      </small>
     </div>
   </div>
+
+  <ng-template #oauthLoader>
+    <div class="l-loader-x-loader">
+      <div class="m-loader">
+        <div class="m-loader-x-body">
+          <div class="m-loader-x-loader">
+            <div class="m-loaderGraphic m-loaderGraphic-large"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
 </div>
