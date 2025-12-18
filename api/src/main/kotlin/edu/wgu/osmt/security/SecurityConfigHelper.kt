@@ -70,6 +70,9 @@ object SecurityConfigHelper {
                 .permitAll()
                 .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_COLLECTIONS))
                 .permitAll()
+                // Public skills filter endpoint (for the skills list page)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_FILTER))
+                .permitAll()
                 // Public canonical URL endpoints
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_DETAIL))
                 .permitAll()

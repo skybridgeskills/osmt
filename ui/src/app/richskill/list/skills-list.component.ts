@@ -75,6 +75,8 @@ export class SkillsListComponent extends QuickLinksHelper {
   showAddToCollection = true;
   showExportSelected = false;
 
+  isPublicView = false;
+
   selectAllChecked = false;
 
   constructor(
@@ -141,11 +143,17 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   actionsVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return true;
     // return (this.selectedSkills?.length ?? 0) > 0
   }
 
   publishVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         skill.publishDate === undefined &&
@@ -164,6 +172,9 @@ export class SkillsListComponent extends QuickLinksHelper {
     }
   }
   archiveVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         !checkArchived(skill) &&
@@ -183,6 +194,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   unarchiveVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         checkArchived(skill) &&
@@ -200,6 +214,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   protected exportSearchVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return false;
   }
 
@@ -208,6 +225,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   addToCollectionVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (this.collection?.status === PublishStatus.Workspace) {
       return (
         this.addToVisible() &&
@@ -384,6 +404,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   protected addToWorkspaceVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return (
       this.addToVisible() &&
       this.authService.isEnabledByRoles(ButtonAction.MyWorkspace)
@@ -561,6 +584,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   getSelectAllEnabled(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return true;
   }
 

@@ -140,6 +140,9 @@ class RichSkillController
             sort: String?,
             @AuthenticationPrincipal user: Jwt?,
         ): HttpEntity<List<RichSkillDoc>> {
+            if (!appConfig.allowPublicLists && user === null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
             val publishStatuses =
                 status
                     .mapNotNull {

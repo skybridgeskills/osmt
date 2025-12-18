@@ -5,6 +5,7 @@ import edu.wgu.osmt.HasDatabaseReset
 import edu.wgu.osmt.HasElasticsearchReset
 import edu.wgu.osmt.RoutePaths
 import edu.wgu.osmt.SpringTest
+import edu.wgu.osmt.api.GeneralApiException
 import edu.wgu.osmt.api.model.ApiFilteredSearch
 import edu.wgu.osmt.api.model.ApiSearch
 import edu.wgu.osmt.collection.CollectionEsRepo
@@ -25,6 +26,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import org.apache.commons.lang3.StringUtils
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -32,6 +34,7 @@ import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
@@ -355,5 +358,160 @@ internal class RichSkillControllerTest
 
             val result = richSkillController.exportLibraryCsv(user = notNullJwt)
             assertThat(result.body?.uuid).isNotBlank()
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersPublicAccessAllowed() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", true)
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs().filter { it.publishStatus != PublishStatus.Deleted && it.publishStatus != PublishStatus.Draft }
+            richSkillEsRepo.saveAll(listOfSkills)
+
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("published", "archived"),
+                    ApiSearch(),
+                    "",
+                    nullJwt, // unauthenticated user
+                )
+
+            // Assert
+            assertThat(result.body?.size).isGreaterThan(0)
+            assertThat(result.body?.all { it.publishStatus == PublishStatus.Published || it.publishStatus == PublishStatus.Archived }).isTrue()
+            assertThat(result.body?.none { it.publishStatus == PublishStatus.Draft || it.publishStatus == PublishStatus.Deleted }).isTrue()
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersPublicAccessDenied() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", false)
+            val size = 50
+            val listOfSkills = mockData.getRichSkillDocs()
+            richSkillEsRepo.saveAll(listOfSkills)
+
+            // Act & Assert
+            assertThatThrownBy {
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    size,
+                    0,
+                    arrayOf("published", "archived"),
+                    ApiSearch(),
+                    "",
+                    nullJwt, // unauthenticated user
+                )
+            }.isInstanceOf(GeneralApiException::class.java)
+                .hasMessage("Unauthorized")
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersDraftFilteredForUnauthenticated() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", true)
+            val draftSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Draft, uuid = "draft-skill")
+            val publishedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Published, uuid = "published-skill")
+            richSkillEsRepo.saveAll(listOf(draftSkill, publishedSkill))
+
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    50,
+                    0,
+                    arrayOf("draft", "published"), // request both draft and published
+                    ApiSearch(),
+                    "",
+                    nullJwt, // unauthenticated user
+                )
+
+            // Assert
+            assertThat(result.body?.size).isGreaterThan(0)
+            assertThat(result.body?.any { it.uuid == "published-skill" }).isTrue()
+            assertThat(result.body?.none { it.uuid == "draft-skill" }).isTrue() // draft should be filtered out
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersDeletedFilteredForUnauthenticated() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", true)
+            val deletedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Deleted, uuid = "deleted-skill")
+            val publishedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Published, uuid = "published-skill")
+            richSkillEsRepo.saveAll(listOf(deletedSkill, publishedSkill))
+
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    50,
+                    0,
+                    arrayOf("deleted", "published"), // request both deleted and published
+                    ApiSearch(),
+                    "",
+                    nullJwt, // unauthenticated user
+                )
+
+            // Assert
+            assertThat(result.body?.size).isGreaterThan(0)
+            assertThat(result.body?.any { it.uuid == "published-skill" }).isTrue()
+            assertThat(result.body?.none { it.uuid == "deleted-skill" }).isTrue() // deleted should be filtered out
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersAuthenticatedSeesAllStatuses() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", true)
+            val draftSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Draft, uuid = "draft-skill")
+            val publishedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Published, uuid = "published-skill")
+            val archivedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Archived, uuid = "archived-skill")
+            val deletedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Deleted, uuid = "deleted-skill")
+            richSkillEsRepo.saveAll(listOf(draftSkill, publishedSkill, archivedSkill, deletedSkill))
+
+            val jwt = Jwt.withTokenValue("test-token").header("alg", "RS256").build()
+
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    50,
+                    0,
+                    arrayOf("draft", "published", "archived", "deleted"), // request all statuses
+                    ApiSearch(),
+                    "",
+                    jwt, // authenticated user
+                )
+
+            // Assert
+            val uuids = result.body?.map { it.uuid } ?: emptyList()
+            assertThat(uuids).contains("draft-skill", "published-skill", "archived-skill", "deleted-skill")
+        }
+
+        @Test
+        fun testAllPaginatedWithFiltersPublishedAndArchivedAccessible() {
+            // Arrange
+            ReflectionTestUtils.setField(appConfig, "allowPublicLists", true)
+            val publishedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Published, uuid = "published-skill")
+            val archivedSkill = mockData.getRichSkillDocs().first().copy(publishStatus = PublishStatus.Archived, uuid = "archived-skill")
+            richSkillEsRepo.saveAll(listOf(publishedSkill, archivedSkill))
+
+            // Act
+            val result =
+                richSkillController.allPaginatedWithFilters(
+                    UriComponentsBuilder.newInstance(),
+                    50,
+                    0,
+                    arrayOf("published", "archived"),
+                    ApiSearch(),
+                    "",
+                    nullJwt, // unauthenticated user
+                )
+
+            // Assert
+            val uuids = result.body?.map { it.uuid } ?: emptyList()
+            assertThat(uuids).contains("published-skill", "archived-skill")
         }
     }

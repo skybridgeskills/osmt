@@ -34,7 +34,8 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
   showPublicNavbar(): boolean {
     const url = this.location.path();
     const pattern = /(api\/)?(skills|collections)\/[-0-9a-f]{36}$/; // exclude public canonical URL paths
-    return !this.isAuthenticated() || url.match(pattern) !== null;
+    const isSkillsRoute = url === '/skills' || url.startsWith('/skills?');
+    return !this.isAuthenticated() || url.match(pattern) !== null || (!this.isAuthenticated() && isSkillsRoute);
   }
 
   handleClickMenu(): boolean {
@@ -66,5 +67,9 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
     }
 
     return false;
+  }
+
+  getCurrentUrl(): string {
+    return this.location.path();
   }
 }

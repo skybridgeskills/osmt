@@ -33,6 +33,13 @@
 
       <div class="m-navBar-x-tagline">{{ whitelabel.toolNameLong }}</div>
 
+      <!-- Login button for public navbar -->
+      <div *ngIf="showPublicNavbar() && !isAuthenticated()" class="m-navBar-x-publicAuth">
+        <a routerLink="/login" [queryParams]="{ return: getCurrentUrl() }" class="m-navBar-x-loginButton">
+          Login
+        </a>
+      </div>
+
       <ul *ngIf="!showPublicNavbar()" class="m-navBar-x-desktopNav">
         <li>
           <a
