@@ -8,6 +8,7 @@ import { AppConfig } from './app.config';
 import { Observable } from 'rxjs';
 import { IAuthService } from './auth/iauth-service';
 import { ApiTaskResult, ITaskResult } from './task/ApiTaskResult';
+import { ToastService } from './toast/toast.service';
 import { PublishStatus } from './PublishStatus';
 import { ApiSortOrder } from './richskill/ApiSkill';
 import {
@@ -55,6 +56,7 @@ export abstract class AbstractService {
   protected constructor(
     protected httpClient: HttpClient,
     protected authService: IAuthService,
+    protected toastService: ToastService,
     protected router: Router,
     protected location: Location,
     @Inject('BASE_API') baseApi: string
@@ -65,10 +67,21 @@ export abstract class AbstractService {
   redirectToLogin(error: any): void {
     const status: number = error?.status ?? 500;
     if (status === 401) {
-      this.authService.logout();
-      const returnPath = this.location.path(true);
-      this.authService.start(returnPath);
-      return;
+      if (!this.authService.isAuthenticated()) {
+        // Public user trying to access protected endpoint - show toast instead of redirect
+        this.toastService.showToast(
+          'Authentication Required',
+          'Some features require authentication. Please log in to access all functionality.',
+          true
+        );
+        return;
+      } else {
+        // Authenticated user got 401 - logout and redirect (existing behavior)
+        this.authService.logout();
+        const returnPath = this.location.path(true);
+        this.authService.start(returnPath);
+        return;
+      }
     } else if (status === 0) {
       this.authService.setServerIsDown(true);
     }

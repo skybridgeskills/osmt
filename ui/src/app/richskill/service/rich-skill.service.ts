@@ -19,6 +19,7 @@ import { ApiSkillSummary, ISkillSummary } from '../ApiSkillSummary';
 import { ApiSkillUpdate } from '../ApiSkillUpdate';
 import { AbstractService } from '../../abstract.service';
 import { AuthService } from '../../auth/auth-service';
+import { ToastService } from '../../toast/toast.service';
 import { PublishStatus } from '../../PublishStatus';
 import { ApiTaskResult, ITaskResult } from '../../task/ApiTaskResult';
 
@@ -29,11 +30,12 @@ export class RichSkillService extends AbstractService {
   constructor(
     httpClient: HttpClient,
     authService: AuthService,
+    toastService: ToastService,
     router: Router,
     location: Location,
     @Inject('BASE_API') baseApi: string
   ) {
-    super(httpClient, authService, router, location, baseApi);
+    super(httpClient, authService, toastService, router, location, baseApi);
   }
 
   private serviceUrl = 'skills';

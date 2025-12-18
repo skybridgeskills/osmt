@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { AbstractService } from '../../abstract.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth-service';
+import { ToastService } from '../../toast/toast.service';
 import { Observable } from 'rxjs';
 import { ApiNamedReference, INamedReference, KeywordType } from '../ApiSkill';
 import { map } from 'rxjs/operators';
@@ -16,11 +17,12 @@ export class KeywordSearchService extends AbstractService {
   constructor(
     httpClient: HttpClient,
     authService: AuthService,
+    toastService: ToastService,
     router: Router,
     location: Location,
     @Inject('BASE_API') baseApi: string
   ) {
-    super(httpClient, authService, router, location, baseApi);
+    super(httpClient, authService, toastService, router, location, baseApi);
   }
 
   searchJobcodes(query: string): Observable<ApiJobCode[]> {
