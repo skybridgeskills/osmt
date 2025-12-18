@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../auth/auth-service';
+import { ToastService } from '../../toast/toast.service';
 import { AbstractService } from '../../abstract.service';
 import { PublishStatus } from '../../PublishStatus';
 import {
@@ -47,11 +48,12 @@ export class CollectionService extends AbstractService {
   constructor(
     httpClient: HttpClient,
     authService: AuthService,
+    toastService: ToastService,
     router: Router,
     location: Location,
     @Inject('BASE_API') baseApi: string
   ) {
-    super(httpClient, authService, router, location, baseApi);
+    super(httpClient, authService, toastService, router, location, baseApi);
   }
 
   getCollections(

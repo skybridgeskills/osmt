@@ -15,10 +15,13 @@ import {
   AuthServiceStub,
   RouterData,
   RouterStub,
+  ToastServiceData,
+  ToastServiceStub,
 } from '@test/resource/mock-stubs';
 import { AbstractService } from './abstract.service';
 import { AppConfig } from './app.config';
 import { AuthService } from './auth/auth-service';
+import { ToastService } from './toast/toast.service';
 import { EnvironmentService } from './core/environment.service';
 import { PublishStatus } from './PublishStatus';
 import { ApiSortOrder } from './richskill/ApiSkill';
@@ -33,11 +36,12 @@ export class ConcreteService extends AbstractService {
   constructor(
     httpClient: HttpClient,
     authService: AuthService,
+    toastService: ToastService,
     router: Router,
     location: Location,
     @Inject('BASE_API') baseApi: string
   ) {
-    super(httpClient, authService, router, location, baseApi);
+    super(httpClient, authService, toastService, router, location, baseApi);
   }
 
   public buildUrl(path: string): string {
@@ -84,6 +88,7 @@ describe('AbstractService (no HTTP needed)', () => {
         ConcreteService,
         Location,
         { provide: AuthService, useClass: AuthServiceStub },
+        { provide: ToastService, useClass: ToastServiceStub },
         { provide: Router, useClass: RouterStub },
         {
           provide: 'BASE_API',
@@ -105,8 +110,6 @@ describe('AbstractService (no HTTP needed)', () => {
     [
       { input: undefined, output: { commands: [], isDown: false } },
       { input: {}, output: { commands: [], isDown: false } },
-      // Ignoring 401 case because the behavior is configurable.
-      { input: { status: 0 }, output: { commands: [], isDown: true } },
     ].forEach(params => {
       // Arrange
       RouterData.commands = [];
@@ -119,6 +122,57 @@ describe('AbstractService (no HTTP needed)', () => {
       expect(RouterData.commands).toEqual(params.output.commands);
       expect(AuthServiceData.isDown).toEqual(params.output.isDown);
     });
+  });
+
+  it('redirectToLogin with status 401 when not authenticated should show toast', () => {
+    // Arrange
+    RouterData.commands = [];
+    AuthServiceData.isDown = false;
+    AuthServiceData.authenticatedFlag = false;
+    ToastServiceData.lastToast = null;
+
+    // Act
+    testService.redirectToLogin({ status: 401 });
+
+    // Assert
+    expect(RouterData.commands).toEqual([]); // No redirect
+    expect(AuthServiceData.isDown).toEqual(false);
+    expect(ToastServiceData.lastToast).toEqual({
+      title: 'Authentication Required',
+      message: 'Some features require authentication. Please log in to access all functionality.',
+      isAttention: true,
+    });
+  });
+
+  it('redirectToLogin with status 401 when authenticated should logout and redirect', () => {
+    // Arrange
+    RouterData.commands = [];
+    RouterData.extras = {};
+    AuthServiceData.isDown = false;
+    AuthServiceData.authenticatedFlag = true;
+    ToastServiceData.lastToast = null;
+
+    // Act
+    testService.redirectToLogin({ status: 401 });
+
+    // Assert
+    expect(RouterData.commands).toEqual(['/login']); // Redirect to login
+    expect(RouterData.extras).toEqual({ queryParams: { return: '' } });
+    expect(AuthServiceData.isDown).toEqual(false);
+    expect(ToastServiceData.lastToast).toBeNull(); // No toast shown
+  });
+
+  it('redirectToLogin with status 0 should set server down', () => {
+    // Arrange
+    RouterData.commands = [];
+    AuthServiceData.isDown = false;
+
+    // Act
+    testService.redirectToLogin({ status: 0 });
+
+    // Assert
+    expect(RouterData.commands).toEqual([]);
+    expect(AuthServiceData.isDown).toEqual(true);
   });
 
   it('buildTableParams should be correct', () => {
@@ -161,6 +215,7 @@ describe('AbstractService (HTTP needed)', () => {
         ConcreteService,
         Location,
         { provide: AuthService, useClass: AuthServiceStub },
+        { provide: ToastService, useClass: ToastServiceStub },
         { provide: Router, useClass: RouterStub },
         {
           provide: 'BASE_API',
