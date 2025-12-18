@@ -139,7 +139,8 @@ describe('AbstractService (no HTTP needed)', () => {
     expect(AuthServiceData.isDown).toEqual(false);
     expect(ToastServiceData.lastToast).toEqual({
       title: 'Authentication Required',
-      message: 'Some features require authentication. Please log in to access all functionality.',
+      message:
+        'Some features require authentication. Please log in to access all functionality.',
       isAttention: true,
     });
   });

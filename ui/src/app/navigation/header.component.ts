@@ -35,7 +35,11 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
     const url = this.location.path();
     const pattern = /(api\/)?(skills|collections)\/[-0-9a-f]{36}$/; // exclude public canonical URL paths
     const isSkillsRoute = url === '/skills' || url.startsWith('/skills?');
-    return !this.isAuthenticated() || url.match(pattern) !== null || (!this.isAuthenticated() && isSkillsRoute);
+    return (
+      !this.isAuthenticated() ||
+      url.match(pattern) !== null ||
+      (!this.isAuthenticated() && isSkillsRoute)
+    );
   }
 
   handleClickMenu(): boolean {
@@ -71,5 +75,17 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
 
   getCurrentUrl(): string {
     return this.location.path();
+  }
+
+  shouldShowSearchBar(): boolean {
+    if (!this.showPublicNavbar()) {
+      return true; // Show for authenticated users
+    }
+    // Show for unauthenticated users on skills page
+    const url = this.location.path();
+    return (
+      !this.isAuthenticated() &&
+      (url === '/skills' || url.startsWith('/skills?'))
+    );
   }
 }

@@ -1,4 +1,9 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -84,7 +89,8 @@ export class SkillsListComponent extends QuickLinksHelper {
     protected richSkillService: RichSkillService,
     protected collectionService: CollectionService,
     protected toastService: ToastService,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -102,6 +108,8 @@ export class SkillsListComponent extends QuickLinksHelper {
   protected setResults(results: PaginatedSkills): void {
     this.results = results;
     this.selectedSkills = undefined;
+    // Mark for check after results update to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => this.cdr.markForCheck(), 0);
   }
 
   get skillCountLabel(): string {
@@ -622,8 +630,13 @@ export class SkillsListComponent extends QuickLinksHelper {
     return a;
   }
 
+  private _isSizePaginationVisibleFn: () => boolean = () => {
+    const minSize =
+      this.filterControlsComponent?.sizePagination?.values[0] ?? 50;
+    return this.totalCount > minSize;
+  };
+
   get isSizePaginationVisible(): () => boolean {
-    return () =>
-      this.totalCount > this.filterControlsComponent?.sizePagination?.values[0];
+    return this._isSizePaginationVisibleFn;
   }
 }

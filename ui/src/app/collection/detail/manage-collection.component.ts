@@ -1,4 +1,11 @@
-import { Component, Inject, LOCALE_ID, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  LOCALE_ID,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -88,14 +95,16 @@ export class ManageCollectionComponent
     protected route: ActivatedRoute,
     protected titleService: Title,
     protected authService: AuthService,
-    @Inject(LOCALE_ID) protected locale: string
+    @Inject(LOCALE_ID) protected locale: string,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
       richSkillService,
       collectionService,
       toastService,
-      authService
+      authService,
+      cdr
     );
   }
 

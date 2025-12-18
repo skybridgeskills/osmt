@@ -1,6 +1,6 @@
 // noinspection MagicNumberJS,LocalVariableNamingConventionJS
 
-import { Component, ElementRef, Type } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Type } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import {
@@ -520,6 +520,135 @@ describe('SkillsListComponent', () => {
       expect(component.from).toEqual(0);
       expect(component.size).toEqual(size);
       expect(component.handlePageClicked).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('isSizePaginationVisible', () => {
+    it('should return a stable function reference', () => {
+      // Arrange
+      const fn1 = component.isSizePaginationVisible;
+      const fn2 = component.isSizePaginationVisible;
+
+      // Assert - function reference should be stable (same reference)
+      expect(fn1).toBe(fn2);
+    });
+
+    it('should return false when totalCount is less than min size', () => {
+      // Arrange
+      component.setResults(createMockPaginatedSkills(10, 30)); // 30 < 50
+      component.filterControlsComponent = {
+        sizePagination: { values: [50, 100, 150] },
+      } as any;
+
+      // Act
+      const fn = component.isSizePaginationVisible;
+      const result = fn();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should return true when totalCount is greater than min size', () => {
+      // Arrange
+      component.setResults(createMockPaginatedSkills(10, 100)); // 100 > 50
+      component.filterControlsComponent = {
+        sizePagination: { values: [50, 100, 150] },
+      } as any;
+
+      // Act
+      const fn = component.isSizePaginationVisible;
+      const result = fn();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('should use default min size of 50 when filterControlsComponent is undefined', () => {
+      // Arrange
+      component.setResults(createMockPaginatedSkills(10, 30)); // 30 < 50
+      component.filterControlsComponent = undefined as any;
+
+      // Act
+      const fn = component.isSizePaginationVisible;
+      const result = fn();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('should not cause ExpressionChangedAfterItHasBeenCheckedError when totalCount changes', () => {
+      // Arrange
+      component.setResults(createMockPaginatedSkills(10, 30));
+      component.filterControlsComponent = {
+        sizePagination: { values: [50, 100, 150] },
+      } as any;
+
+      const fn1 = component.isSizePaginationVisible;
+      const result1 = fn1();
+
+      // Act - change totalCount
+      component.setResults(createMockPaginatedSkills(10, 100));
+
+      // Assert - function reference should still be stable
+      const fn2 = component.isSizePaginationVisible;
+      expect(fn1).toBe(fn2); // Same reference
+
+      // But the function should reflect the new totalCount when called
+      const result2 = fn2();
+      expect(result1).toBe(false);
+      expect(result2).toBe(true);
+    });
+  });
+
+  describe('isPublicView', () => {
+    it('should default to false', () => {
+      expect(component.isPublicView).toBe(false);
+    });
+
+    it('actionsVisible should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      expect(component.actionsVisible()).toBe(false);
+    });
+
+    it('actionsVisible should return true when isPublicView is false', () => {
+      component.isPublicView = false;
+      expect(component.actionsVisible()).toBe(true);
+    });
+
+    it('publishVisible should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      const skill = createMockSkillSummary('id1', PublishStatus.Draft, '');
+      expect(component.publishVisible(skill)).toBe(false);
+    });
+
+    it('archiveVisible should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      const skill = createMockSkillSummary('id1', PublishStatus.Draft);
+      expect(component.archiveVisible(skill)).toBe(false);
+    });
+
+    it('unarchiveVisible should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      const skill = createMockSkillSummary('id1', PublishStatus.Archived);
+      expect(component.unarchiveVisible(skill)).toBe(false);
+    });
+
+    it('addToCollectionVisible should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      component.selectedSkills = [
+        createMockSkillSummary('id1', PublishStatus.Draft),
+      ];
+      expect(component.addToCollectionVisible()).toBe(false);
+    });
+
+    it('getSelectAllEnabled should return false when isPublicView is true', () => {
+      component.isPublicView = true;
+      expect(component.getSelectAllEnabled()).toBe(false);
+    });
+
+    it('getSelectAllEnabled should return true when isPublicView is false', () => {
+      component.isPublicView = false;
+      expect(component.getSelectAllEnabled()).toBe(true);
     });
   });
 });

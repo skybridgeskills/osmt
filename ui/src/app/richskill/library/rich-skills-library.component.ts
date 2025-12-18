@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RichSkillService } from '../service/rich-skill.service';
 import { SkillsListComponent } from '../list/skills-list.component';
 import { ToastService } from '../../toast/toast.service';
@@ -29,14 +29,16 @@ export class RichSkillsLibraryComponent
     protected collectionService: CollectionService,
     protected toastService: ToastService,
     protected titleService: Title,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
       richSkillService,
       collectionService,
       toastService,
-      authService
+      authService,
+      cdr
     );
   }
 
@@ -47,7 +49,10 @@ export class RichSkillsLibraryComponent
     if (!this.authService.isAuthenticated()) {
       this.isPublicView = true;
       // Filter to only show Published and Archived skills (API automatically filters out Draft and Deleted)
-      this.selectedFilters = new Set([PublishStatus.Published, PublishStatus.Archived]);
+      this.selectedFilters = new Set([
+        PublishStatus.Published,
+        PublishStatus.Archived,
+      ]);
     }
 
     this.loadNextPage();

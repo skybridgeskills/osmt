@@ -46,7 +46,6 @@ const routes: Routes = [
   {
     path: 'skills/search',
     component: RichSkillSearchResultsComponent,
-    canActivate: [AuthGuard],
   },
   // edit skill
   {
