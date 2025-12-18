@@ -78,7 +78,6 @@ const routes: Routes = [
   {
     path: 'skills',
     component: RichSkillsLibraryComponent,
-    canActivate: [AuthGuard],
   },
   // batch import
   {

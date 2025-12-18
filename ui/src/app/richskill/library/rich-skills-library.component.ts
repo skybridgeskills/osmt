@@ -7,7 +7,7 @@ import {
   PaginatedSkills,
 } from '../service/rich-skill-search.service';
 import { Router } from '@angular/router';
-import { determineFilters } from '../../PublishStatus';
+import { determineFilters, PublishStatus } from '../../PublishStatus';
 import { Title } from '@angular/platform-browser';
 import { AuthService } from '../../auth/auth-service';
 import { CollectionService } from '../../collection/service/collection.service';
@@ -42,6 +42,14 @@ export class RichSkillsLibraryComponent
 
   ngOnInit(): void {
     this.titleService.setTitle(`${this.title} | ${this.whitelabel.toolName}`);
+
+    // Check authentication status and adjust behavior
+    if (!this.authService.isAuthenticated()) {
+      this.isPublicView = true;
+      // Filter to only show Published and Archived skills (API automatically filters out Draft and Deleted)
+      this.selectedFilters = new Set([PublishStatus.Published, PublishStatus.Archived]);
+    }
+
     this.loadNextPage();
   }
 
