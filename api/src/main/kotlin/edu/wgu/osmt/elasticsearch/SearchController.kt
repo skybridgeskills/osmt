@@ -340,7 +340,7 @@ class SearchController
         )
         @ResponseBody
         fun searchJobCodes(
-            uriComponentsBuilder: UriComponentsBuilder,
+            _uriComponentsBuilder: UriComponentsBuilder,
             @RequestParam(required = true) query: String,
         ): HttpEntity<List<ApiJobCode>> {
             val searchResults = jobCodeEsRepo.typeAheadSearch(query)
@@ -363,7 +363,7 @@ class SearchController
         )
         @ResponseBody
         fun searchKeywords(
-            uriComponentsBuilder: UriComponentsBuilder,
+            _uriComponentsBuilder: UriComponentsBuilder,
             @RequestParam(required = true) query: String,
             @RequestParam(required = true) type: String,
             @AuthenticationPrincipal user: Jwt?,

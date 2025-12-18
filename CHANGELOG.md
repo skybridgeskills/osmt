@@ -2,6 +2,10 @@
 
 TBD, 2026
 
+## Enhancements
+
+- Public skills list page accessible without authentication
+
 # Announcing the release of OSMT 3.0.0
 
 Jan 29, 2024
