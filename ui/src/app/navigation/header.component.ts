@@ -34,12 +34,7 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
   showPublicNavbar(): boolean {
     const url = this.location.path();
     const pattern = /(api\/)?(skills|collections)\/[-0-9a-f]{36}$/; // exclude public canonical URL paths
-    const isSkillsRoute = url === '/skills' || url.startsWith('/skills?');
-    return (
-      !this.isAuthenticated() ||
-      url.match(pattern) !== null ||
-      (!this.isAuthenticated() && isSkillsRoute)
-    );
+    return !this.isAuthenticated() || url.match(pattern) !== null;
   }
 
   handleClickMenu(): boolean {
