@@ -23,13 +23,4 @@ data "aws_secretsmanager_secret_version" "db_password" {
   secret_id = data.aws_secretsmanager_secret.db_password.id
 }
 
-// Load the Sendgrid API Key
-data "aws_secretsmanager_secret" "sendgrid_api_key" {
-  name = "platform/secrets/sendgrid_api_key"
-}
-
-// Load the Tenant Admin Password
-data "aws_secretsmanager_secret" "tenant_admin_password" {
-  name = "platform/secrets/tenant_admin_password"
-}
 

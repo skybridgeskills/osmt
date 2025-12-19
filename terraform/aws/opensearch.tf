@@ -6,7 +6,7 @@ resource "aws_opensearch_domain" "opensearch" {
     instance_type          = var.config.opensearch.instance_type
     instance_count         = var.config.opensearch.instance_count
     dedicated_master_type  = var.config.opensearch.dedicated_master_type
-    master_instance_count  = var.config.opensearch.master_instance_count
+    dedicated_master_count = var.config.opensearch.master_instance_count
 
     zone_awareness_enabled = true
     zone_awareness_config {

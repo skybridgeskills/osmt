@@ -62,10 +62,6 @@ resource "aws_iam_role_policy_attachment" "certificate_and_loadbalancer_manageme
 }
 
 # Policy Attachments for Execution Task Role
-resource "aws_iam_role_policy_attachment" "execution_access_policy_attachment" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = aws_iam_policy.platform_secrets_access_policy.arn
-}
 
 resource "aws_iam_role_policy_attachment" "execution_ssm_policy_attachment" {
   role       = aws_iam_role.ecs_task_execution.name

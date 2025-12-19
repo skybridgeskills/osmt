@@ -14,6 +14,51 @@ The infrastructure includes:
 - **Route53** DNS records
 - **ACM** SSL certificates
 
+## File Organization
+
+The Terraform files are organized by logical function to make it easy to understand which resources belong to each service and to copy/paste service configurations when adding new services.
+
+### Service-Specific Files (`api_*`)
+
+These files contain API-specific resources and can be copy/pasted to create new services:
+
+- `api_ecs_cluster.tf` - ECS cluster (shared infrastructure)
+- `api_ecs_task_def.tf` - ECS task definition
+- `api_ecs_service.tf` - ECS service
+- `api_cloudwatch.tf` - CloudWatch log group for ECS
+- `api_alb.tf` - Application Load Balancer (API-specific)
+- `api_route53.tf` - Route53 DNS record pointing to API ALB
+- `api_iam.tf` - IAM roles for ECS tasks
+- `api_iam_policies.tf` - IAM policies for ECS tasks
+- `api_security_groups.tf` - Security groups for API service (`app_internal`, `web_external`)
+
+### Shared Infrastructure Files (un-prefixed)
+
+These files contain infrastructure shared across all services:
+
+- `vpc.tf` - VPC and networking infrastructure
+- `acm.tf` - SSL certificates
+- `rds.tf` - MySQL database
+- `elasticache.tf` - Redis cache
+- `opensearch.tf` - OpenSearch
+- `security_groups.tf` - Data layer security groups (`redis_internal`, `mysql_internal`, `opensearch_internal`)
+
+### Configuration Files (un-prefixed)
+
+- `variables.tf` - Input variables
+- `locals.tf` - Local values and computed expressions
+- `outputs.tf` - Output values
+- `data.tf` - Terraform data sources
+- `secrets.tf` - Random secrets generation
+- `ssm.tf` - SSM parameters
+- `kms.tf` - KMS encryption keys
+- `versions.tf` - Terraform version constraints
+
+This organization makes it easy to:
+1. Identify which resources belong to which service
+2. Copy/paste service files to create new services (e.g., `ui_*` files for a UI service)
+3. Understand which infrastructure is shared vs service-specific
+
 ## Prerequisites
 
 Before deploying, ensure you have:

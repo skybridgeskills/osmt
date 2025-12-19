@@ -35,7 +35,6 @@ resource "aws_iam_policy" "secrets_access_policy" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:platform/secrets/*",
           "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:osmt/*",
           module.rds.db_instance_master_user_secret_arn
         ]
@@ -44,26 +43,6 @@ resource "aws_iam_policy" "secrets_access_policy" {
   })
 }
 
-resource "aws_iam_policy" "platform_secrets_access_policy" {
-  name        = "${local.name-env-region}-platform-secrets-access"
-  description = "Allows access to platform secrets for task execution"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = [
-          "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:platform/secrets/*",
-          module.rds.db_instance_master_user_secret_arn
-        ]
-      }
-    ]
-  })
-}
 
 resource "aws_iam_policy" "ssm_read_access" {
   name        = "${local.name-env-region}-ssm-read-access"

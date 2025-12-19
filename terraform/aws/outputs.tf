@@ -33,3 +33,14 @@ output "opensearch_endpoint" {
   description = "OpenSearch endpoint"
 }
 
+output "auth_mode" {
+  value       = var.auth_mode
+  description = "Authentication mode (single-auth or oauth2)"
+}
+
+output "single_auth_admin_password" {
+  value       = local.auth.password
+  description = "Single-auth admin password (only available when auth_mode is single-auth)"
+  sensitive   = true
+}
+

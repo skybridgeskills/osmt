@@ -1,6 +1,5 @@
 variable "ecr_registry" {
   type        = string
-  default     = "853091924495.dkr.ecr.us-west-2.amazonaws.com"
   description = "ECR registry URL for Docker images"
 }
 
@@ -18,16 +17,6 @@ variable "config" {
       node_type            = optional(string, "cache.t3.micro")
       number_of_nodes      = optional(number, null)
       parameter_group_name = optional(string, "default.redis7")
-    }), {})
-    cloudfront = optional(object({
-      alternate_domains      = optional(list(string), [])
-      alternate_acm_cert_arn = optional(string, null)
-    }), {})
-    tenant_home = optional(object({
-      alternate_domains = optional(list(string), [])
-    }), {})
-    ops = optional(object({
-      allowed_cidrs = optional(list(string), ["0.0.0.0/0"])
     }), {})
     rds = optional(object({
       allocated_storage           = optional(number, 20)
@@ -52,18 +41,6 @@ variable "config" {
       name = optional(string, null)
       cidr = optional(string, "10.0.0.0/18")
     }), {})
-    sendgrid = optional(object({
-      domains = list(object({
-        domain = string
-        records = list(object({
-          type  = string
-          host  = string
-          value = string
-        }))
-      }))
-      }), {
-      domains = []
-    })
   })
   default = {
     app = {
@@ -74,8 +51,6 @@ variable "config" {
       tld  = "prettygoodskills.com"
     }
     # cache      = {}
-    # cloudfront = {}
-    # ops        = {}
     # rds        = {}
     # opensearch = {}
     # vpc        = {}
@@ -83,15 +58,45 @@ variable "config" {
   description = "Configuration options for the OSMT services (e.g. email from address)"
 }
 
-variable "sendgrid_api_key" {
+
+variable "auth_mode" {
   type        = string
-  description = "API key for sending emails"
+  default     = "single-auth"
+  description = "Authentication mode: 'single-auth' for simple admin/password auth, 'oauth2' for OAuth2/Okta authentication"
+
+  validation {
+    condition     = contains(["single-auth", "oauth2"], var.auth_mode)
+    error_message = "auth_mode must be either 'single-auth' or 'oauth2'"
+  }
+}
+
+variable "single_auth" {
+  type = object({
+    admin_username = optional(string, "admin")
+    admin_password = optional(string, null)
+  })
+  default = {
+    admin_username = "admin"
+    admin_password = null
+  }
+  description = "Single authentication mode configuration. If admin_password is not provided, a random password will be generated."
   sensitive   = true
 }
 
-variable "tenant_admin_password" {
-  type        = string
-  description = "Password for tenant admin"
+variable "oauth2" {
+  type = object({
+    issuer       = optional(string, null)
+    client_id    = optional(string, null)
+    client_secret = optional(string, null)
+    audience     = optional(string, null)
+  })
+  default = {
+    issuer       = null
+    client_id    = null
+    client_secret = null
+    audience     = null
+  }
+  description = "OAuth2/Okta authentication configuration"
   sensitive   = true
 }
 

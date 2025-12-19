@@ -13,24 +13,6 @@ locals {
     email_from_address = var.config.app.from_address == null ? "no-reply-${var.config.env.name}@${var.config.env.tld}" : var.config.app.from_address
   }
 
-  # SendGrid domain verification configuration
-  sendgrid_domains = {
-    for domain_config in var.config.sendgrid.domains : domain_config.domain => {
-      domain  = domain_config.domain
-      records = domain_config.records
-    }
-  }
-
-  cloudfront = {
-    aliases = length(var.config.cloudfront.alternate_domains) == 0 ? [
-      local.domains.osmt
-    ] : var.config.cloudfront.alternate_domains
-
-    cors_origins = length(var.config.cloudfront.alternate_domains) == 0 ? [
-      "https://${local.base_domain}",
-      "https://${local.domains.osmt}",
-    ] : [for domain in var.config.cloudfront.alternate_domains : "https://${domain}"]
-  }
 
   domains = {
     osmt = "osmt.${local.base_domain}"   # osmt.staging.prettygoodskills.com
@@ -48,6 +30,11 @@ locals {
   mysql_uri = "mysql://${urlencode(jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string).username)}:${urlencode(jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string).password)}@${module.rds.db_instance_endpoint}/${var.config.rds.db_name}"
   redis_uri = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:${local.ports.redis}"
   opensearch_uri = "https://${aws_opensearch_domain.opensearch.endpoint}"
+
+  # Computed auth password - use provided password or generated one
+  auth = {
+    password = var.auth_mode == "single-auth" ? (var.single_auth.admin_password != null ? var.single_auth.admin_password : random_password.single_auth_admin[0].result) : null
+  }
 
   tags = merge(
     {

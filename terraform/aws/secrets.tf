@@ -1,12 +1,16 @@
-resource "random_id" "tenant_admin_password" {
-  byte_length = 8
+
+resource "random_id" "jwt_secret" {
+  byte_length = 32
   keepers = {
     regenerate_on = "initial"
   }
 }
 
-resource "random_id" "jwt_secret" {
-  byte_length = 32
+# Generate random password for single-auth admin when not provided
+resource "random_password" "single_auth_admin" {
+  count   = var.single_auth.admin_password == null ? 1 : 0
+  length  = 16
+  special = true
   keepers = {
     regenerate_on = "initial"
   }
