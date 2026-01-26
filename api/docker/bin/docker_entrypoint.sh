@@ -146,7 +146,8 @@ function get_config_profile_from_env() {
 
   # If $ENVIRONMENT contains the config profile from one of these Spring application profiles,
   # then append it to the reindex profile string
-  declare -ar config_profile_list=("dev" "test" "review" "stage")
+  # Valid OSMT Spring Boot profiles: dev, test, review, staging
+  declare -ar config_profile_list=("dev" "test" "review" "staging")
 
   for config_profile in "${config_profile_list[@]}"; do
     if grep -q "${config_profile}" <<<"${env_arg}"; then
