@@ -27,7 +27,7 @@ function echo_err() {
 
 function echo_debug() {
   if [[ "${DEBUG:-}" == "1" ]] || [[ "${DEBUG:-}" == "true" ]]; then
-    echo "[docker_entrypoint.sh] DEBUG: $*"
+    echo "[docker_entrypoint.sh] DEBUG: $*" >&2
   fi
 }
 
@@ -135,7 +135,7 @@ function build_reindex_profile_string() {
   # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2-okta"
   declare env_arg=${1}
 
-  echo "reindex,$(get_config_profile_from_env "${env_arg}")"
+  echo "reindex,$(get_config_profile_from_env "${env_arg}" 2>/dev/null)"
 }
 
 function get_config_profile_from_env() {
@@ -165,7 +165,7 @@ function import_metadata() {
   else
     echo_info "Importing BLS metadata"
     local config_profile
-    config_profile=$(get_config_profile_from_env "${ENVIRONMENT}")
+    config_profile=$(get_config_profile_from_env "${ENVIRONMENT}" 2>/dev/null)
     echo_debug "Using config profile for import: '${config_profile}'"
     local java_cmd="/bin/java -jar
       -Dspring.profiles.active=${config_profile},import
@@ -198,7 +198,7 @@ function reindex_elasticsearch() {
   # The containerized Spring app needs an initial ElasticSearch index, or it returns 500s.
   if [[ "${REINDEX_ELASTICSEARCH}" == "true" ]]; then
     local reindex_profile_string
-    reindex_profile_string="reindex,$(get_config_profile_from_env "${ENVIRONMENT}")"
+    reindex_profile_string="reindex,$(get_config_profile_from_env "${ENVIRONMENT}" 2>/dev/null)"
     echo_debug "Reindex profile string: '${reindex_profile_string}'"
 
     echo_info "Building initial index in OSMT ElasticSearch using ${reindex_profile_string} Spring profiles..."
