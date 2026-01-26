@@ -27,7 +27,7 @@ function echo_err() {
 
 function echo_debug() {
   if [[ "${DEBUG:-}" == "1" ]] || [[ "${DEBUG:-}" == "true" ]]; then
-    echo "[docker_entrypoint.sh] DEBUG: $*" 1>&2
+    echo "[docker_entrypoint.sh] DEBUG: $*"
   fi
 }
 
