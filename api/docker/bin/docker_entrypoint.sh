@@ -36,7 +36,11 @@ function validate() {
   echo_debug "ENVIRONMENT variable value: '${ENVIRONMENT}'"
   echo_debug "ENVIRONMENT variable length: ${#ENVIRONMENT}"
   echo_debug "SPRING_PROFILES_ACTIVE variable value: '${SPRING_PROFILES_ACTIVE:-<not set>}'"
-  echo_debug "SPRING_PROFILES_ACTIVE variable length: ${#SPRING_PROFILES_ACTIVE:-0}"
+  if [[ -n "${SPRING_PROFILES_ACTIVE:-}" ]]; then
+    echo_debug "SPRING_PROFILES_ACTIVE variable length: ${#SPRING_PROFILES_ACTIVE}"
+  else
+    echo_debug "SPRING_PROFILES_ACTIVE variable length: 0 (not set)"
+  fi
   
   local -i missing_args=0
 
