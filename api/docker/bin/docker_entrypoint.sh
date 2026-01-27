@@ -207,7 +207,16 @@ function reindex_elasticsearch() {
       -Dspring.profiles.active=${reindex_profile_string}
       -Dredis.uri=${REDIS_URI}
       -Ddb.uri=${DB_URI}
-      -Des.uri=${ELASTICSEARCH_URI}
+      -Des.uri=${ELASTICSEARCH_URI}"
+
+    # Add Elasticsearch credentials if provided (for fine-grained access control)
+    if [[ -n "${ELASTICSEARCH_USERNAME:-}" ]] && [[ -n "${ELASTICSEARCH_PWD:-}" ]]; then
+      java_cmd="${java_cmd}
+      -Des.username=${ELASTICSEARCH_USERNAME}
+      -Des.password=${ELASTICSEARCH_PWD}"
+    fi
+
+    java_cmd="${java_cmd}
       -Dspring.flyway.enabled=${MIGRATIONS_ENABLED}
       -jar ${OSMT_JAR}"
 
@@ -237,6 +246,14 @@ function start_spring_app() {
       -Des.uri=${ELASTICSEARCH_URI}"
 
   echo_debug "Initial java command (before OAuth/auth checks): ${java_cmd}"
+
+  # Add Elasticsearch credentials if provided (for fine-grained access control)
+  if [[ -n "${ELASTICSEARCH_USERNAME:-}" ]] && [[ -n "${ELASTICSEARCH_PWD:-}" ]]; then
+    java_cmd="${java_cmd}
+      -Des.username=${ELASTICSEARCH_USERNAME}
+      -Des.password=${ELASTICSEARCH_PWD}"
+    echo_debug "Added Elasticsearch authentication arguments"
+  fi
 
   # Only add OAuth JVM arguments if OAuth credentials are provided
   if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] &&
