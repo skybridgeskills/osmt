@@ -210,10 +210,14 @@ function reindex_elasticsearch() {
       -Des.uri=${ELASTICSEARCH_URI}"
 
     # Add Elasticsearch credentials if provided (for fine-grained access control)
+    echo_debug "Checking Elasticsearch credentials for reindex: ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:+SET (length: ${#ELASTICSEARCH_USERNAME})}, ELASTICSEARCH_PWD=${ELASTICSEARCH_PWD:+SET (length: ${#ELASTICSEARCH_PWD})}"
     if [[ -n "${ELASTICSEARCH_USERNAME:-}" ]] && [[ -n "${ELASTICSEARCH_PWD:-}" ]]; then
       java_cmd="${java_cmd}
       -Des.username=${ELASTICSEARCH_USERNAME}
       -Des.password=${ELASTICSEARCH_PWD}"
+      echo_debug "Added Elasticsearch authentication arguments to reindex command"
+    else
+      echo_debug "Elasticsearch credentials not provided for reindex - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:-<not set>}, ELASTICSEARCH_PWD=${ELASTICSEARCH_PWD:-<not set>}"
     fi
 
     java_cmd="${java_cmd}
@@ -248,11 +252,14 @@ function start_spring_app() {
   echo_debug "Initial java command (before OAuth/auth checks): ${java_cmd}"
 
   # Add Elasticsearch credentials if provided (for fine-grained access control)
+  echo_debug "Checking Elasticsearch credentials: ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:+SET (length: ${#ELASTICSEARCH_USERNAME})}, ELASTICSEARCH_PWD=${ELASTICSEARCH_PWD:+SET (length: ${#ELASTICSEARCH_PWD})}"
   if [[ -n "${ELASTICSEARCH_USERNAME:-}" ]] && [[ -n "${ELASTICSEARCH_PWD:-}" ]]; then
     java_cmd="${java_cmd}
       -Des.username=${ELASTICSEARCH_USERNAME}
       -Des.password=${ELASTICSEARCH_PWD}"
     echo_debug "Added Elasticsearch authentication arguments"
+  else
+    echo_debug "Elasticsearch credentials not provided - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:-<not set>}, ELASTICSEARCH_PWD=${ELASTICSEARCH_PWD:-<not set>}"
   fi
 
   # Only add OAuth JVM arguments if OAuth credentials are provided
