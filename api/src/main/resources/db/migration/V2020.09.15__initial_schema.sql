@@ -164,12 +164,12 @@ CREATE TABLE IF NOT EXISTS `Keyword`
     KEY `idx_Keyword_value`
 (
     `keyword_type_enum`,
-    `value`
+    `value`(191)
 ),
     KEY `idx_Keyword_uri`
 (
     `keyword_type_enum`,
-    `uri`
+    `uri`(191)
 ),
     PRIMARY KEY
 (
