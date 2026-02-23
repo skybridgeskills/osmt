@@ -25,7 +25,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          gh workflow run create-osmt-version-bump-pr.yml \
+          gh workflow run osmt-bump-version.yml \
             --repo skybridgeskills/skybridgeskills-monorepo \
             --ref main
           echo "✅ Triggered monorepo version bump workflow"
