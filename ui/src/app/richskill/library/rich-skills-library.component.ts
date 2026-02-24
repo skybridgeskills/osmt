@@ -75,12 +75,4 @@ export class RichSkillsLibraryComponent
       this.setResults(results);
     });
   }
-
-  /**
-   * Always returns false to disable skill selection in the public skills library.
-   * Public users cannot select or manipulate skills.
-   */
-  getSelectAllEnabled(): boolean {
-    return false;
-  }
 }

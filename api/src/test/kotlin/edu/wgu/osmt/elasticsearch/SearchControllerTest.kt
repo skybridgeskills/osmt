@@ -5,6 +5,7 @@ import edu.wgu.osmt.HasDatabaseReset
 import edu.wgu.osmt.HasElasticsearchReset
 import edu.wgu.osmt.SpringTest
 import edu.wgu.osmt.TestObjectHelpers.richSkillDoc
+import edu.wgu.osmt.api.GeneralApiException
 import edu.wgu.osmt.api.model.ApiAdvancedSearch
 import edu.wgu.osmt.api.model.ApiNamedReference
 import edu.wgu.osmt.api.model.ApiSearch
@@ -115,6 +116,13 @@ internal class SearchControllerTest
         @Test
         fun testSearchJobCodes() {
             // Arrange
+            ReflectionTestUtils.setField(
+                searchController,
+                "appConfig",
+                mockData.appConfig.apply {
+                    ReflectionTestUtils.setField(this, "allowPublicLists", true)
+                },
+            )
             val listOfJobCodes = mockData.getJobCodes()
             jobCodeEsRepo.saveAll(listOfJobCodes)
 
@@ -123,6 +131,7 @@ internal class SearchControllerTest
                 searchController.searchJobCodes(
                     UriComponentsBuilder.newInstance(),
                     listOfJobCodes[0].code,
+                    nullJwt,
                 )
 
             // Assert
@@ -402,6 +411,13 @@ internal class SearchControllerTest
         @Test
         fun testSearchJobCodesUnauthenticatedWorks() {
             // Arrange
+            ReflectionTestUtils.setField(
+                searchController,
+                "appConfig",
+                mockData.appConfig.apply {
+                    ReflectionTestUtils.setField(this, "allowPublicLists", true)
+                },
+            )
             val listOfJobCodes = mockData.getJobCodes()
             jobCodeEsRepo.saveAll(listOfJobCodes)
 
@@ -410,6 +426,7 @@ internal class SearchControllerTest
                 searchController.searchJobCodes(
                     UriComponentsBuilder.newInstance(),
                     listOfJobCodes[0].code,
+                    nullJwt,
                 )
 
             // Assert - unauthenticated users can access jobcodes
@@ -719,5 +736,52 @@ internal class SearchControllerTest
 
             assertThat((draftKeywordResult as ResponseEntity).statusCode).isEqualTo(HttpStatus.OK)
             assertThat(draftKeywordResult.body?.map { it.name }).doesNotContain("Draft Keyword")
+        }
+
+        @Test
+        fun testSearchKeywordsUnauthenticatedRejectedWhenAllowPublicListsFalse() {
+            // Arrange
+            ReflectionTestUtils.setField(
+                searchController,
+                "appConfig",
+                mockData.appConfig.apply {
+                    ReflectionTestUtils.setField(this, "allowPublicLists", false)
+                },
+            )
+
+            // Act & Assert
+            assertThatThrownBy {
+                searchController.searchKeywords(
+                    UriComponentsBuilder.newInstance(),
+                    "test",
+                    "keyword",
+                    nullJwt,
+                )
+            }.isInstanceOf(GeneralApiException::class.java)
+                .hasMessage("Unauthorized")
+        }
+
+        @Test
+        fun testSearchJobCodesUnauthenticatedRejectedWhenAllowPublicListsFalse() {
+            // Arrange
+            ReflectionTestUtils.setField(
+                searchController,
+                "appConfig",
+                mockData.appConfig.apply {
+                    ReflectionTestUtils.setField(this, "allowPublicLists", false)
+                },
+            )
+            val listOfJobCodes = mockData.getJobCodes()
+            jobCodeEsRepo.saveAll(listOfJobCodes)
+
+            // Act & Assert
+            assertThatThrownBy {
+                searchController.searchJobCodes(
+                    UriComponentsBuilder.newInstance(),
+                    listOfJobCodes[0].code,
+                    nullJwt,
+                )
+            }.isInstanceOf(GeneralApiException::class.java)
+                .hasMessage("Unauthorized")
         }
     }

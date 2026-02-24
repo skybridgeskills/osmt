@@ -103,6 +103,18 @@ describe('RichSkillsLibraryComponent', () => {
       expect(component.selectedFilters.has(PublishStatus.Draft)).toBe(true);
       expect(component.selectedFilters.has(PublishStatus.Published)).toBe(true);
     });
+
+    it('should enable skill selection when user is authenticated', () => {
+      // Arrange
+      const authService = TestBed.inject(AuthService);
+      spyOn(authService, 'isAuthenticated').and.returnValue(true);
+
+      // Act
+      component.ngOnInit();
+
+      // Assert
+      expect(component.getSelectAllEnabled()).toBe(true);
+    });
   });
 
   describe('public mode behavior', () => {

@@ -342,7 +342,11 @@ class SearchController
         fun searchJobCodes(
             _uriComponentsBuilder: UriComponentsBuilder,
             @RequestParam(required = true) query: String,
+            @AuthenticationPrincipal user: Jwt?,
         ): HttpEntity<List<ApiJobCode>> {
+            if (!appConfig.allowPublicLists && user === null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
             val searchResults = jobCodeEsRepo.typeAheadSearch(query)
 
             return ResponseEntity.status(200).body(
@@ -372,6 +376,10 @@ class SearchController
                 KeywordTypeEnum.forApiValue(type)
                     ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
 
+            if (!appConfig.allowPublicLists && user == null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
+
             return if (user == null) {
                 // Unauthenticated: Query skills index and extract keywords from public skills
                 val publishStatuses = setOf(PublishStatus.Published, PublishStatus.Archived)
@@ -379,7 +387,7 @@ class SearchController
                     richSkillEsRepo.byApiSearch(
                         ApiSearch(),
                         publishStatuses,
-                        OffsetPageable(0, 10000, null),
+                        OffsetPageable(0, appConfig.publicKeywordLimit, null),
                         null,
                     )
 

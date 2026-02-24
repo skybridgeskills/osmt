@@ -51,7 +51,7 @@ internal class OnetImportTest
             onetImport.handleRows(listOfOnetCodes)
             val result =
                 listOfOnetCodes[0].code?.let {
-                    searchController.searchJobCodes(UriComponentsBuilder.newInstance(), it)
+                    searchController.searchJobCodes(UriComponentsBuilder.newInstance(), it, null)
                 }
 
             // Assert
