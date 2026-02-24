@@ -47,7 +47,7 @@ internal class BlsImportTest
             // searchJobCodes will only return 10 items in the list
             val result =
                 expectedMajorCode?.let {
-                    searchController.searchJobCodes(UriComponentsBuilder.newInstance(), it)
+                    searchController.searchJobCodes(UriComponentsBuilder.newInstance(), it, null)
                 }
             val listOfApiJobCodes = result?.body?.map { it.code }
 

@@ -67,4 +67,20 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
 
     return false;
   }
+
+  getCurrentUrl(): string {
+    return this.location.path();
+  }
+
+  shouldShowSearchBar(): boolean {
+    if (!this.showPublicNavbar()) {
+      return true; // Show for authenticated users
+    }
+    // Show for unauthenticated users on skills page
+    const url = this.location.path();
+    return (
+      !this.isAuthenticated() &&
+      (url === '/skills' || url.startsWith('/skills?'))
+    );
+  }
 }

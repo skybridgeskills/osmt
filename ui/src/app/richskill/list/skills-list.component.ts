@@ -1,4 +1,9 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -75,6 +80,8 @@ export class SkillsListComponent extends QuickLinksHelper {
   showAddToCollection = true;
   showExportSelected = false;
 
+  isPublicView = false;
+
   selectAllChecked = false;
 
   constructor(
@@ -82,7 +89,8 @@ export class SkillsListComponent extends QuickLinksHelper {
     protected richSkillService: RichSkillService,
     protected collectionService: CollectionService,
     protected toastService: ToastService,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -100,6 +108,8 @@ export class SkillsListComponent extends QuickLinksHelper {
   protected setResults(results: PaginatedSkills): void {
     this.results = results;
     this.selectedSkills = undefined;
+    // Mark for check after results update to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => this.cdr.markForCheck(), 0);
   }
 
   get skillCountLabel(): string {
@@ -141,11 +151,17 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   actionsVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return true;
     // return (this.selectedSkills?.length ?? 0) > 0
   }
 
   publishVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         skill.publishDate === undefined &&
@@ -164,6 +180,9 @@ export class SkillsListComponent extends QuickLinksHelper {
     }
   }
   archiveVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         !checkArchived(skill) &&
@@ -183,6 +202,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   unarchiveVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (skill !== undefined) {
       return (
         checkArchived(skill) &&
@@ -200,6 +222,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   protected exportSearchVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return false;
   }
 
@@ -208,6 +233,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   addToCollectionVisible(skill?: ApiSkillSummary): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     if (this.collection?.status === PublishStatus.Workspace) {
       return (
         this.addToVisible() &&
@@ -384,6 +412,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   protected addToWorkspaceVisible(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return (
       this.addToVisible() &&
       this.authService.isEnabledByRoles(ButtonAction.MyWorkspace)
@@ -561,6 +592,9 @@ export class SkillsListComponent extends QuickLinksHelper {
   }
 
   getSelectAllEnabled(): boolean {
+    if (this.isPublicView) {
+      return false;
+    }
     return true;
   }
 
@@ -596,8 +630,13 @@ export class SkillsListComponent extends QuickLinksHelper {
     return a;
   }
 
+  private _isSizePaginationVisibleFn: () => boolean = () => {
+    const minSize =
+      this.filterControlsComponent?.sizePagination?.values[0] ?? 50;
+    return this.totalCount > minSize;
+  };
+
   get isSizePaginationVisible(): () => boolean {
-    return () =>
-      this.totalCount > this.filterControlsComponent?.sizePagination?.values[0];
+    return this._isSizePaginationVisibleFn;
   }
 }

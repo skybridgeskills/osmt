@@ -36,6 +36,8 @@ class AppConfig(
     val allowPublicSearching: Boolean = true,
     @Value("\${app.allowPublicLists}")
     val allowPublicLists: Boolean = true,
+    @Value("\${app.publicKeywordLimit:1000}")
+    val publicKeywordLimit: Int = 1000,
     @Value("\${app.enableRoles}")
     val enableRoles: Boolean = false,
     @Value("\${app.baseLineAuditLogIfEmpty}")

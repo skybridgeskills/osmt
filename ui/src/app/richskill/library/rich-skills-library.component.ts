@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RichSkillService } from '../service/rich-skill.service';
 import { SkillsListComponent } from '../list/skills-list.component';
 import { ToastService } from '../../toast/toast.service';
@@ -7,7 +7,7 @@ import {
   PaginatedSkills,
 } from '../service/rich-skill-search.service';
 import { Router } from '@angular/router';
-import { determineFilters } from '../../PublishStatus';
+import { determineFilters, PublishStatus } from '../../PublishStatus';
 import { Title } from '@angular/platform-browser';
 import { AuthService } from '../../auth/auth-service';
 import { CollectionService } from '../../collection/service/collection.service';
@@ -29,19 +29,32 @@ export class RichSkillsLibraryComponent
     protected collectionService: CollectionService,
     protected toastService: ToastService,
     protected titleService: Title,
-    protected authService: AuthService
+    protected authService: AuthService,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
       richSkillService,
       collectionService,
       toastService,
-      authService
+      authService,
+      cdr
     );
   }
 
   ngOnInit(): void {
     this.titleService.setTitle(`${this.title} | ${this.whitelabel.toolName}`);
+
+    // Check authentication status and adjust behavior
+    if (!this.authService.isAuthenticated()) {
+      this.isPublicView = true;
+      // Filter to only show Published and Archived skills (API automatically filters out Draft and Deleted)
+      this.selectedFilters = new Set([
+        PublishStatus.Published,
+        PublishStatus.Archived,
+      ]);
+    }
+
     this.loadNextPage();
   }
 
@@ -61,9 +74,5 @@ export class RichSkillsLibraryComponent
     this.resultsLoaded.subscribe(results => {
       this.setResults(results);
     });
-  }
-
-  getSelectAllEnabled(): boolean {
-    return false;
   }
 }

@@ -106,6 +106,7 @@ This feature is enabled by default. These settings are in application.properties
 
 - `app.allowPublicSearching=true`
 - `app.allowPublicLists=true`
+- `app.publicKeywordLimit=1000` — max skills scanned for unauthenticated keyword suggestions
 
 ## Caching and Rate Limiting with bucket4j
 

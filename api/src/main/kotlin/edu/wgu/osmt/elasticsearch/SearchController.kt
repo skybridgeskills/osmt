@@ -16,6 +16,7 @@ import edu.wgu.osmt.collection.CollectionDoc
 import edu.wgu.osmt.collection.CollectionEsRepo
 import edu.wgu.osmt.config.AppConfig
 import edu.wgu.osmt.db.PublishStatus
+import edu.wgu.osmt.elasticsearch.OffsetPageable
 import edu.wgu.osmt.jobcode.JobCodeEsRepo
 import edu.wgu.osmt.keyword.KeywordEsRepo
 import edu.wgu.osmt.keyword.KeywordTypeEnum
@@ -339,9 +340,13 @@ class SearchController
         )
         @ResponseBody
         fun searchJobCodes(
-            uriComponentsBuilder: UriComponentsBuilder,
+            _uriComponentsBuilder: UriComponentsBuilder,
             @RequestParam(required = true) query: String,
+            @AuthenticationPrincipal user: Jwt?,
         ): HttpEntity<List<ApiJobCode>> {
+            if (!appConfig.allowPublicLists && user === null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
             val searchResults = jobCodeEsRepo.typeAheadSearch(query)
 
             return ResponseEntity.status(200).body(
@@ -362,21 +367,63 @@ class SearchController
         )
         @ResponseBody
         fun searchKeywords(
-            uriComponentsBuilder: UriComponentsBuilder,
+            _uriComponentsBuilder: UriComponentsBuilder,
             @RequestParam(required = true) query: String,
             @RequestParam(required = true) type: String,
+            @AuthenticationPrincipal user: Jwt?,
         ): HttpEntity<List<ApiNamedReference>> {
             val keywordType =
                 KeywordTypeEnum.forApiValue(type)
                     ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST)
-            val searchResults = keywordEsRepo.typeAheadSearch(query, keywordType)
 
-            return ResponseEntity.status(200).body(
-                searchResults
-                    .map {
-                        ApiNamedReference.fromKeyword(it.content)
-                    }.toList(),
-            )
+            if (!appConfig.allowPublicLists && user == null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
+
+            return if (user == null) {
+                // Unauthenticated: Query skills index and extract keywords from public skills
+                val publishStatuses = setOf(PublishStatus.Published, PublishStatus.Archived)
+                val skills =
+                    richSkillEsRepo.byApiSearch(
+                        ApiSearch(),
+                        publishStatuses,
+                        OffsetPageable(0, appConfig.publicKeywordLimit, null),
+                        null,
+                    )
+
+                val allKeywords = mutableListOf<String>()
+                for (searchHit in skills) {
+                    val skill = searchHit.content
+                    val keywordList: List<String> =
+                        when (keywordType) {
+                            KeywordTypeEnum.Category -> skill.categories
+                            KeywordTypeEnum.Keyword -> skill.searchingKeywords
+                            KeywordTypeEnum.Standard -> skill.standards
+                            KeywordTypeEnum.Certification -> skill.certifications
+                            KeywordTypeEnum.Employer -> skill.employers
+                            KeywordTypeEnum.Alignment -> skill.alignments
+                            KeywordTypeEnum.Author -> skill.authors
+                        }
+                    allKeywords.addAll(keywordList)
+                }
+
+                val filteredKeywords =
+                    allKeywords
+                        .distinct()
+                        .filter { it.contains(query, ignoreCase = true) }
+                        .map { ApiNamedReference(name = it) }
+
+                ResponseEntity.status(200).body(filteredKeywords)
+            } else {
+                // Authenticated: Use existing keyword index search
+                val searchResults = keywordEsRepo.typeAheadSearch(query, keywordType)
+                ResponseEntity.status(200).body(
+                    searchResults
+                        .map {
+                            ApiNamedReference.fromKeyword(it.content)
+                        }.toList(),
+                )
+            }
         }
 
         @PostMapping(

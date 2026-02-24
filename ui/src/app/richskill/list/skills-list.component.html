@@ -73,7 +73,7 @@
             <p class="m-emptyMessage-x-message">
               The library is ready to fill with RSDs.
             </p>
-            <p class="m-emptyMessage-x-message">
+            <p class="m-emptyMessage-x-message" *ngIf="!isPublicView">
               <a routerLink="/skills/create">Create an RSD</a> or
               <a href="/skills/import">Batch import RSDs</a>.
             </p>

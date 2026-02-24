@@ -70,6 +70,11 @@ object SecurityConfigHelper {
                 .permitAll()
                 .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_COLLECTIONS))
                 .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_KEYWORDS_PATH))
+                .permitAll()
+                // Public skills filter endpoint (for the skills list page)
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_FILTER))
+                .permitAll()
                 // Public canonical URL endpoints
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_DETAIL))
                 .permitAll()
@@ -84,6 +89,8 @@ object SecurityConfigHelper {
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_TEXT))
                 .permitAll()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_MEDIA))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_JOBCODES_PATH))
                 .permitAll()
         }
 
@@ -108,10 +115,6 @@ object SecurityConfigHelper {
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_SKILLS))
                 .authenticated()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_BATCH))
-                .authenticated()
-                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_JOBCODES_PATH))
-                .authenticated()
-                .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_KEYWORDS_PATH))
                 .authenticated()
         }
 

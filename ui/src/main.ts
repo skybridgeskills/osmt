@@ -28,7 +28,3 @@ fetch('/config/config.json')
       .bootstrapModule(AppModule)
       .catch(err => console.error(err));
   });
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch(err => console.error(err));

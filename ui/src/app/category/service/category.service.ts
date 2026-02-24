@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { map, share } from 'rxjs/operators';
 import { AbstractService, IRelatedSkillsService } from '../../abstract.service';
 import { AuthService } from '../../auth/auth-service';
+import { ToastService } from '../../toast/toast.service';
 import { PublishStatus } from '../../PublishStatus';
 import {
   ApiSearch,
@@ -30,11 +31,12 @@ export class CategoryService
   constructor(
     httpClient: HttpClient,
     authService: AuthService,
+    toastService: ToastService,
     router: Router,
     location: Location,
     @Inject('BASE_API') baseApi: string
   ) {
-    super(httpClient, authService, router, location, baseApi);
+    super(httpClient, authService, toastService, router, location, baseApi);
   }
 
   private serviceUrl = 'categories';

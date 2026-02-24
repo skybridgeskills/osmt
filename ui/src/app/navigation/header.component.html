@@ -33,6 +33,21 @@
 
       <div class="m-navBar-x-tagline">{{ whitelabel.toolNameLong }}</div>
 
+      <!-- Login button for public navbar -->
+      <ul
+        *ngIf="showPublicNavbar() && !isAuthenticated()"
+        class="m-navBar-x-desktopNav"
+      >
+        <li>
+          <a
+            class="m-navItem"
+            routerLink="/login"
+            [queryParams]="{ return: getCurrentUrl() }"
+            >Login</a
+          >
+        </li>
+      </ul>
+
       <ul *ngIf="!showPublicNavbar()" class="m-navBar-x-desktopNav">
         <li>
           <a
@@ -117,7 +132,11 @@
     ></div>
   </nav>
 
-  <div *ngIf="!showPublicNavbar()" class="t-hidden-desktopMax">
+  <!-- Show search bar for authenticated users (mobile) and public users on skills page (all devices) -->
+  <div
+    *ngIf="shouldShowSearchBar()"
+    [class.t-hidden-desktopMax]="isAuthenticated()"
+  >
     <app-commoncontrols></app-commoncontrols>
   </div>
 </header>

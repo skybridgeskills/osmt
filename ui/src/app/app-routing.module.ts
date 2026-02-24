@@ -46,7 +46,6 @@ const routes: Routes = [
   {
     path: 'skills/search',
     component: RichSkillSearchResultsComponent,
-    canActivate: [AuthGuard],
   },
   // edit skill
   {
@@ -78,7 +77,6 @@ const routes: Routes = [
   {
     path: 'skills',
     component: RichSkillsLibraryComponent,
-    canActivate: [AuthGuard],
   },
   // batch import
   {

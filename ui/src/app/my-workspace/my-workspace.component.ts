@@ -1,4 +1,10 @@
-import { Component, Inject, LOCALE_ID, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  LOCALE_ID,
+  OnInit,
+} from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -30,7 +36,8 @@ export class MyWorkspaceComponent
     protected route: ActivatedRoute,
     protected titleService: Title,
     protected authService: AuthService,
-    @Inject(LOCALE_ID) protected locale: string
+    @Inject(LOCALE_ID) protected locale: string,
+    protected cdr: ChangeDetectorRef
   ) {
     super(
       router,
@@ -40,7 +47,8 @@ export class MyWorkspaceComponent
       route,
       titleService,
       authService,
-      locale
+      locale,
+      cdr
     );
   }
 
