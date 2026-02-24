@@ -7,7 +7,7 @@
 set -euo pipefail
 
 MAJOR_MINOR="${MAJOR_MINOR:-4.0}"
-TAG_PREFIX="v${MAJOR_MINOR}."
+TAG_PREFIX="${MAJOR_MINOR}."
 
 normalize_version() {
   local v="$1"
@@ -39,7 +39,7 @@ else
 fi
 
 CURRENT_COMMIT=$(git rev-parse HEAD)
-if git tag --points-at "$CURRENT_COMMIT" | grep -qE "^v[0-9]+\.[0-9]+\.[0-9]+$"; then
+if git tag --points-at "$CURRENT_COMMIT" | grep -qE "^v?[0-9]+\.[0-9]+\.[0-9]+$"; then
   echo "Error: A version tag already exists for this commit" >&2
   exit 1
 fi
