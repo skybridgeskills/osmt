@@ -9,9 +9,9 @@ consumers depend on OSMT. Time-based versioning was considered but deferred.
 
 ## Version Format
 
-Versions use the format `MAJOR.MINOR.PATCH` (e.g., 4.0.0). Git tags use a `v`
-prefix: `v4.0.0`, `v4.0.1`. All scripts must normalize to handle both `v4.0.0`
-and `4.0.0` formats.
+Versions use the format `MAJOR.MINOR.PATCH` (e.g., 4.0.0). Git tags do not use
+a prefix: `4.0.0`, `4.0.1`. Scripts should normalize to handle both formats in
+case legacy tags or inputs include a `v` prefix.
 
 ## Placeholder Versions
 
