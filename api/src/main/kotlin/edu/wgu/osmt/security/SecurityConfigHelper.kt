@@ -59,6 +59,9 @@ object SecurityConfigHelper {
                     "/*.png",
                     "/*.svg",
                 ).permitAll()
+                // Version endpoint (deployment verification)
+                .requestMatchers(GET, "/version")
+                .permitAll()
                 // Whitelabel config endpoint (needed for frontend initialization)
                 .requestMatchers(GET, "/whitelabel/**")
                 .permitAll()
