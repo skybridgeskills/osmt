@@ -23,6 +23,8 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.SecurityFilterChain
@@ -52,6 +54,15 @@ class SecurityConfig {
 
     @Autowired(required = false)
     var adminUserAuthenticationFilter: AdminUserAuthenticationFilter? = null
+
+    private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+        val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter()
+        grantedAuthoritiesConverter.setAuthoritiesClaimName(appConfig.oauth2RolesClaim)
+        grantedAuthoritiesConverter.setAuthorityPrefix("")
+        val converter = JwtAuthenticationConverter()
+        converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter)
+        return converter
+    }
 
     @Bean
     fun userAuthoritiesMapper(): GrantedAuthoritiesMapper =
@@ -136,7 +147,14 @@ class SecurityConfig {
                 .oauth2Login()
                 .successHandler(redirectToFrontend)
                 .and()
-        config.oauth2ResourceServer().jwt()
+        config =
+            config.oauth2ResourceServer { oauth2 ->
+                oauth2.jwt { jwt ->
+                    if (appConfig.singleAuthEnabled) {
+                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    }
+                }
+            }
 
         if (appConfig.enableRoles) {
             configureForRoles(config)
