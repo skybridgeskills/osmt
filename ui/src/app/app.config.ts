@@ -35,10 +35,14 @@ export class AppConfig {
           AppConfig.settings = this.defaultConfig();
           Object.assign(AppConfig.settings, value as IAppConfig);
 
-          // baseApiUrl is not runtime whitelabellable, but loginUrl can be overridden for single-auth mode
+          // baseApiUrl is not runtime whitelabellable
           AppConfig.settings.baseApiUrl = this.environment.baseApiUrl;
           AppConfig.settings.loginUrl =
             (value as IAppConfig).loginUrl || this.environment.loginUrl;
+          AppConfig.settings.authProviders =
+            (value as IAppConfig).authProviders ?? [];
+          AppConfig.settings.singleAuthEnabled =
+            (value as IAppConfig).singleAuthEnabled ?? false;
           return value;
         })
         .catch(reason => {

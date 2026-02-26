@@ -11,6 +11,8 @@ declare OAUTH_ISSUER="${OAUTH_ISSUER:-}"
 declare OAUTH_CLIENTID="${OAUTH_CLIENTID:-}"
 declare OAUTH_CLIENTSECRET="${OAUTH_CLIENTSECRET:-}"
 declare OAUTH_AUDIENCE="${OAUTH_AUDIENCE:-}"
+declare OAUTH_GOOGLE_CLIENT_ID="${OAUTH_GOOGLE_CLIENT_ID:-}"
+declare OAUTH_GOOGLE_CLIENT_SECRET="${OAUTH_GOOGLE_CLIENT_SECRET:-}"
 declare MIGRATIONS_ENABLED="${MIGRATIONS_ENABLED:-}"
 declare SKIP_METADATA_IMPORT="${SKIP_METADATA_IMPORT:-}"
 declare REINDEX_ELASTICSEARCH="${REINDEX_ELASTICSEARCH:-}"
@@ -65,37 +67,38 @@ function validate() {
   # Note: This script runs in Docker and cannot source common.sh, so it implements
   # the same profile detection logic inline to ensure consistency.
   # IMPORTANT: This logic MUST be kept in sync with detect_security_profile() in bin/lib/common.sh
-  # Any changes to profile detection logic must be made in both places.
-  # The logic matches detect_security_profile() in bin/lib/common.sh
-  local -i missing_oauth=0
-  if [[ -z "${OAUTH_ISSUER:-}" ]] || [[ -z "${OAUTH_CLIENTID:-}" ]] ||
-    [[ -z "${OAUTH_CLIENTSECRET:-}" ]] || [[ -z "${OAUTH_AUDIENCE:-}" ]]; then
-    missing_oauth=1
+  local -i has_oauth_okta=0
+  if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] &&
+    [[ -n "${OAUTH_CLIENTSECRET:-}" ]] && [[ -n "${OAUTH_AUDIENCE:-}" ]]; then
+    has_oauth_okta=1
+  fi
+  local -i has_oauth_google=0
+  if [[ -n "${OAUTH_GOOGLE_CLIENT_ID:-}" ]] &&
+    [[ -n "${OAUTH_GOOGLE_CLIENT_SECRET:-}" ]]; then
+    has_oauth_google=1
   fi
 
-  echo_debug "OAuth check: missing_oauth=${missing_oauth}"
+  echo_debug "OAuth check: has_oauth_okta=${has_oauth_okta}, has_oauth_google=${has_oauth_google}"
   echo_debug "ENVIRONMENT before OAuth logic: '${ENVIRONMENT}'"
 
-  if [[ ${missing_oauth} -eq 1 ]]; then
+  if [[ ${has_oauth_okta} -eq 1 ]] || [[ ${has_oauth_google} -eq 1 ]]; then
+    echo_info "OAuth credentials provided - will use oauth2 profile"
+    if [[ "${ENVIRONMENT}" != *"oauth2"* ]]; then
+      ENVIRONMENT="${ENVIRONMENT},oauth2"
+      echo_debug "ENVIRONMENT after appending oauth2: '${ENVIRONMENT}'"
+    fi
+  fi
+  # Add single-auth when no OAuth, or when ENABLE_SINGLE_AUTH=true (staging)
+  if [[ ${has_oauth_okta} -eq 0 ]] && [[ ${has_oauth_google} -eq 0 ]]; then
     echo_info "OAuth credentials not provided - will use single-auth profile"
-    # Append single-auth to ENVIRONMENT if not already present
     if [[ "${ENVIRONMENT}" != *"single-auth"* ]]; then
       ENVIRONMENT="${ENVIRONMENT},single-auth"
       echo_info "Updated ENVIRONMENT to: ${ENVIRONMENT}"
-      echo_debug "ENVIRONMENT after appending single-auth: '${ENVIRONMENT}'"
-    else
-      echo_debug "ENVIRONMENT already contains single-auth, no change needed"
     fi
-  else
-    echo_info "OAuth credentials provided - will use oauth2-okta profile"
-    # Ensure oauth2-okta is in ENVIRONMENT if not present
-    if [[ "${ENVIRONMENT}" != *"oauth2-okta"* ]] && [[ "${ENVIRONMENT}" != *"single-auth"* ]]; then
-      ENVIRONMENT="${ENVIRONMENT},oauth2-okta"
-      echo_info "Updated ENVIRONMENT to: ${ENVIRONMENT}"
-      echo_debug "ENVIRONMENT after appending oauth2-okta: '${ENVIRONMENT}'"
-    else
-      echo_debug "ENVIRONMENT already contains oauth2-okta or single-auth, no change needed"
-    fi
+  elif [[ "${ENABLE_SINGLE_AUTH:-}" == "true" ]] &&
+    [[ "${ENVIRONMENT}" != *"single-auth"* ]]; then
+    ENVIRONMENT="${ENVIRONMENT},single-auth"
+    echo_info "ENABLE_SINGLE_AUTH=true - adding single-auth for staging"
   fi
 
   echo_debug "ENVIRONMENT after validate(): '${ENVIRONMENT}'"
@@ -132,14 +135,14 @@ function validate() {
 }
 
 function build_reindex_profile_string() {
-  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2-okta"
+  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2"
   declare env_arg=${1}
 
   echo "reindex,$(get_config_profile_from_env "${env_arg}" 2>/dev/null)"
 }
 
 function get_config_profile_from_env() {
-  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2-okta"
+  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2"
   declare env_arg=${1}
 
   echo_debug "get_config_profile_from_env called with: '${env_arg}'"
@@ -266,16 +269,7 @@ function start_spring_app() {
     echo_debug "Elasticsearch credentials not provided - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:-<not set>}, ELASTICSEARCH_PWD=${ELASTICSEARCH_PWD:-<not set>}"
   fi
 
-  # Only add OAuth JVM arguments if OAuth credentials are provided
-  if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] &&
-    [[ -n "${OAUTH_CLIENTSECRET:-}" ]] && [[ -n "${OAUTH_AUDIENCE:-}" ]]; then
-    java_cmd="${java_cmd}
-      -Dokta.oauth2.issuer=${OAUTH_ISSUER}
-      -Dokta.oauth2.clientId=${OAUTH_CLIENTID}
-      -Dokta.oauth2.clientSecret=${OAUTH_CLIENTSECRET}
-      -Dokta.oauth2.audience=${OAUTH_AUDIENCE}"
-    echo_debug "Added OAuth JVM arguments"
-  fi
+  # OAuth config passed via env; Spring Boot reads spring.security.oauth2.* from env
 
   # Add admin auth variables if using single-auth profile
   if [[ "${ENVIRONMENT}" == *"single-auth"* ]]; then

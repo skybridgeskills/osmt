@@ -1,7 +1,15 @@
+export interface AuthProvider {
+  id: string;
+  name: string;
+  authorizationUrl: string;
+}
+
 export interface IAppConfig {
   baseApiUrl: string;
   loginUrl: string;
   authMode?: string;
+  authProviders?: AuthProvider[];
+  singleAuthEnabled?: boolean;
   editableAuthor: boolean;
   defaultAuthorValue: string;
   toolName: string;
@@ -35,4 +43,6 @@ export class DefaultAppConfig implements IAppConfig {
   idleTimeoutInSeconds = 24 * 60 * 60;
   colorBrandAccent1 = undefined;
   dynamicWhitelabel = false;
+  authProviders: AuthProvider[] = [];
+  singleAuthEnabled = false;
 }

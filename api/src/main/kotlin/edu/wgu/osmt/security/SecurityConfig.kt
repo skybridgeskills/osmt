@@ -17,24 +17,29 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.stereotype.Component
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 /**
- * Security configurations
- * - to enable another OAuth provider, include the profile name in place of `OTHER-OAUTH-PROFILE`
- *   in the @Profile annotation
+ * Security configuration for OAuth2 (profile: oauth2).
+ * Add providers via application-oauth2.properties; no code changes required.
  */
 @Configuration
 @EnableWebSecurity
-@Profile("oauth2-okta | OTHER-OAUTH-PROFILE")
+@Profile("oauth2")
 class SecurityConfig {
     @Autowired
     lateinit var appConfig: AppConfig
@@ -45,36 +50,101 @@ class SecurityConfig {
     @Autowired
     lateinit var returnUnauthorized: ReturnUnauthorized
 
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .cors()
-            .and()
-            .csrf()
-            .disable()
-            .httpBasic()
-            .disable()
-            // Configure public and authenticated endpoints using shared helper
-            // This ensures consistency with single-auth security configuration
-            .also {
-                SecurityConfigHelper.configurePublicEndpoints(it)
-                SecurityConfigHelper.configureAuthenticatedEndpoints(it)
-            }.exceptionHandling()
-            .authenticationEntryPoint(returnUnauthorized)
-            .and()
-            .oauth2Login()
-            .successHandler(redirectToFrontend)
-            .and()
-            .oauth2ResourceServer()
-            .jwt()
+    @Autowired(required = false)
+    var adminUserAuthenticationFilter: AdminUserAuthenticationFilter? = null
 
-        if (appConfig.enableRoles) {
-            configureForRoles(http)
-        } else {
-            configureForNoRoles(http)
+    @Bean
+    fun userAuthoritiesMapper(): GrantedAuthoritiesMapper =
+        GrantedAuthoritiesMapper { authorities ->
+            authorities
+                .flatMap { authority ->
+                    when (authority) {
+                        is OidcUserAuthority -> {
+                            val claim =
+                                authority.idToken.claims[appConfig.oauth2RolesClaim]
+                            when (claim) {
+                                is Collection<*> -> {
+                                    claim
+                                        .filterIsInstance<String>()
+                                        .map { SimpleGrantedAuthority(it) }
+                                }
+
+                                is String -> {
+                                    listOf(SimpleGrantedAuthority(claim))
+                                }
+
+                                else -> {
+                                    listOf(authority)
+                                }
+                            }
+                        }
+
+                        is OAuth2UserAuthority -> {
+                            val claim =
+                                authority.attributes[appConfig.oauth2RolesClaim]
+                            when (claim) {
+                                is Collection<*> -> {
+                                    claim
+                                        .filterIsInstance<String>()
+                                        .map { SimpleGrantedAuthority(it) }
+                                }
+
+                                is String -> {
+                                    listOf(SimpleGrantedAuthority(claim))
+                                }
+
+                                else -> {
+                                    listOf(authority)
+                                }
+                            }
+                        }
+
+                        else -> {
+                            listOf(authority)
+                        }
+                    }
+                }.toMutableSet()
         }
 
-        return http.build()
+    @Bean
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        var config =
+            http
+                .cors()
+                .and()
+                .csrf()
+                .disable()
+                .httpBasic()
+                .disable()
+                // Configure public and authenticated endpoints using shared helper
+                // This ensures consistency with single-auth security configuration
+                .also {
+                    SecurityConfigHelper.configurePublicEndpoints(it)
+                    SecurityConfigHelper.configureAuthenticatedEndpoints(it)
+                }.exceptionHandling()
+                .authenticationEntryPoint(returnUnauthorized)
+                .and()
+        if (appConfig.singleAuthEnabled && adminUserAuthenticationFilter != null) {
+            config =
+                config.addFilterBefore(
+                    adminUserAuthenticationFilter!!,
+                    UsernamePasswordAuthenticationFilter::class.java,
+                )
+        }
+        config =
+            config
+                .oauth2Login()
+                .successHandler(redirectToFrontend)
+                .and()
+        config.oauth2ResourceServer().jwt()
+
+        if (appConfig.enableRoles) {
+            configureForRoles(config)
+        } else {
+            configureForNoRoles(config)
+        }
+
+        return config.build()
     }
 
     fun configureForRoles(http: HttpSecurity) {

@@ -14,6 +14,8 @@ declare OAUTH_ISSUER="${OAUTH_ISSUER:-}"
 declare OAUTH_CLIENTID="${OAUTH_CLIENTID:-}"
 declare OAUTH_CLIENTSECRET="${OAUTH_CLIENTSECRET:-}"
 declare OAUTH_AUDIENCE="${OAUTH_AUDIENCE:-}"
+declare OAUTH_GOOGLE_CLIENT_ID="${OAUTH_GOOGLE_CLIENT_ID:-}"
+declare OAUTH_GOOGLE_CLIENT_SECRET="${OAUTH_GOOGLE_CLIENT_SECRET:-}"
 
 declare OKTA_URL="${OKTA_URL:-}"
 declare OKTA_USERNAME="${OKTA_USERNAME:-}"
@@ -194,29 +196,27 @@ echo_debug_env() {
 # Detect which security profile to use based on OAuth credentials
 # This function provides a single source of truth for profile detection
 # Used by all scripts that need to determine security profile
-# Returns: "oauth2-okta" or "single-auth"
+# Returns: "oauth2" or "single-auth"
 detect_security_profile() {
-  # Priority 1: Check if OAuth credentials are present in environment
-  # All four OAuth variables must be present to use oauth2-okta profile
-  if [[ \
-      -n "${OAUTH_ISSUER:-}" && \
-      -n "${OAUTH_CLIENTID:-}" && \
-      -n "${OAUTH_CLIENTSECRET:-}" && \
-      -n "${OAUTH_AUDIENCE:-}" \
-    ]]; then
-    echo "oauth2-okta"
-    return 0
-  fi
-
-  # Priority 2: If OSMT_SECURITY_PROFILE is explicitly set, use it
-  # This allows manual override of profile detection
+  # Priority 1: If OSMT_SECURITY_PROFILE is explicitly set, use it
   if [[ -n "${OSMT_SECURITY_PROFILE:-}" ]]; then
     echo "${OSMT_SECURITY_PROFILE}"
     return 0
   fi
 
+  # Priority 2: Check for OAuth credentials (Okta or Google)
+  if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] &&
+    [[ -n "${OAUTH_CLIENTSECRET:-}" ]] && [[ -n "${OAUTH_AUDIENCE:-}" ]]; then
+    echo "oauth2"
+    return 0
+  fi
+  if [[ -n "${OAUTH_GOOGLE_CLIENT_ID:-}" ]] &&
+    [[ -n "${OAUTH_GOOGLE_CLIENT_SECRET:-}" ]]; then
+    echo "oauth2"
+    return 0
+  fi
+
   # Priority 3: Default to single-auth when OAuth credentials are missing
-  # This enables local development with simple admin authentication
   echo "single-auth"
 }
 
