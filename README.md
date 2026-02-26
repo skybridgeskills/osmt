@@ -213,7 +213,7 @@ Before you start with these steps, you may be required to update your goals on t
 8. In the Assignments tab:
     - Click "Assign", and choose "Assign to People". For your Okta user ID, click "Assign". Leave defaults; then click "Save and Go Back".
 
-When using Okta, you will use the `oauth2-okta` profile for Spring Boot, which will include the properties from [application-oauth2-okta.properties](api/src/main/resources/config/application-oauth2-okta.properties). This properties file relies on secrets being provided via the environment. The commands in `osmt_cli.sh` automatically provide the appropriate environment files.
+When using Okta, you will use the `oauth2` profile for Spring Boot, which will include the properties from [application-oauth2.properties](api/src/main/resources/config/application-oauth2.properties). This properties file relies on secrets being provided via the environment. The commands in `osmt_cli.sh` automatically provide the appropriate environment files.
 
 ### OAuth2 with Google
 

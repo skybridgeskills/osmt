@@ -82,16 +82,10 @@ function validate() {
   echo_debug "ENVIRONMENT before OAuth logic: '${ENVIRONMENT}'"
 
   if [[ ${has_oauth_okta} -eq 1 ]] || [[ ${has_oauth_google} -eq 1 ]]; then
-    echo_info "OAuth credentials provided - will use oauth2 profile(s)"
-    if [[ ${has_oauth_okta} -eq 1 ]] &&
-      [[ "${ENVIRONMENT}" != *"oauth2-okta"* ]]; then
-      ENVIRONMENT="${ENVIRONMENT},oauth2-okta"
-      echo_debug "ENVIRONMENT after appending oauth2-okta: '${ENVIRONMENT}'"
-    fi
-    if [[ ${has_oauth_google} -eq 1 ]] &&
-      [[ "${ENVIRONMENT}" != *"oauth2-google"* ]]; then
-      ENVIRONMENT="${ENVIRONMENT},oauth2-google"
-      echo_debug "ENVIRONMENT after appending oauth2-google: '${ENVIRONMENT}'"
+    echo_info "OAuth credentials provided - will use oauth2 profile"
+    if [[ "${ENVIRONMENT}" != *"oauth2"* ]]; then
+      ENVIRONMENT="${ENVIRONMENT},oauth2"
+      echo_debug "ENVIRONMENT after appending oauth2: '${ENVIRONMENT}'"
     fi
   fi
   # Add single-auth when no OAuth, or when ENABLE_SINGLE_AUTH=true (staging)
@@ -141,14 +135,14 @@ function validate() {
 }
 
 function build_reindex_profile_string() {
-  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2-okta"
+  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2"
   declare env_arg=${1}
 
   echo "reindex,$(get_config_profile_from_env "${env_arg}" 2>/dev/null)"
 }
 
 function get_config_profile_from_env() {
-  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2-okta"
+  # accept the $ENVIRONMENT env var, i.e. "test,apiserver,oauth2"
   declare env_arg=${1}
 
   echo_debug "get_config_profile_from_env called with: '${env_arg}'"

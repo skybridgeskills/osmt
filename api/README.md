@@ -4,7 +4,7 @@ This Maven module represents the Spring Boot API application.
 
 ## Spring Boot Configuration and Profiles
 
-Spring Boot uses profiles to manage its runtime configuration. While these can be provided in different ways, osmt_cli.sh uses `-D` to set a `spring-boot.run.profiles` system property in the JVM. A typical OSMT profile list will look like `dev,apiserver,oauth2-okta`. In OSMT, this list of profiles informs which property files are loaded, and which Spring Boot components are run.
+Spring Boot uses profiles to manage its runtime configuration. While these can be provided in different ways, osmt_cli.sh uses `-D` to set a `spring-boot.run.profiles` system property in the JVM. A typical OSMT profile list will look like `dev,apiserver,oauth2`. In OSMT, this list of profiles informs which property files are loaded, and which Spring Boot components are run.
 
 - Property files -- If a profile from the active profiles list (`dev`) matches a property file (`application-dev.properties`), then that property file is loaded. Spring Boot's property files are located in `./api/src/main/resources/config/`.
 - Spring Boot components -- When Spring Boot starts, it scans for classes with a `@Component` annotation. If a profile from the active profiles list (`apiserver`) matches a @Profile annotation in a @Component class (`@Profile("apiserver")`), then that class is loaded.
@@ -25,12 +25,12 @@ The Spring profiles in OSMT can be conceptually grouped as:
 
   | Security Component Profile |                                                                                                                                                                                  |
   | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | oauth2-okta                | Includes required configuration for OAuth2 OIDC with Okta                                                                                                                        |
+  | oauth2                     | OAuth2 OIDC (Okta, Google, or custom providers via application-oauth2.properties)                                                                                                  |
   | single-auth                | Enables local development with simple admin authentication. Admin credentials provided via environment variables. Authorization rules are still enforced. |
 
   | Application Component Profile |                                                                                                                                                                                                     |
   | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | apiserver                     | Starts the API server. API endpoints started with this profile will also require a<br> Security Component Profile (see `oauth2-okta` or `single-auth`, above)                                            |
+  | apiserver                     | Starts the API server. API endpoints started with this profile will also require a<br> Security Component Profile (see `oauth2` or `single-auth`, above)                                            |
   | import                        | Runs the batch import process, expects `--csv=` argument and `--import-type=` argument.<br>This process terminates when complete, and does not expose API endpoints; no Security profile is needed. |
   | reindex                       | Runs the Elasticsearch re-index process.<br>This process terminates when complete, and does not expose API endpoints; no Security profile is needed.                                                |
 
@@ -50,7 +50,7 @@ Examples:
 
 - Using Maven to start the API server overriding the `spring.flyway.enabled` property:
   ```
-    mvn -Dspring-boot.run.profiles=dev,apiserver,oauth2-okta \
+    mvn -Dspring-boot.run.profiles=dev,apiserver,oauth2 \
         -Dspring-boot.run.jvmArguments="-Dspring.flyway.enabled=false" \
         spring-boot:run
   ```
@@ -66,7 +66,7 @@ OSMT supports two security profiles:
 
 ### OAuth2 with Okta
 
-An example profile and Spring Boot components (edu.wgu.osmt.security.SecurityConfig) are provided to support OAuth2 with Okta. To use a different provider, create an additional profile-scoped Spring @Component that implements security configuration, and activate that security profile. Additional Spring Boot components may also be required to support the chosen provider. See [Okta Configuration](../README.md#oauth2-and-okta-configuration) in the project [README](../README.md) for more details.
+Spring Boot components (edu.wgu.osmt.security.SecurityConfig) support OAuth2 with Okta, Google, or custom providers. Add providers via application-oauth2.properties; no code changes required. See [Okta Configuration](../README.md#oauth2-and-okta-configuration) in the project [README](../README.md) for more details.
 
 - It is possible that you will need to exclude the `com.okta.spring.okta-spring-boot-starter` Maven dependency.
 

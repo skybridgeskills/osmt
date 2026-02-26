@@ -3,13 +3,14 @@ package edu.wgu.osmt.security
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.oauth2.client.registration.ClientRegistration
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.stereotype.Component
 
 /**
  * Provides OAuth provider information for the whitelabel API.
  * Uses ClientRegistrationRepository when available (oauth2 profile).
- * ObjectProvider allows lazy resolution when repository is created by security config.
+ * Iterates all registrations; custom providers appear without code changes.
  */
 @Component
 class AuthConfigProvider {
@@ -23,16 +24,15 @@ class AuthConfigProvider {
         val repo = clientRegistrationRepositoryProvider.getIfAvailable() ?: return emptyList()
 
         val providers = mutableListOf<AuthProviderInfo>()
-        for (registrationId in KNOWN_PROVIDERS.keys) {
-            val registration =
-                repo.findByRegistrationId(registrationId)
-                    ?: continue
+        val iterable = repo as? Iterable<ClientRegistration> ?: return providers
+        for (registration in iterable) {
             if (registration.clientId != "xxxxxx") {
                 providers.add(
                     AuthProviderInfo(
                         id = registration.registrationId,
                         name = getDisplayName(registration.registrationId),
-                        authorizationUrl = "$baseUrl/oauth2/authorization/${registration.registrationId}",
+                        authorizationUrl =
+                            "$baseUrl/oauth2/authorization/${registration.registrationId}",
                     ),
                 )
             }

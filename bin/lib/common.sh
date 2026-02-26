@@ -196,7 +196,7 @@ echo_debug_env() {
 # Detect which security profile to use based on OAuth credentials
 # This function provides a single source of truth for profile detection
 # Used by all scripts that need to determine security profile
-# Returns: "oauth2-okta", "oauth2-google", "oauth2-okta,oauth2-google", or "single-auth"
+# Returns: "oauth2" or "single-auth"
 detect_security_profile() {
   # Priority 1: If OSMT_SECURITY_PROFILE is explicitly set, use it
   if [[ -n "${OSMT_SECURITY_PROFILE:-}" ]]; then
@@ -204,19 +204,15 @@ detect_security_profile() {
     return 0
   fi
 
-  # Priority 2: Check for OAuth credentials
-  local -a profiles=()
+  # Priority 2: Check for OAuth credentials (Okta or Google)
   if [[ -n "${OAUTH_ISSUER:-}" ]] && [[ -n "${OAUTH_CLIENTID:-}" ]] &&
     [[ -n "${OAUTH_CLIENTSECRET:-}" ]] && [[ -n "${OAUTH_AUDIENCE:-}" ]]; then
-    profiles+=("oauth2-okta")
+    echo "oauth2"
+    return 0
   fi
   if [[ -n "${OAUTH_GOOGLE_CLIENT_ID:-}" ]] &&
     [[ -n "${OAUTH_GOOGLE_CLIENT_SECRET:-}" ]]; then
-    profiles+=("oauth2-google")
-  fi
-
-  if [[ ${#profiles[@]} -gt 0 ]]; then
-    echo "$(IFS=,; echo "${profiles[*]}")"
+    echo "oauth2"
     return 0
   fi
 

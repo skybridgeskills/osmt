@@ -280,7 +280,7 @@ Usage:
   -e   Stop the detached backend Development Docker stack (MySQL, ElasticSearch, Redis).
   -s   Start the local Spring app, as built from source code. This also sources the api/osmt-dev-stack.env file
        for OAUTH2-related environment variables. If OAuth credentials are missing, the 'single-auth' profile will be
-       used automatically. Set OSMT_SECURITY_PROFILE to override (oauth2-okta or single-auth).
+       used automatically. Set OSMT_SECURITY_PROFILE to override (oauth2 or single-auth).
   -l   Load the static CI dataset into the local MySQL instance. This will delete all data from the MySQL database.
        This action requires the database schema to be present. Locally, this is done by Flyway when the Spring
        application starts. You may need to start the Spring application first, and you will need to reindex

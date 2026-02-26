@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="OSMT API Dev (google oauth) - TEMPLATE" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
-    <option name="ACTIVE_PROFILES" value="dev,apiserver,oauth2-google,single-auth" />
+    <option name="ACTIVE_PROFILES" value="dev,apiserver,oauth2,single-auth" />
     <envs>
       <env name="DB_URI" value="osmt_db_user:password@localhost:3306" />
       <env name="REDIS_URI" value="localhost:6379" />

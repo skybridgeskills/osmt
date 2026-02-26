@@ -8,12 +8,11 @@ Google OAuth2, and staging (Google + single-auth).
 
 OSMT supports three authentication modes:
 
-| Mode          | Profiles                    | Use case                                   |
-|---------------|-----------------------------|--------------------------------------------|
-| Single-auth   | `single-auth`               | Local development, testing, CI             |
-| Okta OAuth2   | `oauth2-okta`               | Production with Okta as IdP                |
-| Google OAuth2 | `oauth2-google`             | Production with Google as IdP              |
-| Staging       | `oauth2-google,single-auth` | Staging with both OAuth and admin fallback |
+| Mode          | Profiles                | Use case                                   |
+|---------------|-------------------------|--------------------------------------------|
+| Single-auth   | `single-auth`           | Local development, testing, CI             |
+| OAuth2        | `oauth2`                | Production (Okta, Google, or custom)       |
+| Staging       | `oauth2,single-auth`    | Staging with both OAuth and admin fallback |
 
 Profile selection is **automatic** based on environment variables. When running
 locally via `./osmt_cli.sh -s`, the CLI detects which profiles to use. When
@@ -26,7 +25,7 @@ determines profiles from the `ENVIRONMENT` variable and OAuth credentials.
 
 1. **Explicit override**: If `OSMT_SECURITY_PROFILE` is set, it is used as-is.
 2. **OAuth credentials**: If Okta or Google OAuth vars are present and valid,
-   the corresponding `oauth2-okta` and/or `oauth2-google` profiles are added.
+   the `oauth2` profile is added.
 3. **Fallback**: If no OAuth credentials are provided, `single-auth` is used.
 4. **Staging**: When OAuth is configured and `ENABLE_SINGLE_AUTH=true`, the
    `single-auth` profile is added alongside OAuth so the login page shows both
@@ -34,12 +33,12 @@ determines profiles from the `ENVIRONMENT` variable and OAuth credentials.
 
 ### Security Configurations
 
-- **SecurityConfig** (`@Profile("oauth2-okta | oauth2-google")`): Handles OAuth2
-  login. When `app.singleAuthEnabled` is true, it also adds the
-  `AdminUserAuthenticationFilter` so form-based admin login works alongside OAuth.
-- **SingleAuthSecurityConfig** (`@Profile("single-auth & !oauth2-okta & !oauth2-google")`):
-  Used when *only* single-auth is active (no OAuth). Provides form login and
-  AdminUserAuthenticationFilter.
+- **SecurityConfig** (`@Profile("oauth2")`): Handles OAuth2 login. When
+  `app.singleAuthEnabled` is true, it also adds the AdminUserAuthenticationFilter
+  so form-based admin login works alongside OAuth.
+- **SingleAuthSecurityConfig** (`@Profile("single-auth & !oauth2")`): Used when
+  *only* single-auth is active (no OAuth). Excludes when oauth2 is active so
+  SecurityConfig handles staging (oauth2,single-auth).
 
 ### Whitelabel API
 
@@ -195,7 +194,7 @@ Use when you want both Google OAuth and an admin fallback on the same login page
 ### Example
 
 Copy `api/osmt-staging.env.example` to `api/osmt-staging.env` and fill in values.
-For Docker, set `ENVIRONMENT` to include `oauth2-google,single-auth` (or let the
+For Docker, set `ENVIRONMENT` to include `oauth2,single-auth` (or let the
 entrypoint add them from the env vars above).
 
 ### Login Page
@@ -250,8 +249,7 @@ are gitignored.
 ## Related Files
 
 - `api/src/main/resources/config/application-single-auth.properties` – single-auth config
-- `api/src/main/resources/config/application-oauth2-okta.properties` – Okta config
-- `api/src/main/resources/config/application-oauth2-google.properties` – Google config
+- `api/src/main/resources/config/application-oauth2.properties` – OAuth2 (Okta, Google, custom)
 - `api/docker/bin/docker_entrypoint.sh` – Docker profile logic
 - `bin/lib/common.sh` – `detect_security_profile()` for local dev
 - [README.md](../README.md) – Quick start and OAuth setup

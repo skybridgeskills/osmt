@@ -22,12 +22,12 @@ import org.springframework.transaction.annotation.Transactional
  *
  * Note: authProviders requires ClientRegistrationRepository, which is created by
  * OAuth2 client auto-config. In the test context this bean may not be created;
- * verify authProviders manually by running the API with oauth2-google profile
+ * verify authProviders manually by running the API with oauth2 profile
  * and curl http://localhost:8080/whitelabel/whitelabel.json
  */
 @Transactional
 @AutoConfigureMockMvc
-@ActiveProfiles("test", "apiserver", "oauth2-google", "single-auth")
+@ActiveProfiles("test", "apiserver", "oauth2", "single-auth")
 internal class WhitelabelControllerTest
     @Autowired
     constructor(
@@ -43,7 +43,7 @@ internal class WhitelabelControllerTest
         private val objectMapper = jacksonObjectMapper()
 
         @Test
-        fun `whitelabel json returns authProviders and singleAuthEnabled when oauth2-google and single-auth active`() {
+        fun `whitelabel json returns authProviders and singleAuthEnabled when oauth2 and single-auth active`() {
             val result =
                 mockMvc
                     .perform(get("/whitelabel/whitelabel.json"))
