@@ -1,11 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { siApple, siAuth0, siGithub, siGoogle, siOkta } from 'simple-icons';
 import { AuthService } from './auth-service';
 import { AppConfig } from '../app.config';
+import { AuthProvider } from '../models/app-config.model';
 
-interface LoginQueryParams {
-  return?: string;
-}
+const PROVIDER_ICONS: Record<string, { path: string; hex: string }> = {
+  apple: { path: siApple.path, hex: siApple.hex },
+  auth0: { path: siAuth0.path, hex: siAuth0.hex },
+  github: { path: siGithub.path, hex: siGithub.hex },
+  google: { path: siGoogle.path, hex: siGoogle.hex },
+  okta: { path: siOkta.path, hex: siOkta.hex },
+};
+
+const ID_ALIASES: Record<string, string> = {};
 
 @Component({
   selector: 'app-login',
@@ -13,7 +21,9 @@ interface LoginQueryParams {
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
-  isSingleAuthMode = false;
+  oauthProviders: AuthProvider[] = [];
+  singleAuthEnabled = false;
+  baseApiUrl = '';
   username = '';
   password = '';
   loginError = '';
@@ -26,30 +36,30 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const loginUrl = AppConfig.settings.loginUrl;
-
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['']);
       return;
     }
 
-    // Check if single-auth mode based on authMode setting
-    this.isSingleAuthMode = AppConfig.settings.authMode === 'single-auth';
+    this.oauthProviders = AppConfig.settings.authProviders ?? [];
+    this.singleAuthEnabled = AppConfig.settings.singleAuthEnabled ?? false;
+    this.baseApiUrl = AppConfig.settings.baseApiUrl ?? '';
 
     this.route.queryParams.subscribe(params => {
-      const returnRoute = params.return;
-
+      const returnRoute = params['return'];
       if (returnRoute) {
         this.authService.storeReturn(returnRoute);
       }
-
-      // If not in single-auth mode, redirect to OAuth2
-      if (!this.isSingleAuthMode) {
-        // Normal OAuth2 flow
-        window.location.href = loginUrl;
-      }
-      // If in single-auth mode, stay on page to show login form
     });
+  }
+
+  get showLoginPage(): boolean {
+    return this.oauthProviders.length >= 1 || this.singleAuthEnabled;
+  }
+
+  getIcon(providerId: string): { path: string; hex: string } | null {
+    const slug = ID_ALIASES[providerId] ?? providerId;
+    return PROVIDER_ICONS[slug] ?? null;
   }
 
   async onLogin(event?: Event): Promise<void> {
@@ -70,9 +80,10 @@ export class LoginComponent implements OnInit {
       await this.authService.login(this.username, this.password);
       const returnRoute = this.authService.popReturn() || '';
       this.router.navigate([returnRoute]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { error?: { error?: string } };
       this.loginError =
-        error.error?.error || 'Login failed. Please check your credentials.';
+        err?.error?.error || 'Login failed. Please check your credentials.';
     } finally {
       this.isLoading = false;
     }

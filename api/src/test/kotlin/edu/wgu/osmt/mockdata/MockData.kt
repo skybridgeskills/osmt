@@ -299,6 +299,8 @@ class MockData {
             "http://localhost:4200",
             "",
             "oauth2",
+            false, // singleAuthEnabled
+            "roles",
             "http://localhost:4200/login/success",
             "user",
             "user@email.com",

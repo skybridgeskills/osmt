@@ -2,6 +2,7 @@ package edu.wgu.osmt.ui
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.security.AuthConfigProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -17,6 +18,9 @@ class UiController {
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
+
+    @Autowired(required = false)
+    var authConfigProvider: AuthConfigProvider? = null
 
     @RequestMapping()
     fun index(): String = javaClass.getResource("/ui/index.html")?.readText(Charsets.UTF_8) ?: "UI not configured"
@@ -40,13 +44,16 @@ class UiController {
                 mutableMapOf<String, Any>()
             }
 
-        // Create dynamic config with loginUrl and authMode
+        // Create dynamic config with loginUrl, authMode, authProviders, singleAuthEnabled
         val dynamicConfig = mutableMapOf<String, Any>()
         if (appConfig.loginUrl.isNotBlank()) {
             dynamicConfig["loginUrl"] = appConfig.loginUrl
         }
-        // Set authMode from configuration
         dynamicConfig["authMode"] = appConfig.authMode
+        dynamicConfig["singleAuthEnabled"] = appConfig.singleAuthEnabled
+        val providers = authConfigProvider?.getOAuthProviders() ?: emptyList()
+        dynamicConfig["authProviders"] =
+            providers.map { mapOf("id" to it.id, "name" to it.name, "authorizationUrl" to it.authorizationUrl) }
 
         // Merge static and dynamic config (dynamic takes precedence)
         return staticConfig + dynamicConfig

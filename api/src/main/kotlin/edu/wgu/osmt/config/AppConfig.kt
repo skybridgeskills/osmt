@@ -26,6 +26,10 @@ class AppConfig(
     val loginUrl: String,
     @Value("\${app.authMode:oauth2}")
     val authMode: String,
+    @Value("\${app.singleAuthEnabled:false}")
+    val singleAuthEnabled: Boolean = false,
+    @Value("\${app.oauth2.rolesClaim:roles}")
+    val oauth2RolesClaim: String,
     @Value("\${app.loginSuccessRedirectUrl}")
     val loginSuccessRedirectUrl: String,
     @Value("\${app.userName:name}")
