@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ApiSkillSummary } from '../../richskill/ApiSkillSummary';
 import { AbstractTableComponent } from '../abstract-table.component';
 
@@ -7,6 +7,8 @@ import { AbstractTableComponent } from '../abstract-table.component';
   templateUrl: './skill-table.component.html',
 })
 export class SkillTableComponent extends AbstractTableComponent<ApiSkillSummary> {
+  @Input() isPublicView = false;
+
   constructor() {
     super();
   }

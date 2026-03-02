@@ -17,6 +17,7 @@ export class SkillListRowComponent implements OnInit {
   @Input() nextId = '';
   @Input() rowActions: TableActionDefinition[] = [];
   @Input() showActions = true;
+  @Input() isPublicView = false;
 
   @Output() rowSelected = new EventEmitter<ApiSkillSummary>();
   @Output() focusActionBar = new EventEmitter<void>();
