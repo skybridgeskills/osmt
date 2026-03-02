@@ -34,7 +34,12 @@ export class AuthService extends Whitelabelled implements IAuthService {
   }
 
   start(returnPath: string): void {
-    this.router.navigate(['/login'], { queryParams: { return: returnPath } });
+    const safeReturn = returnPath?.startsWith('/logout')
+      ? undefined
+      : returnPath;
+    this.router.navigate(['/login'], {
+      queryParams: safeReturn ? { return: safeReturn } : {},
+    });
   }
 
   storeToken(accessToken: string): void {
@@ -87,6 +92,9 @@ export class AuthService extends Whitelabelled implements IAuthService {
   }
 
   storeReturn(returnRoute: string): void {
+    if (returnRoute?.startsWith('/logout')) {
+      return;
+    }
     localStorage.setItem(STORAGE_KEY_RETURN, returnRoute);
   }
 
@@ -97,7 +105,7 @@ export class AuthService extends Whitelabelled implements IAuthService {
   popReturn(): string | null {
     const ret = localStorage.getItem(STORAGE_KEY_RETURN);
     localStorage.removeItem(STORAGE_KEY_RETURN);
-    return ret;
+    return ret?.startsWith('/logout') ? null : ret;
   }
 
   logout(): void {
