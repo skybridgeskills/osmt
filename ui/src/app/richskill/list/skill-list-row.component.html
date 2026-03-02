@@ -16,7 +16,11 @@
       <a
         id="{{ id }}-name"
         class="t-focus t-type-bodyLink"
-        routerLink="/skills/{{ skill.uuid }}/manage"
+        [routerLink]="
+          isPublicView
+            ? ['/skills', skill.uuid]
+            : ['/skills', skill.uuid, 'manage']
+        "
         >{{ skill.skillName }}</a
       >
     </h4>

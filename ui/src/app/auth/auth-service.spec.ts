@@ -1,4 +1,14 @@
-import { AuthService, STORAGE_KEY_RETURN } from './auth-service';
+import {
+  AuthService,
+  STORAGE_KEY_RETURN,
+  STORAGE_KEY_ROLE,
+  STORAGE_KEY_TOKEN,
+} from './auth-service';
+
+function makeJwt(payload: Record<string, unknown>): string {
+  const enc = btoa(JSON.stringify(payload));
+  return `header.${enc}.sig`;
+}
 
 describe('AuthService', () => {
   // @ts-ignore
@@ -6,6 +16,8 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     localStorage.removeItem(STORAGE_KEY_RETURN);
+    localStorage.removeItem(STORAGE_KEY_ROLE);
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
   });
 
   it('should be created', () => {
@@ -47,5 +59,25 @@ describe('AuthService', () => {
     const requiredRoles: string[] = ['admin', 'curator'];
     const userRoles: string[] = ['guest', 'viewer'];
     expect(authService.hasRole(requiredRoles, userRoles)).toEqual(false);
+  });
+
+  it('storeToken should extract role from roles claim', () => {
+    const jwt = makeJwt({ roles: 'ROLE_Osmt_Admin' });
+    authService.storeToken(jwt);
+    expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe('ROLE_Osmt_Admin');
+  });
+
+  it('storeToken should extract role from groups claim (OAuth2)', () => {
+    const jwt = makeJwt({ groups: ['ROLE_Osmt_Curator'] });
+    authService.storeToken(jwt);
+    expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe('ROLE_Osmt_Curator');
+  });
+
+  it('storeToken should extract role from authorities array', () => {
+    const jwt = makeJwt({ authorities: ['ROLE_Osmt_View', 'ROLE_Osmt_Admin'] });
+    authService.storeToken(jwt);
+    expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe(
+      'ROLE_Osmt_View,ROLE_Osmt_Admin'
+    );
   });
 });

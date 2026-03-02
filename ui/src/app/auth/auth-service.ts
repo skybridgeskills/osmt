@@ -46,8 +46,15 @@ export class AuthService extends Whitelabelled implements IAuthService {
     localStorage.setItem(STORAGE_KEY_TOKEN, accessToken);
     try {
       const decoded = JSON.parse(atob(accessToken.split('.')[1]));
-      if (decoded?.roles) {
-        localStorage.setItem(STORAGE_KEY_ROLE, decoded.roles);
+      const rawRoles =
+        decoded?.roles ?? decoded?.groups ?? decoded?.authorities;
+      if (rawRoles !== undefined) {
+        const roleValue = Array.isArray(rawRoles)
+          ? rawRoles.join(',')
+          : String(rawRoles);
+        if (roleValue) {
+          localStorage.setItem(STORAGE_KEY_ROLE, roleValue);
+        }
       }
     } catch (e) {
       // Token may not be a JWT, ignore
