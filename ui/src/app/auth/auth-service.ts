@@ -6,6 +6,7 @@ import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
 import { Whitelabelled } from '../../whitelabel';
 import { IAuthService } from './iauth-service';
+import { AppConfig } from '../app.config';
 
 export const STORAGE_KEY_TOKEN = 'OSMT.AuthService.accessToken';
 export const STORAGE_KEY_RETURN = 'OSMT.AuthService.return';
@@ -115,9 +116,18 @@ export class AuthService extends Whitelabelled implements IAuthService {
   }
 
   logout(): void {
+    const baseUrl = AppConfig.settings?.baseApiUrl ?? '';
+    const logoutUrl = baseUrl
+      ? `${baseUrl.replace(/\/$/, '')}/api/auth/logout`
+      : '/api/auth/logout';
+    this.http
+      .post(logoutUrl, {}, { withCredentials: true })
+      .toPromise()
+      .catch(() => {});
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_NOAUTH);
     localStorage.removeItem(STORAGE_KEY_ROLE);
+    localStorage.removeItem(STORAGE_KEY_RETURN);
   }
 
   currentAuthToken(): string | null {

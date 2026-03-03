@@ -1,6 +1,7 @@
 package edu.wgu.osmt.security
 
-import com.nimbusds.jose.jwk.source.ImmutableSecret
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jose.proc.SecurityContext
 import edu.wgu.osmt.config.AppConfig
 import org.springframework.context.annotation.Bean
@@ -28,9 +29,18 @@ class SessionTokenJwtConfig(
 ) {
     @Bean
     fun sessionTokenJwtEncoder(): JwtEncoder {
-        val key = resolveSecretKey()
-        val immutableSecret = ImmutableSecret<SecurityContext>(key)
-        return NimbusJwtEncoder(immutableSecret)
+        val secretBytes = resolveSecretBytes()
+        val jwk =
+            com.nimbusds.jose.jwk.OctetSequenceKey
+                .Builder(secretBytes)
+                .keyID("session-token-key")
+                .algorithm(JWSAlgorithm.HS256)
+                .build()
+        val jwkSet =
+            com.nimbusds.jose.jwk
+                .JWKSet(jwk)
+        val jwkSource = ImmutableJWKSet<SecurityContext>(jwkSet)
+        return NimbusJwtEncoder(jwkSource)
     }
 
     @Bean

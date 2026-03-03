@@ -68,6 +68,9 @@ object SecurityConfigHelper {
                 // Login endpoint for single-auth profile
                 .requestMatchers(POST, "/api/auth/login")
                 .permitAll()
+                // Logout endpoint - invalidates server session (OAuth2 state)
+                .requestMatchers(POST, "/api/auth/logout")
+                .permitAll()
                 // Public search endpoints
                 .requestMatchers(POST, *buildAllVersions(RoutePaths.SEARCH_SKILLS))
                 .permitAll()
