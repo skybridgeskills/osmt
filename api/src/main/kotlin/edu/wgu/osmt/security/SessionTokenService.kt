@@ -4,6 +4,8 @@ import edu.wgu.osmt.config.AppConfig
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm
+import org.springframework.security.oauth2.jwt.JwsHeader
 import org.springframework.security.oauth2.jwt.JwtClaimsSet
 import org.springframework.security.oauth2.jwt.JwtEncoder
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters
@@ -44,7 +46,8 @@ class SessionTokenService(
                 .issuedAt(now)
                 .expiresAt(expiresAt)
                 .build()
-        val params = JwtEncoderParameters.from(claims)
+        val header = JwsHeader.with(MacAlgorithm.HS256).build()
+        val params = JwtEncoderParameters.from(header, claims)
         return jwtEncoder.encode(params).tokenValue
     }
 }
