@@ -23,6 +23,7 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
+import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.AuthenticationEntryPoint
@@ -54,6 +55,9 @@ class SecurityConfig {
 
     @Autowired(required = false)
     var adminUserAuthenticationFilter: AdminUserAuthenticationFilter? = null
+
+    @Autowired(required = false)
+    var jwtDecoder: JwtDecoder? = null
 
     private fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val grantedAuthoritiesConverter = JwtGrantedAuthoritiesConverter()
@@ -150,9 +154,8 @@ class SecurityConfig {
         config =
             config.oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { jwt ->
-                    if (appConfig.singleAuthEnabled) {
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                    }
+                    jwtDecoder?.let { jwt.decoder(it) }
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
 
@@ -213,9 +216,13 @@ class SecurityConfig {
 }
 
 @Component
+@Profile("oauth2")
 class RedirectToFrontend : AuthenticationSuccessHandler {
     @Autowired
     lateinit var appConfig: AppConfig
+
+    @Autowired
+    lateinit var sessionTokenService: SessionTokenService
 
     override fun onAuthenticationSuccess(
         request: HttpServletRequest?,
@@ -226,8 +233,8 @@ class RedirectToFrontend : AuthenticationSuccessHandler {
         when (authentication?.principal) {
             is OidcUser -> {
                 val oidcUser: OidcUser = authentication.principal as OidcUser
-                val tokenValue = oidcUser.idToken.tokenValue
-                val url = "${appConfig.loginSuccessRedirectUrl}?token=$tokenValue"
+                val token = sessionTokenService.createToken(oidcUser)
+                val url = "${appConfig.loginSuccessRedirectUrl}?token=$token"
                 redirectStrategy.sendRedirect(request, response, url)
             }
         }

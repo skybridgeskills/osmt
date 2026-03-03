@@ -64,6 +64,13 @@ class AppConfig(
     val roleView: String,
     @Value("\${osmt.security.scope.read:SCOPE_osmt.read}")
     val scopeRead: String,
+    // Session token (OAuth2 backend-issued JWT)
+    @Value("\${app.sessionTokenSecret:}")
+    val sessionTokenSecret: String,
+    @Value("\${app.sessionTokenExpirySeconds:86400}")
+    val sessionTokenExpirySeconds: Long,
+    @Value("\${app.sessionTokenIssuer:}")
+    val sessionTokenIssuer: String,
 ) {
     @Autowired
     lateinit var environment: Environment

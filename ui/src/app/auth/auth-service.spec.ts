@@ -67,14 +67,8 @@ describe('AuthService', () => {
     expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe('ROLE_Osmt_Admin');
   });
 
-  it('storeToken should extract role from groups claim (OAuth2)', () => {
-    const jwt = makeJwt({ groups: ['ROLE_Osmt_Curator'] });
-    authService.storeToken(jwt);
-    expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe('ROLE_Osmt_Curator');
-  });
-
-  it('storeToken should extract role from authorities array', () => {
-    const jwt = makeJwt({ authorities: ['ROLE_Osmt_View', 'ROLE_Osmt_Admin'] });
+  it('storeToken should extract role from roles array', () => {
+    const jwt = makeJwt({ roles: ['ROLE_Osmt_View', 'ROLE_Osmt_Admin'] });
     authService.storeToken(jwt);
     expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe(
       'ROLE_Osmt_View,ROLE_Osmt_Admin'

@@ -132,9 +132,23 @@ curl -H "Authorization: Bearer <token>" http://localhost:8080/api/v3/skills
 
 ### Role Mapping
 
-Okta uses `groups-claim=roles` in `application-oauth2-okta.properties`. The claim
+Okta uses `groups-claim=roles` in `application-oauth2.properties`. The claim
 name is configurable via `app.oauth2.rolesClaim` (default `roles`). Ensure Okta
 groups map to OSMT roles (e.g. `ROLE_Osmt_Admin`).
+
+### Session Token (OAuth2)
+
+The backend issues its own JWT after OAuth2 login instead of passing the IdP
+token to the frontend. These settings control that token:
+
+| Variable                      | Description                                          | Default        |
+|-------------------------------|------------------------------------------------------|----------------|
+| `APP_SESSION_TOKEN_SECRET`    | Base64-encoded secret for signing (min 256 bits).    | Derived in dev |
+| `APP_SESSION_TOKEN_EXPIRY_SECONDS` | Session validity in seconds.                   | 86400 (24h)    |
+| `APP_SESSION_TOKEN_ISSUER`    | JWT issuer claim.                                    | `app.baseUrl`  |
+
+In production, set `APP_SESSION_TOKEN_SECRET` to a secure random value (e.g.
+`openssl rand -base64 32`).
 
 ---
 

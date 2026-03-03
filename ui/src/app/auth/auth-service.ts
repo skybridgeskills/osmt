@@ -46,8 +46,7 @@ export class AuthService extends Whitelabelled implements IAuthService {
     localStorage.setItem(STORAGE_KEY_TOKEN, accessToken);
     try {
       const decoded = JSON.parse(atob(accessToken.split('.')[1]));
-      const rawRoles =
-        decoded?.roles ?? decoded?.groups ?? decoded?.authorities;
+      const rawRoles = decoded?.roles;
       if (rawRoles !== undefined) {
         const roleValue = Array.isArray(rawRoles)
           ? rawRoles.join(',')
