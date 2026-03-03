@@ -7,9 +7,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
-import java.time.Instant
 
 /**
  * Data class for login request body
@@ -44,6 +42,7 @@ class AdminAuthController
     @Autowired
     constructor(
         private val environment: Environment,
+        private val adminTokenService: AdminTokenService,
     ) {
         private val logger = LoggerFactory.getLogger(AdminAuthController::class.java)
 
@@ -85,10 +84,10 @@ class AdminAuthController
         ): ResponseEntity<*> =
             try {
                 if (loginRequest.username == adminUsername && loginRequest.password == adminPassword) {
-                    val jwtToken = createAdminJwtToken()
+                    val token = adminTokenService.createAdminToken()
                     val response =
                         LoginResponse(
-                            token = jwtToken.tokenValue,
+                            token = token,
                             expiresIn = 3600,
                             tokenType = "Bearer",
                         )
@@ -107,21 +106,4 @@ class AdminAuthController
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Login failed"))
             }
-
-        private fun createAdminJwtToken(): Jwt {
-            val now = Instant.now()
-            val expiration = now.plusSeconds(3600)
-
-            return Jwt
-                .withTokenValue("admin-jwt-${System.currentTimeMillis()}")
-                .header("typ", "JWT")
-                .header("alg", "none")
-                .claim("email", AdminAuthConstants.ADMIN_EMAIL)
-                .claim("name", AdminAuthConstants.ADMIN_NAME)
-                .claim("sub", AdminAuthConstants.ADMIN_EMAIL)
-                .claim("roles", AdminAuthConstants.ADMIN_ROLE)
-                .issuedAt(now)
-                .expiresAt(expiration)
-                .build()
-        }
     }

@@ -57,7 +57,7 @@ internal class SingleAuthWithOAuth2IntegrationTest
 
             val loginResponse =
                 objectMapper.readValue<LoginResponse>(loginResult.response.contentAsString)
-            assertThat(loginResponse.token).startsWith("admin-jwt-")
+            assertThat(loginResponse.token).isNotBlank()
             assertThat(loginResponse.tokenType).isEqualTo("Bearer")
 
             // Workspace requires authentication (ADMIN or CURATOR)

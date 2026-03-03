@@ -6,12 +6,15 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.Environment
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.JwtException
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
@@ -63,6 +66,7 @@ class AdminUserAuthenticationFilter
     constructor(
         private val appConfig: AppConfig,
         private val environment: Environment,
+        @Qualifier("adminTokenJwtDecoder") private val adminTokenJwtDecoder: JwtDecoder,
     ) : OncePerRequestFilter() {
         private val logger = LoggerFactory.getLogger(AdminUserAuthenticationFilter::class.java)
 
@@ -162,8 +166,8 @@ class AdminUserAuthenticationFilter
         /**
          * Validates Bearer token authentication.
          *
-         * For now, this accepts any non-empty Bearer token as valid admin authentication.
-         * In a production system, this would validate JWT signatures and expiration.
+         * Decodes and validates the JWT signature and expiration.
+         * Only accepts tokens issued by the admin login endpoint.
          *
          * @param authHeader The Authorization header value (Bearer token)
          * @return JwtAuthenticationToken if valid, null otherwise
@@ -171,28 +175,54 @@ class AdminUserAuthenticationFilter
         private fun validateBearerToken(authHeader: String): JwtAuthenticationToken? =
             try {
                 val token = authHeader.substringAfter("Bearer ").trim()
-                if (token.isNotEmpty()) {
-                    createAdminJwtAuthentication(token)
-                } else {
+                if (token.isEmpty()) {
                     null
+                } else {
+                    val jwt = adminTokenJwtDecoder.decode(token)
+                    val authorities = authoritiesFromJwt(jwt)
+                    JwtAuthenticationToken(jwt, authorities)
                 }
+            } catch (e: JwtException) {
+                logger.debug("Invalid Bearer token: ${e.message}")
+                null
             } catch (e: Exception) {
                 logger.warn("Failed to validate Bearer token: ${e.message}")
                 null
             }
 
+        private fun authoritiesFromJwt(jwt: Jwt): List<SimpleGrantedAuthority> {
+            val rolesClaim = jwt.claims["roles"]
+            return when (rolesClaim) {
+                is String -> {
+                    listOf(SimpleGrantedAuthority(rolesClaim))
+                }
+
+                is Collection<*> -> {
+                    rolesClaim
+                        .filterIsInstance<String>()
+                        .map { SimpleGrantedAuthority(it) }
+                }
+
+                else -> {
+                    listOf(SimpleGrantedAuthority(AdminAuthConstants.ADMIN_ROLE))
+                }
+            }
+        }
+
         /**
-         * Creates a JWT authentication token with admin role and claims.
+         * Creates a JWT authentication token with admin role for Basic Auth.
          *
-         * @param tokenValue Optional token value (defaults to "admin-token")
+         * Used when Basic Auth credentials are valid. The in-memory Jwt
+         * is not validated (Basic Auth was already checked).
+         *
          * @return JwtAuthenticationToken with admin authorities
          */
-        private fun createAdminJwtAuthentication(tokenValue: String = "admin-token"): JwtAuthenticationToken {
+        private fun createAdminJwtAuthentication(): JwtAuthenticationToken {
             val authorities = listOf(SimpleGrantedAuthority(AdminAuthConstants.ADMIN_ROLE))
 
             val jwt =
                 Jwt
-                    .withTokenValue(tokenValue)
+                    .withTokenValue("basic-auth-admin")
                     .header("typ", "JWT")
                     .header("alg", "none")
                     .claim("email", AdminAuthConstants.ADMIN_EMAIL)

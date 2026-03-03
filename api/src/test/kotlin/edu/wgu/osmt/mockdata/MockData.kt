@@ -317,7 +317,7 @@ class MockData {
             "Osmt_Curator",
             "Osmt_View",
             "SCOPE_osmt.read",
-            "", // sessionTokenSecret
+            "ZGV2LXBsYWNlaG9sZGVyLWZvci1sb2NhbC1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZA==", // sessionTokenSecret (test placeholder)
             86400L, // sessionTokenExpirySeconds
             "https://osmt.wgu.edu", // sessionTokenIssuer
         )

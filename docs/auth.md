@@ -67,7 +67,8 @@ in production or any environment exposed to the internet.
 
 1. Initialize env files: `./osmt_cli.sh -i`
 2. Leave OAuth values as `xxxxxx` or omit them
-3. Start the app: `./osmt_cli.sh -s`
+3. Use the `dev` profile (provides `APP_SESSION_TOKEN_SECRET` placeholder) or set it explicitly
+4. Start the app: `./osmt_cli.sh -s`
 
 Admin credentials (optional; defaults to `admin`/`admin`):
 
@@ -93,7 +94,7 @@ curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin"}'
 
-# Use the returned token:
+# Use the returned token (signed JWT, validated on each request):
 curl -H "Authorization: Bearer <token>" http://localhost:8080/api/v3/skills
 ```
 
@@ -143,11 +144,12 @@ token to the frontend. These settings control that token:
 
 | Variable                      | Description                                          | Default        |
 |-------------------------------|------------------------------------------------------|----------------|
-| `APP_SESSION_TOKEN_SECRET`    | Base64-encoded secret for signing (min 256 bits).    | Derived in dev |
+| `APP_SESSION_TOKEN_SECRET`    | Base64-encoded secret for signing (min 256 bits).    | Required       |
 | `APP_SESSION_TOKEN_EXPIRY_SECONDS` | Session validity in seconds.                   | 86400 (24h)    |
 | `APP_SESSION_TOKEN_ISSUER`    | JWT issuer claim.                                    | `app.baseUrl`  |
 
-In production, set `APP_SESSION_TOKEN_SECRET` to a secure random value (e.g.
+`APP_SESSION_TOKEN_SECRET` is required. The `dev` profile provides a placeholder
+for local development. In production, set it to a secure random value (e.g.
 `openssl rand -base64 32`).
 
 ---
@@ -197,11 +199,12 @@ Use when you want both Google OAuth and an admin fallback on the same login page
 
 ### Configuration
 
-1. Set Google OAuth vars:
+1. Set `APP_SESSION_TOKEN_SECRET` (required) or use the `dev` profile for local staging.
+2. Set Google OAuth vars:
     - `OAUTH_GOOGLE_CLIENT_ID`
     - `OAUTH_GOOGLE_CLIENT_SECRET`
-2. Set `ENABLE_SINGLE_AUTH=true`
-3. Set admin credentials:
+3. Set `ENABLE_SINGLE_AUTH=true`
+4. Set admin credentials:
     - `SINGLE_AUTH_ADMIN_USERNAME`
     - `SINGLE_AUTH_ADMIN_PASSWORD`
 
@@ -257,6 +260,22 @@ are gitignored.
 2. OAuth buttons and admin form are shown
 3. User chooses OAuth or form login
 4. Same flows as above for whichever option is used
+
+---
+
+## Known Issues
+
+### Token in URL (OAuth2 redirect)
+
+After OAuth2 login, the backend redirects to the frontend with the session token
+in the query string (`?token=...`). Tokens in URLs may be exposed via:
+
+- HTTP Referer header
+- Server access logs
+- Browser history
+
+This behavior predates the backend-issued session token work. Mitigations (e.g.
+using fragment, or code exchange) may be considered in future.
 
 ---
 
