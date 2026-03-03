@@ -1,6 +1,7 @@
 package edu.wgu.osmt.security
 
-import com.nimbusds.jose.jwk.source.ImmutableSecret
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jose.proc.SecurityContext
 import edu.wgu.osmt.config.AppConfig
 import org.springframework.context.annotation.Bean
@@ -16,39 +17,48 @@ import java.util.Base64
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * JWT encoder and decoder for OAuth2 session tokens.
+ * JWT encoder and decoder for single-auth admin tokens.
  *
- * Backend issues its own signed JWT after OAuth2 login instead of passing
- * the IdP token. Uses HS256 with configurable secret.
+ * Admin tokens are signed with HS256 using APP_SESSION_TOKEN_SECRET.
+ * Issuer is "osmt-admin" to distinguish from OAuth2 session tokens.
+ *
+ * @see AdminTokenService for token creation
+ * @see AdminUserAuthenticationFilter for Bearer token validation
  */
 @Configuration
-@Profile("oauth2")
-class SessionTokenJwtConfig(
+@Profile("single-auth")
+class AdminTokenJwtConfig(
     private val appConfig: AppConfig,
 ) {
     @Bean
-    fun sessionTokenJwtEncoder(): JwtEncoder {
-        val key = resolveSecretKey()
-        val immutableSecret = ImmutableSecret<SecurityContext>(key)
-        return NimbusJwtEncoder(immutableSecret)
+    fun adminTokenJwtEncoder(): JwtEncoder {
+        val secretBytes = resolveSecretBytes()
+        val jwk =
+            com.nimbusds.jose.jwk.OctetSequenceKey
+                .Builder(secretBytes)
+                .keyID("admin-token-key")
+                .algorithm(JWSAlgorithm.HS256)
+                .build()
+        val jwkSet =
+            com.nimbusds.jose.jwk
+                .JWKSet(jwk)
+        val jwkSource = ImmutableJWKSet<SecurityContext>(jwkSet)
+        return NimbusJwtEncoder(jwkSource)
     }
 
     @Bean
-    fun sessionTokenJwtDecoder(): JwtDecoder {
+    fun adminTokenJwtDecoder(): JwtDecoder {
         val key = resolveSecretKey()
         val decoder =
             NimbusJwtDecoder
                 .withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build()
-        val issuer = appConfig.sessionTokenIssuer.ifBlank { appConfig.baseUrl }
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer))
+        decoder.setJwtValidator(
+            JwtValidators.createDefaultWithIssuer(AdminTokenService.ADMIN_ISSUER),
+        )
         return decoder
     }
-
-    @Bean
-    @Profile("oauth2 & !single-auth")
-    fun jwtDecoder(): JwtDecoder = sessionTokenJwtDecoder()
 
     private fun resolveSecretKey(): javax.crypto.SecretKey {
         val secretBytes = resolveSecretBytes()
