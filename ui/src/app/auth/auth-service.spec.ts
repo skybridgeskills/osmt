@@ -1,23 +1,31 @@
 import {
   AuthService,
+  STORAGE_KEY_NOAUTH,
   STORAGE_KEY_RETURN,
   STORAGE_KEY_ROLE,
   STORAGE_KEY_TOKEN,
 } from './auth-service';
+import { AppConfig } from '../app.config';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const enc = btoa(JSON.stringify(payload));
   return `header.${enc}.sig`;
 }
 
+const mockHttp = {
+  post: () => ({ toPromise: () => Promise.resolve() }),
+};
+
 describe('AuthService', () => {
   // @ts-ignore
-  const authService = new AuthService(null, null, null);
+  const authService = new AuthService(null, mockHttp, null, null);
 
   beforeEach(() => {
     localStorage.removeItem(STORAGE_KEY_RETURN);
     localStorage.removeItem(STORAGE_KEY_ROLE);
     localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_NOAUTH);
+    AppConfig.settings = { baseApiUrl: '' } as never;
   });
 
   it('should be created', () => {
@@ -73,5 +81,15 @@ describe('AuthService', () => {
     expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBe(
       'ROLE_Osmt_View,ROLE_Osmt_Admin'
     );
+  });
+
+  it('logout should clear all auth storage including STORAGE_KEY_RETURN', () => {
+    localStorage.setItem(STORAGE_KEY_TOKEN, 'token');
+    localStorage.setItem(STORAGE_KEY_ROLE, 'ROLE_Admin');
+    localStorage.setItem(STORAGE_KEY_RETURN, '/skills');
+    authService.logout();
+    expect(localStorage.getItem(STORAGE_KEY_TOKEN)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY_ROLE)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY_RETURN)).toBeNull();
   });
 });

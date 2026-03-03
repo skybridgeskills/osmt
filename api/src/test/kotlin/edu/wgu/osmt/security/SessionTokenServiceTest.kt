@@ -63,7 +63,7 @@ internal class SessionTokenServiceTest : SpringTest() {
                 .name(name)
                 .build()
         val authorities: MutableList<GrantedAuthority> =
-            roles.map { OAuth2UserAuthority(it, mapOf()) }.toMutableList()
+            roles.map { OAuth2UserAuthority(it, mapOf("sub" to subject)) }.toMutableList()
         return DefaultOidcUser(authorities, idToken, userInfo)
     }
 }
