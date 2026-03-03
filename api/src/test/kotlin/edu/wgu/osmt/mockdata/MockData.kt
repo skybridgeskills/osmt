@@ -317,6 +317,9 @@ class MockData {
             "Osmt_Curator",
             "Osmt_View",
             "SCOPE_osmt.read",
+            "", // sessionTokenSecret
+            86400L, // sessionTokenExpirySeconds
+            "https://osmt.wgu.edu", // sessionTokenIssuer
         )
 
     private fun parseDateTime(dateTime: String?): LocalDateTime? =
