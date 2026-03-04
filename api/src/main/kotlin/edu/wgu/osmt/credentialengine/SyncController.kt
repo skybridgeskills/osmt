@@ -22,6 +22,7 @@ data class SyncIntegrationDto(
     val syncKey: String,
     val recordType: String,
     val syncWatermark: String?,
+    val statusJson: String? = null,
 )
 
 @Controller
@@ -59,6 +60,7 @@ class SyncController
                         syncKey = it.syncKey,
                         recordType = it.recordType,
                         syncWatermark = it.syncWatermark?.toString(),
+                        statusJson = it.statusJson,
                     )
                 }
             return ResponseEntity.ok(SyncStateResponse(integrations = integrations))

@@ -1,5 +1,7 @@
 <div class="l-container">
-  <h1>Credential Engine Sync</h1>
+  <h1 class="t-type-heading1 t-margin-small t-margin-bottom">
+    External Sync
+  </h1>
 
   <app-system-message
     *ngIf="!configured"
@@ -15,18 +17,34 @@
   <ng-container *ngIf="configured && !loading && state">
     <table aria-label="Sync integrations">
       <thead>
-        <tr class="m-tableHeader">
-          <th scope="col">Integration Key</th>
-          <th scope="col">Record Type</th>
-          <th scope="col">Watermark</th>
-        </tr>
+      <tr class="m-tableHeader">
+        <th scope="col">Integration Key</th>
+        <th scope="col">Record Type</th>
+        <th scope="col">Watermark</th>
+        <th scope="col">Status</th>
+      </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let i of state.integrations" class="m-tableRow">
-          <td>{{ i.syncKey }}</td>
-          <td>{{ i.recordType }}</td>
-          <td>{{ i.syncWatermark ?? '—' }}</td>
-        </tr>
+      <tr *ngFor="let i of state.integrations" class="m-tableRow">
+        <td>{{ i.syncKey }}</td>
+        <td>{{ i.recordType }}</td>
+        <td>{{ i.syncWatermark ?? '—' }}</td>
+        <td>
+          @let status = getStatusDisplay(i);
+          {{ status.label }}
+          @if (status.correlationId) {
+            <code
+              class="m-code-copyable"
+              [attr.title]="
+                  'Correlation ID: ' + status.correlationId + ' (click to copy)'
+                "
+              (click)="copyToClipboard(status.correlationId)"
+            >
+              {{ status.correlationId }}
+            </code>
+          }
+        </td>
+      </tr>
       </tbody>
     </table>
 

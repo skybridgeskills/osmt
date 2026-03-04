@@ -40,6 +40,34 @@ class SyncStateRepository {
         }
     }
 
+    fun getStatusJson(
+        syncType: String,
+        syncKey: String,
+        recordType: String,
+    ): String? =
+        SyncStateTable
+            .select {
+                (SyncStateTable.syncType eq syncType) and
+                    (SyncStateTable.syncKey eq syncKey) and
+                    (SyncStateTable.recordType eq recordType)
+            }.firstOrNull()
+            ?.get(SyncStateTable.statusJson)
+
+    fun updateStatusJson(
+        syncType: String,
+        syncKey: String,
+        recordType: String,
+        statusJson: String,
+    ) {
+        SyncStateTable.update({
+            (SyncStateTable.syncType eq syncType) and
+                (SyncStateTable.syncKey eq syncKey) and
+                (SyncStateTable.recordType eq recordType)
+        }) {
+            it[SyncStateTable.statusJson] = statusJson
+        }
+    }
+
     fun getOrCreateRow(
         syncType: String,
         syncKey: String,
@@ -59,6 +87,7 @@ class SyncStateRepository {
                 syncKey = existing[SyncStateTable.syncKey],
                 recordType = existing[SyncStateTable.recordType],
                 syncWatermark = existing[SyncStateTable.syncWatermark],
+                statusJson = existing[SyncStateTable.statusJson],
             )
         } else {
             SyncStateTable.insert {
@@ -66,8 +95,9 @@ class SyncStateRepository {
                 it[SyncStateTable.syncKey] = syncKey
                 it[SyncStateTable.recordType] = recordType
                 it[SyncStateTable.syncWatermark] = null
+                it[SyncStateTable.statusJson] = null
             }
-            SyncState(syncType, syncKey, recordType, null)
+            SyncState(syncType, syncKey, recordType, null, null)
         }
     }
 
@@ -85,6 +115,7 @@ class SyncStateRepository {
                     syncKey = it[SyncStateTable.syncKey],
                     recordType = it[SyncStateTable.recordType],
                     syncWatermark = it[SyncStateTable.syncWatermark],
+                    statusJson = it[SyncStateTable.statusJson],
                 )
             }
 }

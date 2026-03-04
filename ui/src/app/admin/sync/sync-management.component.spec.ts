@@ -8,6 +8,8 @@ import { SyncService } from './sync.service';
 import { ToastService } from '../../toast/toast.service';
 import { AppConfig } from '../../app.config';
 import { SystemMessageComponent } from '../../core/system-message.component';
+import { AuthService } from '../../auth/auth-service';
+import { AuthServiceStub } from '../../../../test/resource/mock-stubs';
 
 describe('SyncManagementComponent', () => {
   let component: SyncManagementComponent;
@@ -21,7 +23,11 @@ describe('SyncManagementComponent', () => {
     await TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, CommonModule],
       declarations: [SyncManagementComponent, SystemMessageComponent],
-      providers: [SyncService, ToastService],
+      providers: [
+        SyncService,
+        ToastService,
+        { provide: AuthService, useClass: AuthServiceStub },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SyncManagementComponent);
@@ -52,6 +58,33 @@ describe('SyncManagementComponent', () => {
     expect(component.configured).toBe(true);
   });
 
+  it('getStatusDisplay parses statusJson and shows error with correlationId', () => {
+    const display = component.getStatusDisplay({
+      syncKey: 'default',
+      recordType: 'skill',
+      syncWatermark: null,
+      statusJson: JSON.stringify({
+        error: {
+          message: 'Connection refused',
+          correlationId: 'abc12def34',
+        },
+      }),
+    });
+    expect(display.label).toBe('Error: Connection refused');
+    expect(display.correlationId).toBe('abc12def34');
+  });
+
+  it('getStatusDisplay returns Ok with batches when no error', () => {
+    const display = component.getStatusDisplay({
+      syncKey: 'default',
+      recordType: 'skill',
+      syncWatermark: '2025-01-01',
+      statusJson: JSON.stringify({ batchesCompleted: 3 }),
+    });
+    expect(display.label).toBe('Ok (3 batches)');
+    expect(display.correlationId).toBeNull();
+  });
+
   it('sets configured false on 503', () => {
     spyOn(syncService, 'getState').and.returnValue(
       throwError(() => ({ status: 503 }))
@@ -76,6 +109,24 @@ describe('SyncManagementComponent', () => {
     expect(toastService.showToast).toHaveBeenCalledWith(
       'Success',
       'Sync started. Check logs for progress.'
+    );
+  });
+
+  it('shows error toast on 401 from syncAll', () => {
+    component.state = { integrations: [] };
+    component.configured = true;
+    component.syncing = false;
+    spyOn(syncService, 'syncAll').and.returnValue(
+      throwError(() => ({ status: 401, error: { message: 'Unauthorized' } }))
+    );
+    spyOn(toastService, 'showToast');
+
+    component.onSyncNow();
+
+    expect(toastService.showToast).toHaveBeenCalledWith(
+      'Error',
+      'Unauthorized',
+      true
     );
   });
 });

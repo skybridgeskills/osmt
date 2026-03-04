@@ -8,6 +8,7 @@ object SyncStateTable : LongIdTable("SyncState") {
     val syncKey = varchar("sync_key", 64)
     val recordType = varchar("record_type", 64)
     val syncWatermark = datetime("sync_watermark").nullable()
+    val statusJson = text("status_json").nullable()
 
     init {
         uniqueIndex("uk_sync_state", syncType, syncKey, recordType)

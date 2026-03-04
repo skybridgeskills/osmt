@@ -8,30 +8,30 @@ OSMT → Credential Engine translation mapping and how to use the feature.
 
 ### Skill (RSD) → Competency
 
-| OSMT Field        | CE/CTDL Field         | Notes                                   |
-| ----------------- | ---------------------- | --------------------------------------- |
-| `uuid`            | `CTID`                 | Prefixed as `ce-{uuid}`                 |
-| `name`            | `CompetencyLabel`       | Skill name                              |
-| `statement`       | `CompetencyText`        | Skill statement                         |
-| (org CTID)        | `Creator`              | List with org CTID from config          |
-| `authors` (first) | `Author`               | First author keyword value              |
-| `categories`      | `CompetencyCategory`   | Category keyword values, max 10         |
-| `searchingKeywords` | `ConceptKeyword`     | Keyword values, max 20                  |
-| (status)          | `PublicationStatusType`| `"Published"` or `"Deprecated"`         |
-| canonical URL     | `ExactAlignment`        | `{baseUrl}/api/skills/{uuid}`           |
+| OSMT Field          | CE/CTDL Field           | Notes                           |
+|---------------------|-------------------------|---------------------------------|
+| `uuid`              | `CTID`                  | Prefixed as `ce-{uuid}`         |
+| `name`              | `CompetencyLabel`       | Skill name                      |
+| `statement`         | `CompetencyText`        | Skill statement                 |
+| (org CTID)          | `Creator`               | List with org CTID from config  |
+| `authors` (first)   | `Author`                | First author keyword value      |
+| `categories`        | `CompetencyCategory`    | Category keyword values, max 10 |
+| `searchingKeywords` | `ConceptKeyword`        | Keyword values, max 20          |
+| (status)            | `PublicationStatusType` | `"Published"` or `"Deprecated"` |
+| canonical URL       | `ExactAlignment`        | `{baseUrl}/api/skills/{uuid}`   |
 
 **Not yet mapped:** Job codes (SOC/ONET) → `OccupationType`/`CredentialAlignmentObject`
 
 ### Collection → Collection
 
-| OSMT Field   | CE/CTDL Field           | Notes                                  |
-| ------------ | ----------------------- | -------------------------------------- |
-| `uuid`       | `CTID`                  | Prefixed as `ce-{uuid}`                 |
-| `name`       | `Name`                  | Collection name                         |
-| `description`| `Description`            | Collection description                  |
-| (derived)    | `HasMember`             | Skill CTIDs (`ce-{skillUuid}`)          |
-| (org CTID)   | `OwnedBy`               | List with org CTID from config          |
-| (status)     | `LifeCycleStatusType`   | `"Active"` or `"Ceased"`               |
+| OSMT Field    | CE/CTDL Field         | Notes                          |
+|---------------|-----------------------|--------------------------------|
+| `uuid`        | `CTID`                | Prefixed as `ce-{uuid}`        |
+| `name`        | `Name`                | Collection name                |
+| `description` | `Description`         | Collection description         |
+| (derived)     | `HasMember`           | Skill CTIDs (`ce-{skillUuid}`) |
+| (org CTID)    | `OwnedBy`             | List with org CTID from config |
+| (status)      | `LifeCycleStatusType` | `"Active"` or `"Ceased"`       |
 
 ### Status and Deprecation
 
@@ -54,10 +54,10 @@ OSMT → Credential Engine translation mapping and how to use the feature.
 
 1. **Environment variables** (required for live CE sync):
 
-   - `CREDENTIAL_ENGINE_API_KEY` – API key from Credential Engine
-   - `CREDENTIAL_ENGINE_ORG_CTID` – Your organization CTID (e.g. `ce-...`)
-   - `CREDENTIAL_ENGINE_REGISTRY_URL` – Registry URL (default:
-     `https://sandbox.credentialengine.org`)
+    - `CREDENTIAL_ENGINE_API_KEY` – API key from Credential Engine
+    - `CREDENTIAL_ENGINE_ORG_CTID` – Your organization CTID (e.g. `ce-...`)
+    - `CREDENTIAL_ENGINE_REGISTRY_URL` – Registry URL (default:
+      `https://sandbox.credentialengine.org`)
 
 2. **Admin role** – Sync endpoints and UI require `ROLE_Osmt_Admin`.
 
@@ -81,12 +81,12 @@ On 503 or “not configured,” the page shows instructions to set
 
 ### API Endpoints
 
-| Method | Path                       | Description                    |
-| ------ | -------------------------- | ------------------------------ |
-| GET    | `/api/sync/state`          | List integrations and watermarks |
-| POST   | `/api/sync/skill/{uuid}`   | Sync one skill                 |
-| POST   | `/api/sync/collection/{uuid}` | Sync one collection         |
-| POST   | `/api/sync/all`            | Sync all (async, returns 202)  |
+| Method | Path                          | Description                      |
+|--------|-------------------------------|----------------------------------|
+| GET    | `/api/sync/state`             | List integrations and watermarks |
+| POST   | `/api/sync/skill/{uuid}`      | Sync one skill                   |
+| POST   | `/api/sync/collection/{uuid}` | Sync one collection              |
+| POST   | `/api/sync/all`               | Sync all (async, returns 202)    |
 
 All require admin authentication.
 

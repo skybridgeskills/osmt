@@ -76,6 +76,56 @@ class SyncStateRepositoryTest : SpringTest() {
     }
 
     @Test
+    fun `getStatusJson returns null when not set`() {
+        syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
+        val s =
+            syncStateRepository.getStatusJson(
+                "credential-engine",
+                "default",
+                "skill",
+            )
+        assertThat(s).isNull()
+    }
+
+    @Test
+    fun `updateStatusJson and getStatusJson`() {
+        syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
+        syncStateRepository.updateStatusJson(
+            "credential-engine",
+            "default",
+            "skill",
+            """{"error":{"message":"test","correlationId":"abc12"}}""",
+        )
+        val s =
+            syncStateRepository.getStatusJson(
+                "credential-engine",
+                "default",
+                "skill",
+            )
+        assertThat(s).contains("abc12")
+        assertThat(s).contains("test")
+    }
+
+    @Test
+    fun `findAllBySyncKey includes statusJson`() {
+        syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
+        syncStateRepository.updateStatusJson(
+            "credential-engine",
+            "default",
+            "skill",
+            """{"batchesCompleted":1}""",
+        )
+        val all =
+            syncStateRepository.findAllBySyncKey(
+                "credential-engine",
+                "default",
+            )
+        val skillState = all.find { it.recordType == "skill" }
+        assertThat(skillState).isNotNull
+        assertThat(skillState!!.statusJson).contains("batchesCompleted")
+    }
+
+    @Test
     fun `findAllBySyncKey returns multiple record types`() {
         syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
         syncStateRepository.getOrCreateRow("credential-engine", "default", "collection")

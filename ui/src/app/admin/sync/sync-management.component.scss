@@ -11,3 +11,12 @@
 .l-syncActions {
   margin-top: 1.5rem;
 }
+
+.m-code-copyable {
+  cursor: pointer;
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  background: var(--color-surface-2, #f0f0f0);
+  font-family: monospace;
+  font-size: 0.9em;
+}

@@ -7,4 +7,5 @@ data class SyncState(
     val syncKey: String,
     val recordType: String,
     val syncWatermark: LocalDateTime?,
+    val statusJson: String? = null,
 )

@@ -14,7 +14,10 @@ object SyncRecordType {
     const val COLLECTION = "collection"
 }
 
-fun findSkillsUpdatedSince(watermark: LocalDateTime?): List<RichSkillDescriptorDao> =
+fun findSkillsUpdatedSince(
+    watermark: LocalDateTime?,
+    limit: Int,
+): List<RichSkillDescriptorDao> =
     RichSkillDescriptorDao
         .wrapRows(
             when (watermark) {
@@ -31,9 +34,13 @@ fun findSkillsUpdatedSince(watermark: LocalDateTime?): List<RichSkillDescriptorD
                     }
                 }
             }.orderBy(RichSkillDescriptorTable.updateDate),
-        ).toList()
+        ).limit(limit, 0)
+        .toList()
 
-fun findCollectionsUpdatedSince(watermark: LocalDateTime?): List<CollectionDao> =
+fun findCollectionsUpdatedSince(
+    watermark: LocalDateTime?,
+    limit: Int,
+): List<CollectionDao> =
     CollectionDao
         .wrapRows(
             when (watermark) {
@@ -60,4 +67,5 @@ fun findCollectionsUpdatedSince(watermark: LocalDateTime?): List<CollectionDao> 
                     }
                 }
             }.orderBy(CollectionTable.updateDate),
-        ).toList()
+        ).limit(limit, 0)
+        .toList()

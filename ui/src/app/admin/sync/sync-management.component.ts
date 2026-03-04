@@ -1,6 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { SyncService, SyncStateResponse } from './sync.service';
+import {
+  SyncService,
+  SyncStateResponse,
+  SyncIntegrationDto,
+} from './sync.service';
 import { ToastService } from '../../toast/toast.service';
+
+interface SyncStatusDisplay {
+  label: string;
+  correlationId: string | null;
+}
 
 @Component({
   selector: 'app-sync-management',
@@ -36,6 +45,12 @@ export class SyncManagementComponent implements OnInit {
         if (err?.status === 503) {
           this.configured = false;
           this.state = null;
+        } else if (err?.status === 401 || err?.status === 403) {
+          this.toastService.showToast(
+            'Error',
+            err?.error?.message ?? 'Unauthorized. Please log in again.',
+            true
+          );
         } else {
           this.toastService.showToast(
             'Error',
@@ -45,6 +60,36 @@ export class SyncManagementComponent implements OnInit {
         }
       },
     });
+  }
+
+  getStatusDisplay(i: SyncIntegrationDto): SyncStatusDisplay {
+    if (!i.statusJson) return { label: '—', correlationId: null };
+    try {
+      const s = JSON.parse(i.statusJson);
+      if (s?.error) {
+        return {
+          label: `Error: ${s.error.message ?? 'Unknown'}`,
+          correlationId: s.error.correlationId ?? null,
+        };
+      }
+      const batches = s?.batchesCompleted;
+      const label = batches != null ? `Ok (${batches} batches)` : 'Ok';
+      return { label, correlationId: null };
+    } catch {
+      return { label: '—', correlationId: null };
+    }
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(
+      () => this.toastService.showToast('Copied', 'Correlation ID copied'),
+      () =>
+        this.toastService.showToast(
+          'Copy failed',
+          'Could not copy to clipboard',
+          true
+        )
+    );
   }
 
   onSyncNow(): void {
@@ -64,12 +109,16 @@ export class SyncManagementComponent implements OnInit {
         if (err?.status === 503) {
           this.configured = false;
           this.loadState();
+        } else if (err?.status === 401 || err?.status === 403) {
+          const msg =
+            err?.error?.message ?? 'Unauthorized. Please log in again.';
+          this.toastService.showToast('Error', msg, true);
         } else {
-          this.toastService.showToast(
-            'Error',
-            err?.error ?? 'Sync request failed',
-            true
-          );
+          const msg =
+            typeof err?.error === 'object' && err?.error?.message
+              ? err.error.message
+              : (err?.error ?? 'Sync request failed');
+          this.toastService.showToast('Error', msg, true);
         }
       },
     });
