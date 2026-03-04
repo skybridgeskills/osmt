@@ -16,6 +16,8 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
     ButtonAction.MyWorkspace
   );
 
+  canSyncManage = this.authService.isEnabledByRoles(ButtonAction.SyncManage);
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -52,6 +54,10 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
 
   get myWorkspaceActive(): boolean {
     return this.router.url.startsWith('/my-workspace');
+  }
+
+  get syncActive(): boolean {
+    return this.router.url.startsWith('/admin/sync');
   }
 
   get skillsActive(): boolean {

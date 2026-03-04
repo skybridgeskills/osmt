@@ -26,6 +26,7 @@ import { ActionByRoles, ButtonAction } from './auth/auth-roles';
 import { MyWorkspaceComponent } from './my-workspace/my-workspace.component';
 import { ConvertToCollectionComponent } from './my-workspace/convert-to-collection/convert-to-collection.component';
 import { BatchImportCollectionComponent } from './collection/create-collection/batch-import-collection/batch-import-collection.component';
+import { SyncManagementComponent } from './admin/sync/sync-management.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/skills', pathMatch: 'full' },
@@ -204,6 +205,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: {
       roles: ActionByRoles.get(ButtonAction.MyWorkspace),
+    },
+  },
+  {
+    path: 'admin/sync',
+    component: SyncManagementComponent,
+    canActivate: [AuthGuard],
+    data: {
+      roles: ActionByRoles.get(ButtonAction.SyncManage),
     },
   },
   /* PUBLIC VIEWS */

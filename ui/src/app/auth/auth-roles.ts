@@ -15,6 +15,7 @@ export enum ButtonAction {
   ExportDraftCollection,
   DeleteCollection,
   MyWorkspace,
+  SyncManage,
 }
 
 export const ActionByRoles = new Map<number, string[]>([
@@ -29,6 +30,7 @@ export const ActionByRoles = new Map<number, string[]>([
   [ButtonAction.ExportDraftCollection, [OSMT_ADMIN]],
   [ButtonAction.DeleteCollection, [OSMT_ADMIN]],
   [ButtonAction.MyWorkspace, [OSMT_ADMIN, OSMT_CURATOR]],
+  [ButtonAction.SyncManage, [OSMT_ADMIN]],
 ]);
 
 //TODO migrate  AuthServiceWgu & AuthService.hasRole & isEnabledByRoles into a singleton here. HDN Sept 15, 2022
