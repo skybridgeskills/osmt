@@ -5,6 +5,8 @@ import edu.wgu.osmt.collection.CollectionRepository
 import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.richskill.RichSkillDescriptorDao
 import edu.wgu.osmt.richskill.RichSkillRepository
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,6 +17,9 @@ import java.util.Optional
 private const val SYNC_TYPE = "credential-engine"
 private const val SYNC_KEY_DEFAULT = "default"
 private const val CTID_PREFIX = "ce-"
+private const val MDC_CORRELATION_ID = "syncCorrelationId"
+
+private val log = LoggerFactory.getLogger(SyncService::class.java)
 
 @Service
 @Transactional
@@ -94,48 +99,239 @@ class SyncService(
     fun syncSinceWatermark(
         syncKey: String,
         recordType: String,
-    ): Result<Unit> =
-        syncTargetOpt
-            .map { target -> doSyncSinceWatermark(target, syncKey, recordType) }
-            .orElse(Result.failure(IllegalStateException("Sync not configured")))
+    ): Result<Unit> {
+        val sessionCorrelationId = generateCorrelationId()
+        MDC.put(MDC_CORRELATION_ID, sessionCorrelationId)
+        return try {
+            syncTargetOpt
+                .map { target ->
+                    doSyncSinceWatermark(target, syncKey, recordType, sessionCorrelationId)
+                }.orElse(Result.failure(IllegalStateException("Sync not configured")))
+        } finally {
+            MDC.remove(MDC_CORRELATION_ID)
+        }
+    }
 
     private fun doSyncSinceWatermark(
         target: SyncTarget,
         syncKey: String,
         recordType: String,
+        sessionCorrelationId: String,
     ): Result<Unit> {
+        log.info(
+            "[{}] Sync started recordType={} syncKey={}",
+            sessionCorrelationId,
+            recordType,
+            syncKey,
+        )
         syncStateRepository.getOrCreateRow(SYNC_TYPE, syncKey, recordType)
-        var watermark = syncStateRepository.getWatermark(SYNC_TYPE, syncKey, recordType)
+        var watermarkDate = syncStateRepository.getWatermark(SYNC_TYPE, syncKey, recordType)
+        var watermarkId = syncStateRepository.getLastRecordId(SYNC_TYPE, syncKey, recordType)
         var batchIndex = 0
+        var consecutiveWatermarkRepeats = 0
+        var lastMaxId: Long? = null
 
         while (true) {
+            log.debug(
+                "[{}] Batch {} fetch watermarkDate={} watermarkId={}",
+                sessionCorrelationId,
+                batchIndex,
+                watermarkDate,
+                watermarkId,
+            )
             val batch =
                 when (recordType) {
-                    SyncRecordType.SKILL -> findSkillsUpdatedSince(watermark, batchSize)
-                    SyncRecordType.COLLECTION -> findCollectionsUpdatedSince(watermark, batchSize)
-                    else -> return Result.failure(IllegalArgumentException("Unknown: $recordType"))
+                    SyncRecordType.SKILL -> {
+                        findSkillsUpdatedSince(watermarkDate, watermarkId, batchSize)
+                    }
+
+                    SyncRecordType.COLLECTION -> {
+                        findCollectionsUpdatedSince(watermarkDate, watermarkId, batchSize)
+                    }
+
+                    else -> {
+                        return Result.failure(IllegalArgumentException("Unknown: $recordType"))
+                    }
                 }
             if (batch.isEmpty()) break
 
+            when (recordType) {
+                SyncRecordType.SKILL -> {
+                    val skills = batch as List<RichSkillDescriptorDao>
+                    log.debug(
+                        "[{}] Batch {} raw from DB: size={} ids={} uuids={}",
+                        sessionCorrelationId,
+                        batchIndex,
+                        skills.size,
+                        skills.map { it.id.value },
+                        skills.map { it.uuid },
+                    )
+                }
+
+                SyncRecordType.COLLECTION -> {
+                    val colls = batch as List<CollectionDao>
+                    log.debug(
+                        "[{}] Batch {} raw from DB: size={} ids={} uuids={}",
+                        sessionCorrelationId,
+                        batchIndex,
+                        colls.size,
+                        colls.map { it.id.value },
+                        colls.map { it.uuid },
+                    )
+                }
+
+                else -> {}
+            }
+
+            val cursorFilteredBatch =
+                when (recordType) {
+                    SyncRecordType.SKILL -> {
+                        val skills = batch as List<RichSkillDescriptorDao>
+                        if (watermarkDate != null && watermarkId != null) {
+                            skills.filter {
+                                it.updateDate > watermarkDate ||
+                                    (
+                                        it.updateDate == watermarkDate &&
+                                            it.id.value > watermarkId
+                                    )
+                            }
+                        } else {
+                            skills
+                        }
+                    }
+
+                    SyncRecordType.COLLECTION -> {
+                        val colls = batch as List<CollectionDao>
+                        if (watermarkDate != null && watermarkId != null) {
+                            colls.filter {
+                                it.updateDate > watermarkDate ||
+                                    (
+                                        it.updateDate == watermarkDate &&
+                                            it.id.value > watermarkId
+                                    )
+                            }
+                        } else {
+                            colls
+                        }
+                    }
+
+                    else -> {
+                        batch
+                    }
+                }
+            if (cursorFilteredBatch.size < (batch as List<*>).size) {
+                log.warn(
+                    "[{}] Batch {} excluded {} records that were <= watermark (Exposed query bug workaround)",
+                    sessionCorrelationId,
+                    batchIndex,
+                    (batch as List<*>).size - cursorFilteredBatch.size,
+                )
+            }
+            if (cursorFilteredBatch.isEmpty()) {
+                val (maxD, maxI) =
+                    when (recordType) {
+                        SyncRecordType.SKILL -> {
+                            val b = batch as List<RichSkillDescriptorDao>
+                            val m =
+                                b.maxWithOrNull(
+                                    compareBy<RichSkillDescriptorDao> { it.updateDate }
+                                        .thenBy { it.id.value },
+                                )!!
+                            m.updateDate to m.id.value
+                        }
+
+                        SyncRecordType.COLLECTION -> {
+                            val b = batch as List<CollectionDao>
+                            val m =
+                                b.maxWithOrNull(
+                                    compareBy<CollectionDao> { it.updateDate }
+                                        .thenBy { it.id.value },
+                                )!!
+                            m.updateDate to m.id.value
+                        }
+
+                        else -> {
+                            return Result.failure(
+                                IllegalArgumentException("Unknown: $recordType"),
+                            )
+                        }
+                    }
+                if (lastMaxId == maxI) {
+                    consecutiveWatermarkRepeats++
+                    if (consecutiveWatermarkRepeats >= 3) {
+                        log.error(
+                            "[{}] Circuit breaker: watermark stuck at id={} for 3+ batches. " +
+                                "Exposed id comparison may be broken. Sync aborted.",
+                            sessionCorrelationId,
+                            maxI,
+                        )
+                        return Result.failure(
+                            IllegalStateException(
+                                "Sync cursor stuck at id=$maxI - Exposed query returns " +
+                                    "same record repeatedly. See diagnostic doc.",
+                            ),
+                        )
+                    }
+                } else {
+                    consecutiveWatermarkRepeats = 0
+                }
+                lastMaxId = maxI
+                syncStateRepository.updateWatermark(SYNC_TYPE, syncKey, recordType, maxD, maxI)
+                watermarkDate = maxD
+                watermarkId = maxI
+                batchIndex++
+                continue
+            }
+            consecutiveWatermarkRepeats = 0
+
+            val dedupedBatch =
+                when (recordType) {
+                    SyncRecordType.SKILL -> {
+                        val skills = cursorFilteredBatch as List<RichSkillDescriptorDao>
+                        val seen = mutableSetOf<String>()
+                        val deduped = skills.filter { seen.add(it.uuid) }
+                        if (deduped.size < skills.size) {
+                            log.warn(
+                                "[{}] Batch {} dropped {} duplicate skills",
+                                sessionCorrelationId,
+                                batchIndex,
+                                skills.size - deduped.size,
+                            )
+                        }
+                        deduped
+                    }
+
+                    SyncRecordType.COLLECTION -> {
+                        val colls = cursorFilteredBatch as List<CollectionDao>
+                        val seen = mutableSetOf<String>()
+                        colls.filter { seen.add(it.uuid) }
+                    }
+
+                    else -> {
+                        cursorFilteredBatch
+                    }
+                }
             val result =
                 when (recordType) {
                     SyncRecordType.SKILL -> {
                         processSkillBatch(
                             target,
-                            batch as List<RichSkillDescriptorDao>,
+                            dedupedBatch as List<RichSkillDescriptorDao>,
                             syncKey,
                             recordType,
                             batchIndex,
+                            sessionCorrelationId,
                         )
                     }
 
                     SyncRecordType.COLLECTION -> {
                         processCollectionBatch(
                             target,
-                            batch as List<CollectionDao>,
+                            dedupedBatch as List<CollectionDao>,
                             syncKey,
                             recordType,
                             batchIndex,
+                            sessionCorrelationId,
                         )
                     }
 
@@ -148,24 +344,49 @@ class SyncService(
                 onFailure = { return Result.failure(it) },
             )
 
-            val maxDate =
+            val (maxDate, maxId) =
                 when (recordType) {
                     SyncRecordType.SKILL -> {
-                        (batch as List<RichSkillDescriptorDao>).maxOf { it.updateDate }
+                        val skillBatch = dedupedBatch as List<RichSkillDescriptorDao>
+                        val maxByDate =
+                            skillBatch.maxWithOrNull(
+                                compareBy<RichSkillDescriptorDao> { it.updateDate }.thenBy { it.id.value },
+                            )!!
+                        maxByDate.updateDate to maxByDate.id.value
                     }
 
                     SyncRecordType.COLLECTION -> {
-                        (batch as List<CollectionDao>).maxOf { it.updateDate }
+                        val colBatch = dedupedBatch as List<CollectionDao>
+                        val maxByDate =
+                            colBatch.maxWithOrNull(
+                                compareBy<CollectionDao> { it.updateDate }.thenBy { it.id.value },
+                            )!!
+                        maxByDate.updateDate to maxByDate.id.value
                     }
 
                     else -> {
                         return Result.failure(IllegalArgumentException("Unknown: $recordType"))
                     }
                 }
-            syncStateRepository.updateWatermark(SYNC_TYPE, syncKey, recordType, maxDate)
-            watermark = maxDate
+            syncStateRepository.updateWatermark(
+                SYNC_TYPE,
+                syncKey,
+                recordType,
+                maxDate,
+                maxId,
+            )
+            log.debug(
+                "[{}] Batch {} done, watermark advanced to date={} id={}",
+                sessionCorrelationId,
+                batchIndex,
+                maxDate,
+                maxId,
+            )
+            watermarkDate = maxDate
+            watermarkId = maxId
             batchIndex++
         }
+        log.info("[{}] Sync completed recordType={}", sessionCorrelationId, recordType)
         return Result.success(Unit)
     }
 
@@ -175,11 +396,26 @@ class SyncService(
         syncKey: String,
         recordType: String,
         batchIndex: Int,
+        sessionCorrelationId: String,
     ): Result<Unit> {
         for (dao in batch) {
+            log.debug(
+                "[{}] Processing skill id={} uuid={} batch={}",
+                sessionCorrelationId,
+                dao.id.value,
+                dao.uuid,
+                batchIndex,
+            )
             val result = syncOneSkillWithRetry(target, dao)
             if (result.isFailure) {
                 val err = result.exceptionOrNull()
+                log.error(
+                    "[{}] Sync failed skill={} batch={} error={}",
+                    sessionCorrelationId,
+                    dao.uuid,
+                    batchIndex,
+                    err?.message,
+                )
                 val status =
                     SyncStatusJson(
                         lastRecordUuid = dao.uuid,
@@ -187,6 +423,7 @@ class SyncService(
                         batchIndex = batchIndex,
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
+                        sessionCorrelationId = sessionCorrelationId,
                         error =
                             SyncStatusError(
                                 message = err?.message ?: "Unknown error",
@@ -211,6 +448,7 @@ class SyncService(
                     batchIndex = batchIndex,
                     batchesCompleted = batchIndex,
                     lastUpdatedAt = nowIso(),
+                    sessionCorrelationId = sessionCorrelationId,
                 )
             syncStateRepository.updateStatusJson(
                 SYNC_TYPE,
@@ -228,11 +466,26 @@ class SyncService(
         syncKey: String,
         recordType: String,
         batchIndex: Int,
+        sessionCorrelationId: String,
     ): Result<Unit> {
         for (dao in batch) {
+            log.debug(
+                "[{}] Processing collection id={} uuid={} batch={}",
+                sessionCorrelationId,
+                dao.id.value,
+                dao.uuid,
+                batchIndex,
+            )
             val result = syncOneCollectionWithRetry(target, dao)
             if (result.isFailure) {
                 val err = result.exceptionOrNull()
+                log.error(
+                    "[{}] Sync failed collection={} batch={} error={}",
+                    sessionCorrelationId,
+                    dao.uuid,
+                    batchIndex,
+                    err?.message,
+                )
                 val status =
                     SyncStatusJson(
                         lastRecordUuid = dao.uuid,
@@ -240,6 +493,7 @@ class SyncService(
                         batchIndex = batchIndex,
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
+                        sessionCorrelationId = sessionCorrelationId,
                         error =
                             SyncStatusError(
                                 message = err?.message ?: "Unknown error",
@@ -264,6 +518,7 @@ class SyncService(
                     batchIndex = batchIndex,
                     batchesCompleted = batchIndex,
                     lastUpdatedAt = nowIso(),
+                    sessionCorrelationId = sessionCorrelationId,
                 )
             syncStateRepository.updateStatusJson(
                 SYNC_TYPE,
@@ -321,17 +576,57 @@ class SyncService(
 
     private fun nowIso(): String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
-    fun syncAllSinceWatermark(syncKey: String = SYNC_KEY_DEFAULT): Result<Unit> =
-        syncTargetOpt
-            .map { target ->
-                doSyncSinceWatermark(target, syncKey, SyncRecordType.SKILL)
-                    .fold(
+    fun syncAllSinceWatermark(syncKey: String = SYNC_KEY_DEFAULT): Result<Unit> {
+        val sessionCorrelationId = generateCorrelationId()
+        MDC.put(MDC_CORRELATION_ID, sessionCorrelationId)
+        return try {
+            syncTargetOpt
+                .map { target ->
+                    log.info("[{}] Sync all started syncKey={}", sessionCorrelationId, syncKey)
+                    doSyncSinceWatermark(
+                        target,
+                        syncKey,
+                        SyncRecordType.SKILL,
+                        sessionCorrelationId,
+                    ).fold(
                         onSuccess = {
-                            doSyncSinceWatermark(target, syncKey, SyncRecordType.COLLECTION)
+                            doSyncSinceWatermark(
+                                target,
+                                syncKey,
+                                SyncRecordType.COLLECTION,
+                                sessionCorrelationId,
+                            )
                         },
-                        onFailure = { Result.failure(it) },
-                    )
-            }.orElse(Result.failure(IllegalStateException("Sync not configured")))
+                        onFailure = { e ->
+                            log.error(
+                                "[{}] Sync all failed at skills error={}",
+                                sessionCorrelationId,
+                                e.message,
+                            )
+                            Result.failure(e)
+                        },
+                    ).also { result ->
+                        result
+                            .onSuccess {
+                                log.info(
+                                    "[{}] Sync all completed syncKey={}",
+                                    sessionCorrelationId,
+                                    syncKey,
+                                )
+                            }.onFailure { e ->
+                                log.error(
+                                    "[{}] Sync all failed syncKey={} error={}",
+                                    sessionCorrelationId,
+                                    syncKey,
+                                    e.message,
+                                )
+                            }
+                    }
+                }.orElse(Result.failure(IllegalStateException("Sync not configured")))
+        } finally {
+            MDC.remove(MDC_CORRELATION_ID)
+        }
+    }
 
     fun getSyncState(syncKey: String = SYNC_KEY_DEFAULT): List<SyncState> =
         syncStateRepository.findAllBySyncKey(SYNC_TYPE, syncKey)

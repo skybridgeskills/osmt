@@ -16,6 +16,7 @@ data class SyncStatusJson(
     val batchIndex: Int? = null,
     val batchesCompleted: Int? = null,
     val lastUpdatedAt: String? = null,
+    val sessionCorrelationId: String? = null,
     val error: SyncStatusError? = null,
 )
 

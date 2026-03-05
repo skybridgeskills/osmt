@@ -85,6 +85,20 @@ describe('SyncManagementComponent', () => {
     expect(display.correlationId).toBeNull();
   });
 
+  it('getStatusDisplay shows sessionCorrelationId for log search', () => {
+    const display = component.getStatusDisplay({
+      syncKey: 'default',
+      recordType: 'skill',
+      syncWatermark: '2025-01-01',
+      statusJson: JSON.stringify({
+        batchesCompleted: 2,
+        sessionCorrelationId: 'xyz99abc12',
+      }),
+    });
+    expect(display.label).toBe('Ok (2 batches)');
+    expect(display.correlationId).toBe('xyz99abc12');
+  });
+
   it('sets configured false on 503', () => {
     spyOn(syncService, 'getState').and.returnValue(
       throwError(() => ({ status: 503 }))

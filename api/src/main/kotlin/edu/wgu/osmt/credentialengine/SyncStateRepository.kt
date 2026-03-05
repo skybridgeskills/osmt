@@ -25,18 +25,33 @@ class SyncStateRepository {
             }.firstOrNull()
             ?.get(SyncStateTable.syncWatermark)
 
+    fun getLastRecordId(
+        syncType: String,
+        syncKey: String,
+        recordType: String,
+    ): Long? =
+        SyncStateTable
+            .select {
+                (SyncStateTable.syncType eq syncType) and
+                    (SyncStateTable.syncKey eq syncKey) and
+                    (SyncStateTable.recordType eq recordType)
+            }.firstOrNull()
+            ?.get(SyncStateTable.lastRecordId)
+
     fun updateWatermark(
         syncType: String,
         syncKey: String,
         recordType: String,
         watermark: LocalDateTime,
+        lastRecordId: Long? = null,
     ) {
         SyncStateTable.update({
             (SyncStateTable.syncType eq syncType) and
                 (SyncStateTable.syncKey eq syncKey) and
                 (SyncStateTable.recordType eq recordType)
         }) {
-            it[syncWatermark] = watermark
+            it[SyncStateTable.syncWatermark] = watermark
+            it[SyncStateTable.lastRecordId] = lastRecordId
         }
     }
 
@@ -95,6 +110,7 @@ class SyncStateRepository {
                 it[SyncStateTable.syncKey] = syncKey
                 it[SyncStateTable.recordType] = recordType
                 it[SyncStateTable.syncWatermark] = null
+                it[SyncStateTable.lastRecordId] = null
                 it[SyncStateTable.statusJson] = null
             }
             SyncState(syncType, syncKey, recordType, null, null)

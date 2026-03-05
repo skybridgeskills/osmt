@@ -8,6 +8,7 @@ object SyncStateTable : LongIdTable("SyncState") {
     val syncKey = varchar("sync_key", 64)
     val recordType = varchar("record_type", 64)
     val syncWatermark = datetime("sync_watermark").nullable()
+    val lastRecordId = long("last_record_id").nullable()
     val statusJson = text("status_json").nullable()
 
     init {

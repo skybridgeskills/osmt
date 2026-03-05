@@ -50,4 +50,18 @@ class SyncStatusJsonTest {
         assertThat(json).contains("abc12def34")
         assertThat(json).contains("CE publish failed")
     }
+
+    @Test
+    fun `serialize with sessionCorrelationId`() {
+        val status =
+            SyncStatusJson(
+                batchesCompleted = 3,
+                sessionCorrelationId = "xyz99abc12",
+                lastUpdatedAt = "2026-03-04T12:00:00",
+            )
+        val json = status.toJsonString()
+        assertThat(json).contains("xyz99abc12")
+        val parsed = parseSyncStatusJson(json)
+        assertThat(parsed!!.sessionCorrelationId).isEqualTo("xyz99abc12")
+    }
 }

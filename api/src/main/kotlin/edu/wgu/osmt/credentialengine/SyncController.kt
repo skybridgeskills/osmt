@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.server.ResponseStatusException
 import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.atomic.AtomicBoolean
 
 data class SyncStateResponse(
     val integrations: List<SyncIntegrationDto>,
@@ -34,6 +35,8 @@ class SyncController
         private val appConfig: AppConfig,
         private val oAuthHelper: OAuthHelper,
     ) {
+        private val syncInProgress = AtomicBoolean(false)
+
         private fun ensureAdmin() {
             if (!oAuthHelper.hasRole(appConfig.roleAdmin)) {
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
@@ -138,8 +141,18 @@ class SyncController
         fun syncAll(): ResponseEntity<String> {
             ensureAdmin()
             ensureConfigured()
+            if (!syncInProgress.compareAndSet(false, true)) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Sync already in progress",
+                )
+            }
             ForkJoinPool.commonPool().submit {
-                syncService.syncAllSinceWatermark()
+                try {
+                    syncService.syncAllSinceWatermark()
+                } finally {
+                    syncInProgress.set(false)
+                }
             }
             return ResponseEntity(
                 "Sync started. Check logs for progress.",

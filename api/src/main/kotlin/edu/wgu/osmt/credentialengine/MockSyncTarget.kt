@@ -49,6 +49,8 @@ class MockSyncTarget : SyncTarget {
 
     fun getPublishedSkillUuids(): List<String> = publishedSkills.toList()
 
+    fun getPublishCountPerSkill(): Map<String, Int> = publishedSkills.groupingBy { it }.eachCount()
+
     fun getPublishedCollectionUuids(): List<String> = publishedCollections.toList()
 
     fun getDeprecatedSkillUuids(): List<String> = deprecatedSkills.toList()

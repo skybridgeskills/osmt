@@ -133,6 +133,21 @@ class SyncServiceTest :
         assertThat(syncService.isConfigured()).isTrue()
     }
 
+    @Test
+    fun `sync publishes each skill exactly once no duplicates`() {
+        val createdUuids = (1..25).map { randomSkill().uuid }
+
+        val result = syncService.syncAllSinceWatermark("default")
+
+        assertThat(result.isSuccess).isTrue()
+        val counts = mockSyncTarget.getPublishCountPerSkill()
+        createdUuids.forEach { uuid ->
+            assertThat(counts[uuid])
+                .withFailMessage("Skill $uuid publish count")
+                .isEqualTo(1)
+        }
+    }
+
     @TestConfiguration
     class SyncTestConfig {
         @Bean

@@ -66,15 +66,17 @@ export class SyncManagementComponent implements OnInit {
     if (!i.statusJson) return { label: '—', correlationId: null };
     try {
       const s = JSON.parse(i.statusJson);
+      const correlationId =
+        s?.sessionCorrelationId ?? s?.error?.correlationId ?? null;
       if (s?.error) {
         return {
           label: `Error: ${s.error.message ?? 'Unknown'}`,
-          correlationId: s.error.correlationId ?? null,
+          correlationId,
         };
       }
       const batches = s?.batchesCompleted;
       const label = batches != null ? `Ok (${batches} batches)` : 'Ok';
-      return { label, correlationId: null };
+      return { label, correlationId };
     } catch {
       return { label: '—', correlationId: null };
     }
