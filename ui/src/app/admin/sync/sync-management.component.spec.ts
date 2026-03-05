@@ -29,11 +29,13 @@ describe('SyncManagementComponent', () => {
         ToastService,
         { provide: AuthService, useClass: AuthServiceStub },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(SyncManagementComponent, { set: { providers: [] } })
+      .compileComponents();
 
     fixture = TestBed.createComponent(SyncManagementComponent);
     component = fixture.componentInstance;
-    syncService = fixture.debugElement.injector.get(SyncService);
+    syncService = TestBed.inject(SyncService);
     toastService = TestBed.inject(ToastService);
   });
 
@@ -177,7 +179,7 @@ describe('SyncManagementComponent', () => {
   });
 
   it('renders sections and column help when configured', () => {
-    component.state = {
+    const state = {
       integrations: [
         {
           syncKey: 'default',
@@ -186,8 +188,9 @@ describe('SyncManagementComponent', () => {
         },
       ],
     };
-    component.configured = true;
-    component.loading = false;
+    spyOn(syncService, 'getState').and.returnValue(of(state));
+    fixture = TestBed.createComponent(SyncManagementComponent);
+    component = fixture.componentInstance;
     fixture.detectChanges();
     const html = fixture.nativeElement as HTMLElement;
     expect(html.textContent).toContain('Sync Status');

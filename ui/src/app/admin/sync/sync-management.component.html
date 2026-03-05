@@ -1,7 +1,5 @@
 <div class="l-container">
-  <h1 class="t-type-heading1 t-margin-small t-margin-bottom">
-    External Sync
-  </h1>
+  <h1 class="t-type-heading1 t-margin-small t-margin-bottom">External Sync</h1>
   <p class="t-type-body t-margin-small t-margin-bottom">
     Publish RSDs and Collections to the Credential Engine Registry. Sync runs
     asynchronously; check logs for progress.
@@ -35,40 +33,40 @@
       </p>
       <table aria-label="Sync integrations">
         <thead>
-        <tr class="m-tableHeader">
-          <th scope="col">Integration Key</th>
-          <th scope="col">Record Type</th>
-          <th scope="col">Watermark</th>
-          <th scope="col">Status</th>
-        </tr>
+          <tr class="m-tableHeader">
+            <th scope="col">Integration Key</th>
+            <th scope="col">Record Type</th>
+            <th scope="col">Watermark</th>
+            <th scope="col">Status</th>
+          </tr>
         </thead>
         <tbody>
-        <tr *ngFor="let i of state.integrations" class="m-tableRow">
-          <td>{{ i.syncKey }}</td>
-          <td>{{ i.recordType }}</td>
-          <td>{{ i.syncWatermark ?? '—' }}</td>
-          <td>
-            @let status = getStatusDisplay(i);
-            {{ status.label }}
-            @if (status.correlationId) {
-              <code
-                class="m-code-copyable"
-                [attr.title]="
+          <tr *ngFor="let i of state.integrations" class="m-tableRow">
+            <td>{{ i.syncKey }}</td>
+            <td>{{ i.recordType }}</td>
+            <td>{{ i.syncWatermark ?? '—' }}</td>
+            <td>
+              @let status = getStatusDisplay(i);
+              {{ status.label }}
+              @if (status.correlationId) {
+                <code
+                  class="m-code-copyable"
+                  [attr.title]="
                     'Correlation ID: ' +
                     status.correlationId +
                     ' (click to copy)'
                   "
-                (click)="copyToClipboard(status.correlationId)"
-              >
-                {{ status.correlationId }}
-              </code>
-            }
-          </td>
-        </tr>
+                  (click)="copyToClipboard(status.correlationId)"
+                >
+                  {{ status.correlationId }}
+                </code>
+              }
+            </td>
+          </tr>
         </tbody>
       </table>
       <dl
-        class="t-type-bodySmall t-margin-small t-margin-bottom"
+        class="t-type-bodySmall mt-6 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1"
         aria-label="Column definitions"
       >
         <dt><strong>Integration Key</strong></dt>
@@ -110,7 +108,7 @@
       </p>
       <div class="l-syncActions">
         <label class="t-type-body t-margin-small" style="display: block">
-          <input type="checkbox" [(ngModel)]="autoRefreshUntilDone"/>
+          <input type="checkbox" [(ngModel)]="autoRefreshUntilDone" />
           Auto refresh until sync completes (up to 1 hour)
         </label>
         <button
@@ -141,7 +139,7 @@
       </p>
       <div class="l-syncActions">
         <button
-          class="m-button m-button-tertiary"
+          class="m-button bg-cherry text-white hover:brightness-90 disabled:opacity-50"
           type="button"
           [disabled]="syncing || resyncing"
           (click)="onResync()"
