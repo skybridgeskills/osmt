@@ -159,4 +159,27 @@ class SyncController
                 HttpStatus.ACCEPTED,
             )
         }
+
+        @PostMapping(RoutePaths.SYNC_RESYNC)
+        fun resyncAll(): ResponseEntity<String> {
+            ensureAdmin()
+            ensureConfigured()
+            if (!syncInProgress.compareAndSet(false, true)) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Sync already in progress",
+                )
+            }
+            ForkJoinPool.commonPool().submit {
+                try {
+                    syncService.resyncAll()
+                } finally {
+                    syncInProgress.set(false)
+                }
+            }
+            return ResponseEntity(
+                "Full resync started. Check logs for progress.",
+                HttpStatus.ACCEPTED,
+            )
+        }
     }

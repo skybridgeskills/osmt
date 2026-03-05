@@ -140,4 +140,28 @@ class SyncStateRepositoryTest : SpringTest() {
             "collection",
         )
     }
+
+    @Test
+    fun `resetWatermark clears watermark and lastRecordId`() {
+        syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
+        val now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+        syncStateRepository.updateWatermark(
+            "credential-engine",
+            "default",
+            "skill",
+            now,
+            12345L,
+        )
+        assertThat(syncStateRepository.getWatermark("credential-engine", "default", "skill"))
+            .isNotNull()
+        assertThat(syncStateRepository.getLastRecordId("credential-engine", "default", "skill"))
+            .isEqualTo(12345L)
+
+        syncStateRepository.resetWatermark("credential-engine", "default", "skill")
+
+        assertThat(syncStateRepository.getWatermark("credential-engine", "default", "skill"))
+            .isNull()
+        assertThat(syncStateRepository.getLastRecordId("credential-engine", "default", "skill"))
+            .isNull()
+    }
 }

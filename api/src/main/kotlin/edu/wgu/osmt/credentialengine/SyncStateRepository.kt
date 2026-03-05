@@ -55,6 +55,21 @@ class SyncStateRepository {
         }
     }
 
+    fun resetWatermark(
+        syncType: String,
+        syncKey: String,
+        recordType: String,
+    ) {
+        SyncStateTable.update({
+            (SyncStateTable.syncType eq syncType) and
+                (SyncStateTable.syncKey eq syncKey) and
+                (SyncStateTable.recordType eq recordType)
+        }) {
+            it[SyncStateTable.syncWatermark] = null
+            it[SyncStateTable.lastRecordId] = null
+        }
+    }
+
     fun getStatusJson(
         syncType: String,
         syncKey: String,

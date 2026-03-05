@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 
 import { SyncManagementComponent } from './sync-management.component';
@@ -21,7 +22,7 @@ describe('SyncManagementComponent', () => {
     AppConfig.settings = { baseApiUrl: 'http://localhost:8080' } as never;
 
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, CommonModule],
+      imports: [HttpClientTestingModule, CommonModule, FormsModule],
       declarations: [SyncManagementComponent, SystemMessageComponent],
       providers: [
         SyncService,
@@ -99,6 +100,20 @@ describe('SyncManagementComponent', () => {
     expect(display.correlationId).toBe('xyz99abc12');
   });
 
+  it('getStatusDisplay shows In progress when inProgress is true', () => {
+    const display = component.getStatusDisplay({
+      syncKey: 'default',
+      recordType: 'skill',
+      syncWatermark: null,
+      statusJson: JSON.stringify({
+        inProgress: true,
+        sessionCorrelationId: 'abc123',
+      }),
+    });
+    expect(display.label).toBe('In progress…');
+    expect(display.correlationId).toBe('abc123');
+  });
+
   it('sets configured false on 503', () => {
     spyOn(syncService, 'getState').and.returnValue(
       throwError(() => ({ status: 503 }))
@@ -114,15 +129,32 @@ describe('SyncManagementComponent', () => {
     component.configured = true;
     component.loading = false;
     spyOn(syncService, 'syncAll').and.returnValue(of('ok'));
+    spyOn(syncService, 'getState').and.returnValue(of({ integrations: [] }));
     spyOn(toastService, 'showToast');
-    spyOn(component, 'loadState');
 
     component.onSyncNow();
 
     expect(syncService.syncAll).toHaveBeenCalled();
     expect(toastService.showToast).toHaveBeenCalledWith(
       'Success',
-      'Sync started. Check logs for progress.'
+      'Sync new changes started. Check logs for progress.'
+    );
+  });
+
+  it('onResync calls resyncAll when configured', () => {
+    component.state = { integrations: [] };
+    component.configured = true;
+    component.loading = false;
+    spyOn(syncService, 'resyncAll').and.returnValue(of('ok'));
+    spyOn(syncService, 'getState').and.returnValue(of({ integrations: [] }));
+    spyOn(toastService, 'showToast');
+
+    component.onResync();
+
+    expect(syncService.resyncAll).toHaveBeenCalled();
+    expect(toastService.showToast).toHaveBeenCalledWith(
+      'Success',
+      'Full resync started. Check logs for progress.'
     );
   });
 
@@ -142,5 +174,26 @@ describe('SyncManagementComponent', () => {
       'Unauthorized',
       true
     );
+  });
+
+  it('renders sections and column help when configured', () => {
+    component.state = {
+      integrations: [
+        {
+          syncKey: 'default',
+          recordType: 'skill',
+          syncWatermark: '2025-01-01',
+        },
+      ],
+    };
+    component.configured = true;
+    component.loading = false;
+    fixture.detectChanges();
+    const html = fixture.nativeElement as HTMLElement;
+    expect(html.textContent).toContain('Sync Status');
+    expect(html.textContent).toContain('Sync New Changes');
+    expect(html.textContent).toContain('Resync All');
+    expect(html.textContent).toContain('Integration Key');
+    expect(html.textContent).toContain('Watermark');
   });
 });

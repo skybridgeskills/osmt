@@ -64,4 +64,18 @@ class SyncStatusJsonTest {
         val parsed = parseSyncStatusJson(json)
         assertThat(parsed!!.sessionCorrelationId).isEqualTo("xyz99abc12")
     }
+
+    @Test
+    fun `serialize and parse inProgress`() {
+        val inProgress = SyncStatusJson(inProgress = true, sessionCorrelationId = "abc")
+        val json = inProgress.toJsonString()
+        assertThat(json).contains("inProgress")
+        val parsed = parseSyncStatusJson(json)
+        assertThat(parsed!!.inProgress).isTrue()
+
+        val done = SyncStatusJson(inProgress = false, batchesCompleted = 1)
+        val doneJson = done.toJsonString()
+        val doneParsed = parseSyncStatusJson(doneJson)
+        assertThat(doneParsed!!.inProgress).isFalse()
+    }
 }

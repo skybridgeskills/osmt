@@ -8,8 +8,15 @@
   margin: 2rem 0;
 }
 
-.l-syncActions {
+.l-syncSection {
   margin-top: 1.5rem;
+}
+
+.l-syncActions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .m-code-copyable {

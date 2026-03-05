@@ -148,6 +148,31 @@ class SyncServiceTest :
         }
     }
 
+    @Test
+    fun `resyncAll clears watermarks and syncs from beginning`() {
+        val skillDao = randomSkill()
+        syncService.syncAllSinceWatermark("default")
+        val watermarkAfterFirst =
+            syncStateRepository.getWatermark(
+                "credential-engine",
+                "default",
+                SyncRecordType.SKILL,
+            )
+        assertThat(watermarkAfterFirst).isNotNull()
+
+        val result = syncService.resyncAll("default")
+
+        assertThat(result.isSuccess).isTrue()
+        assertThat(mockSyncTarget.getPublishedSkillUuids()).contains(skillDao.uuid)
+        val watermarkAfterResync =
+            syncStateRepository.getWatermark(
+                "credential-engine",
+                "default",
+                SyncRecordType.SKILL,
+            )
+        assertThat(watermarkAfterResync).isNotNull()
+    }
+
     @TestConfiguration
     class SyncTestConfig {
         @Bean

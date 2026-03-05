@@ -125,6 +125,16 @@ class SyncService(
             syncKey,
         )
         syncStateRepository.getOrCreateRow(SYNC_TYPE, syncKey, recordType)
+        syncStateRepository.updateStatusJson(
+            SYNC_TYPE,
+            syncKey,
+            recordType,
+            SyncStatusJson(
+                inProgress = true,
+                sessionCorrelationId = sessionCorrelationId,
+                lastUpdatedAt = nowIso(),
+            ).toJsonString(),
+        )
         var watermarkDate = syncStateRepository.getWatermark(SYNC_TYPE, syncKey, recordType)
         var watermarkId = syncStateRepository.getLastRecordId(SYNC_TYPE, syncKey, recordType)
         var batchIndex = 0
@@ -386,6 +396,17 @@ class SyncService(
             watermarkId = maxId
             batchIndex++
         }
+        syncStateRepository.updateStatusJson(
+            SYNC_TYPE,
+            syncKey,
+            recordType,
+            SyncStatusJson(
+                inProgress = false,
+                batchesCompleted = batchIndex,
+                sessionCorrelationId = sessionCorrelationId,
+                lastUpdatedAt = nowIso(),
+            ).toJsonString(),
+        )
         log.info("[{}] Sync completed recordType={}", sessionCorrelationId, recordType)
         return Result.success(Unit)
     }
@@ -424,6 +445,7 @@ class SyncService(
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
                         sessionCorrelationId = sessionCorrelationId,
+                        inProgress = false,
                         error =
                             SyncStatusError(
                                 message = err?.message ?: "Unknown error",
@@ -494,6 +516,7 @@ class SyncService(
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
                         sessionCorrelationId = sessionCorrelationId,
+                        inProgress = false,
                         error =
                             SyncStatusError(
                                 message = err?.message ?: "Unknown error",
@@ -632,4 +655,10 @@ class SyncService(
         syncStateRepository.findAllBySyncKey(SYNC_TYPE, syncKey)
 
     fun isConfigured(): Boolean = syncTargetOpt.isPresent
+
+    fun resyncAll(syncKey: String = SYNC_KEY_DEFAULT): Result<Unit> {
+        syncStateRepository.resetWatermark(SYNC_TYPE, syncKey, SyncRecordType.SKILL)
+        syncStateRepository.resetWatermark(SYNC_TYPE, syncKey, SyncRecordType.COLLECTION)
+        return syncAllSinceWatermark(syncKey)
+    }
 }

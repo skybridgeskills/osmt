@@ -47,4 +47,11 @@ export class SyncService {
       responseType: 'text',
     });
   }
+
+  resyncAll(): Observable<string> {
+    return this.http.post(`${this.base}/resync`, null, {
+      headers: this.headers(),
+      responseType: 'text',
+    });
+  }
 }
