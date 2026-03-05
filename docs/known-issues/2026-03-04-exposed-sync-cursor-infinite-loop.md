@@ -2,61 +2,50 @@
 
 **Date:** 2026-03-04  
 **Component:** Credential Engine sync (`SyncService`, `SyncQueryHelpers`)  
-**Status:** Workaround in place; root cause unresolved
+**Status:** Workaround applied 2026-03-05; root cause in Exposed/JDBC layer
 
 ## Summary
 
-The Credential Engine sync uses composite cursor pagination `(watermarkDate, watermarkId)` to fetch published skills/collections in batches. An Exposed ORM bug causes the query to return records that should be excluded—specifically, when the cursor is `(updateDate, id)` of the last processed record, the next fetch incorrectly returns that same record again. This leads to an infinite loop or circuit-breaker abort.
+The Credential Engine sync uses composite cursor pagination `(watermarkDate, watermarkId)` to fetch published skills/collections in batches. An Exposed/JDBC binding bug caused the `id >= nextId` predicate to be ignored—MySQL returned records that should have been excluded (e.g. id=780 when cursor was `id >= 781`). This led to an infinite loop or circuit-breaker abort.
 
-## Symptoms
+## Workaround Applied
 
-- Sync repeatedly processes the same skill (e.g. id=780) batch after batch
-- Logs show `watermark advanced to date=X id=780` followed by `Batch N raw from DB: size=1 ids=[780]` with the same record
-- Workaround log: `excluded N records that were <= watermark (Exposed query bug workaround)`
-- Circuit breaker eventually fires: `Sync cursor stuck at id=780 - Exposed query returns same record repeatedly`
+**We bypass Exposed entirely for the composite-cursor branch** and use raw JDBC:
 
-## Root Cause
+- **Location:** `SyncQueryHelpers.kt` – functions suffixed with `Raw`: `findSkillsUpdatedSinceRaw`, `findCollectionsUpdatedSinceRaw`, `countSkillsUpdatedSinceRaw`, `countCollectionsUpdatedSinceRaw`
+- **Trigger:** When `watermarkDate != null && watermarkId != null` (i.e. resuming from a prior cursor)
+- **Implementation:** Inside `transaction { }`, obtain `TransactionManager.current().connection.connection as java.sql.Connection`, then:
+  - `conn.prepareStatement(sql)` with `?` placeholders
+  - `ps.setTimestamp(1, ts)`, `ps.setTimestamp(2, ts)` for datetime
+  - `ps.setLong(3, nextId)` for the id threshold
+  - `ps.setInt(4, limit)` for LIMIT
+  - Execute and map results to DAOs via `findById`
 
-The pagination query in `SyncQueryHelpers.kt` uses Exposed DSL:
+**Why this level?** Only direct `PreparedStatement.setLong()` binding produces correct results. Every Exposed path we tried failed.
 
-```kotlin
-(RichSkillDescriptorTable.id greater EntityID(watermarkId, RichSkillDescriptorTable))
-```
+## What We Tried (All Failed)
 
-**Intended logic:** Return records where `(updateDate > watermarkDate) OR (updateDate = watermarkDate AND id > watermarkId)`. Thus when watermark is `(2023-03-30, 780)`, record 780 should be excluded.
+1. **Exposed DSL with EntityID:** `id greaterEq EntityID(watermarkId+1, Table)` — SQL looked correct (`id >= 781`) but MySQL returned 780.
+2. **Exposed DSL with raw Long:** `id greaterEq nextId` using `ExpressionWithColumnType<EntityID<T>>.greaterEq(t: T)` — same wrong result.
+3. **Exposed `exec()` with IColumnType args:** `exec(sql, listOf(LongColumnType() to nextId, ...))` — same wrong result.
 
-**Observed behavior:** The query returns record 780 anyway. Raw SQL with the same conditions (`updateDate = ? AND id > ?`) returns no rows when executed directly against MySQL. The bug appears to be in how Exposed generates or binds the `EntityID` comparison for `LongIdTable.id` columns.
+Exposed’s parameter binding (DSL or exec) appears to bind the id value incorrectly for this query with MySQL, regardless of how we pass the Long. Raw JDBC `ps.setLong()` bypasses that layer and works.
 
-## Why Tests Don't Reproduce It
+## Justification
 
-- Tests use Testcontainers MySQL with fresh, synthetic data
-- Production/dev databases have specific data distributions (many records sharing the same `updateDate`, boundary ids like 780)
-- EntityID serialization or JDBC binding may differ by driver/dialect
-- No test asserts the actual SQL generated; only behavioral outcomes are validated
+- **Scope is minimal:** Only the four cursor/count helpers when `watermarkId != null`. All other sync logic (non-cursor fetches, single-record lookups, updates) continues to use Exposed.
+- **Query is stable:** The cursor SQL is simple and unlikely to need schema changes.
+- **Defense in depth:** `SyncService` still retains the Kotlin-side cursor filter and circuit breaker for robustness.
+- **Reversibility:** If Exposed fixes the bug, we can remove the raw path and revert to DSL.
 
-## Architectural Problems
+## Symptoms (Pre-Workaround)
 
-1. **No abstraction over the cursor query** – The sync depends directly on Exposed DSL. There is no seam to use raw SQL for this critical path.
-2. **ORM as single source of truth** – Business-critical pagination semantics are expressed only in the DSL; no explicit contract or SQL assertion.
-3. **Framework-specific type at DB boundary** – `Column<EntityID<Long>>` comparison behavior is not fully specified and can vary across Exposed versions and JDBC drivers.
-4. **Tests validate outcome, not mechanism** – Tests pass when the ORM behaves correctly but do not detect when the generated SQL diverges from the intended logic.
-
-## Workarounds in Place
-
-1. **Defensive Kotlin-side filter** – `SyncService` filters out any record where `(updateDate, id) <= (watermarkDate, watermarkId)` before processing. Records incorrectly returned by the query are dropped.
-2. **Circuit breaker** – If the same max id repeats for 3+ consecutive batches, sync aborts with a clear error instead of looping indefinitely.
-3. **Diagnostic doc** – `docs/plans/2026-03-02-credential-engine-sync/07-sync-duplicate-diagnostic.md` describes how to log Exposed SQL and verify the generated query.
-
-## Proper Fix (Not Yet Implemented)
-
-1. **Use raw SQL for the cursor query** – Bypass Exposed for `findSkillsUpdatedSince` / `findCollectionsUpdatedSince` composite-cursor branch. The query is small, critical, and stable.
-2. **Introduce a SyncCursorQuery abstraction** – Allow swapping implementations (raw SQL vs Exposed) and test the raw SQL path independently.
-3. **Add SQL assertion tests** – Verify the actual SQL (or raw implementation) matches the intended cursor semantics.
+- Sync repeatedly processed the same skill (e.g. id=780) batch after batch.
+- Logs: `watermark advanced to id=780` then `Batch N raw from DB: ids=[780]` again.
+- Circuit breaker: `Sync cursor stuck at id=780 - Exposed query returns same record repeatedly`.
 
 ## References
 
-- `api/src/main/kotlin/edu/wgu/osmt/credentialengine/SyncQueryHelpers.kt` – Query definitions
-- `api/src/main/kotlin/edu/wgu/osmt/credentialengine/SyncService.kt` – Filter and circuit breaker logic
-- `docs/plans/2026-03-02-credential-engine-sync/07-sync-duplicate-diagnostic.md` – Diagnostic steps
-- Exposed `LongIdTable` / `EntityID`: JetBrains Exposed framework
-- Related: Exposed entity cache issues (e.g. exposed/issues/653)
+- `api/src/main/kotlin/edu/wgu/osmt/credentialengine/SyncQueryHelpers.kt` – Raw JDBC cursor queries
+- `api/src/main/kotlin/edu/wgu/osmt/credentialengine/SyncService.kt` – Filter and circuit breaker
+- Exposed 0.30.2, MySQL Connector/J, `LongIdTable` / `EntityID`

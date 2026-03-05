@@ -133,4 +133,18 @@ class SyncQueryHelpersTest :
 
         assertThat(allUuids).hasSize(25)
     }
+
+    @Test
+    fun `countSkillsUpdatedSince with null watermark returns total published skill count`() {
+        repeat(5) { createPublishedSkill() }
+        assertThat(countSkillsUpdatedSince(null, null)).isEqualTo(5)
+    }
+
+    @Test
+    fun `countSkillsUpdatedSince with watermark of last record returns 0`() {
+        val skill = createPublishedSkill("single")
+        val count =
+            countSkillsUpdatedSince(skill.updateDate, skill.id.value)
+        assertThat(count).isEqualTo(0)
+    }
 }

@@ -1,6 +1,9 @@
 # Sync Duplicate Skill Diagnostic
 
-If the same skill is published repeatedly during sync, run these checks:
+If the same skill is published repeatedly during sync, run these checks.
+
+**Note:** A raw JDBC workaround for the Exposed cursor bug is in place. See
+`docs/known-issues/2026-03-04-exposed-sync-cursor-infinite-loop.md`.
 
 ## 1. Check for duplicate UUIDs in database
 
@@ -62,7 +65,6 @@ If tests pass but production duplicates persist, the issue is likely:
 
 ## Circuit breaker and workaround
 
-SyncService applies a defensive Kotlin-side filter: records with (updateDate, id) <= watermark
-are excluded before processing. This works around an Exposed bug where the query returns
-records that should be excluded. If the same max id repeats for 3+ batches, sync aborts with
-a clear error.
+The cursor query uses raw JDBC when `watermarkId != null` (see known-issues doc). SyncService
+still applies a defensive Kotlin-side filter and circuit breaker: records with (updateDate, id) <=
+watermark are excluded; if the same max id repeats for 3+ batches, sync aborts with a clear error.
