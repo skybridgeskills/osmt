@@ -39,8 +39,11 @@ object Containers {
         GenericContainer<Nothing>("docker.elastic.co/elasticsearch/elasticsearch:8.11.3").apply {
             withExposedPorts(9200, 9300)
             withEnv("discovery.type", "single-node")
-            withEnv("net", "host")
             withEnv("xpack.security.enabled", "false")
+            withEnv("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
+            withCreateContainerCmdModifier { cmd ->
+                cmd.withMemory(2L * 1024 * 1024 * 1024)
+            }
             start()
             println("Elasticsearch port: ${getMappedPort(9200)}")
         }

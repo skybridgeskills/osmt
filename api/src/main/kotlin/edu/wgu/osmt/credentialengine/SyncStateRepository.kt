@@ -118,6 +118,7 @@ class SyncStateRepository {
                 recordType = existing[SyncStateTable.recordType],
                 syncWatermark = existing[SyncStateTable.syncWatermark],
                 statusJson = existing[SyncStateTable.statusJson],
+                lastRecordId = existing[SyncStateTable.lastRecordId],
             )
         } else {
             SyncStateTable.insert {
@@ -128,7 +129,7 @@ class SyncStateRepository {
                 it[SyncStateTable.lastRecordId] = null
                 it[SyncStateTable.statusJson] = null
             }
-            SyncState(syncType, syncKey, recordType, null, null)
+            SyncState(syncType, syncKey, recordType, null, null, null)
         }
     }
 
@@ -147,6 +148,7 @@ class SyncStateRepository {
                     recordType = it[SyncStateTable.recordType],
                     syncWatermark = it[SyncStateTable.syncWatermark],
                     statusJson = it[SyncStateTable.statusJson],
+                    lastRecordId = it[SyncStateTable.lastRecordId],
                 )
             }
 }

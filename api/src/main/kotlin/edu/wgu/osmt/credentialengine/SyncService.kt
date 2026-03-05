@@ -96,6 +96,28 @@ class SyncService(
     private fun skillCtids(collectionDao: CollectionDao): List<String> =
         collectionDao.skills.map { "$CTID_PREFIX${it.uuid}" }
 
+    /**
+     * Marks both skill and collection integrations as in progress immediately.
+     * Called before forking the sync job so GET /state returns inProgress=true
+     * without waiting for the background job to start.
+     */
+    fun markSyncInProgress(syncKey: String) {
+        val sessionCorrelationId = generateCorrelationId()
+        for (recordType in listOf(SyncRecordType.SKILL, SyncRecordType.COLLECTION)) {
+            syncStateRepository.getOrCreateRow(SYNC_TYPE, syncKey, recordType)
+            syncStateRepository.updateStatusJson(
+                SYNC_TYPE,
+                syncKey,
+                recordType,
+                SyncStatusJson(
+                    inProgress = true,
+                    sessionCorrelationId = sessionCorrelationId,
+                    lastUpdatedAt = nowIso(),
+                ).toJsonString(),
+            )
+        }
+    }
+
     fun syncSinceWatermark(
         syncKey: String,
         recordType: String,
@@ -653,6 +675,29 @@ class SyncService(
 
     fun getSyncState(syncKey: String = SYNC_KEY_DEFAULT): List<SyncState> =
         syncStateRepository.findAllBySyncKey(SYNC_TYPE, syncKey)
+
+    fun getPendingCount(
+        syncKey: String,
+        recordType: String,
+    ): Int {
+        val watermark =
+            syncStateRepository.getWatermark(SYNC_TYPE, syncKey, recordType)
+        val lastRecordId =
+            syncStateRepository.getLastRecordId(SYNC_TYPE, syncKey, recordType)
+        return when (recordType) {
+            SyncRecordType.SKILL -> {
+                countSkillsUpdatedSince(watermark, lastRecordId)
+            }
+
+            SyncRecordType.COLLECTION -> {
+                countCollectionsUpdatedSince(watermark, lastRecordId)
+            }
+
+            else -> {
+                0
+            }
+        }
+    }
 
     fun isConfigured(): Boolean = syncTargetOpt.isPresent
 

@@ -59,8 +59,12 @@ services:
       - elastic_data:/usr/share/elasticsearch/data
     environment:
       - "discovery.type=single-node"
-      - "net=host"
       - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     ports:
       - "${ELASTICSEARCH_HTTP_PORT:-9200}:9200"
       - "${ELASTICSEARCH_TRANSPORT_PORT:-9300}:9300"

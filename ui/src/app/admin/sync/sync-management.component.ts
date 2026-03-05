@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
+  SyncIntegrationDto,
   SyncService,
   SyncStateResponse,
-  SyncIntegrationDto,
 } from './sync.service';
 import { ToastService } from '../../toast/toast.service';
 
@@ -34,20 +34,21 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadState();
+    this.loadState(() => this.startAutoRefresh());
   }
 
   ngOnDestroy(): void {
     this.clearRefreshInterval();
   }
 
-  loadState(): void {
+  loadState(afterSuccess?: () => void, afterError?: () => void): void {
     this.loading = true;
     this.syncService.getState().subscribe({
       next: res => {
         this.state = res;
         this.configured = true;
         this.loading = false;
+        afterSuccess?.();
       },
       error: err => {
         this.loading = false;
@@ -67,6 +68,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
             true
           );
         }
+        afterError?.();
       },
     });
   }
@@ -133,6 +135,59 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
     });
   }
 
+  get summaryStatus(): 'up-to-date' | 'in-progress' | 'error' | 'never-synced' {
+    if (!this.state?.integrations?.length) return 'never-synced';
+    if (this.hasSyncError()) return 'error';
+    if (!this.isSyncDone()) return 'in-progress';
+    const hasAnyWatermark = this.state.integrations.some(
+      i => i.syncWatermark != null
+    );
+    return hasAnyWatermark ? 'up-to-date' : 'never-synced';
+  }
+
+  get totalPendingCount(): number {
+    if (!this.state?.integrations?.length) return 0;
+    return this.state.integrations.reduce(
+      (sum, i) => sum + (i.pendingCount ?? 0),
+      0
+    );
+  }
+
+  get summaryError(): SyncStatusDisplay | null {
+    const withError = this.state?.integrations?.find(i => {
+      try {
+        return !!JSON.parse(i.statusJson ?? '{}')?.error;
+      } catch {
+        return false;
+      }
+    });
+    return withError ? this.getStatusDisplay(withError) : null;
+  }
+
+  get lastSyncedDisplay(): Date | null {
+    if (!this.state?.integrations?.length) return null;
+    const dates = this.state.integrations
+      .filter(i => i.syncWatermark != null)
+      .map(i => new Date(i.syncWatermark!).getTime())
+      .filter(t => !isNaN(t));
+    if (dates.length === 0) return null;
+    return new Date(Math.max(...dates));
+  }
+
+  get pendingByRecordType(): { skills: number; collections: number } {
+    if (!this.state?.integrations?.length) {
+      return { skills: 0, collections: 0 };
+    }
+    let skills = 0;
+    let collections = 0;
+    for (const i of this.state.integrations) {
+      const count = i.pendingCount ?? 0;
+      if (i.recordType === 'skill') skills = count;
+      else if (i.recordType === 'collection') collections = count;
+    }
+    return { skills, collections };
+  }
+
   private clearRefreshInterval(): void {
     if (this.refreshIntervalId != null) {
       clearInterval(this.refreshIntervalId);
@@ -141,7 +196,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   }
 
   private startAutoRefresh(): void {
-    if (!this.autoRefreshUntilDone) return;
+    if (!this.autoRefreshUntilDone && this.isSyncDone()) return;
     this.clearRefreshInterval();
     const startTime = Date.now();
     this.refreshIntervalId = setInterval(() => {
@@ -150,6 +205,8 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
           this.state = res;
           if (this.isSyncDone()) {
             this.clearRefreshInterval();
+            this.syncing = false;
+            this.resyncing = false;
             if (this.hasSyncError()) {
               this.toastService.showToast(
                 'Sync finished',
@@ -164,6 +221,8 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
             }
           } else if (Date.now() - startTime > this.maxRefreshDurationMs) {
             this.clearRefreshInterval();
+            this.syncing = false;
+            this.resyncing = false;
             this.toastService.showToast(
               'Auto refresh stopped',
               'Stopped after 1 hour. Sync may still be running.',
@@ -171,27 +230,37 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
             );
           }
         },
-        error: () => this.clearRefreshInterval(),
+        error: () => {
+          this.clearRefreshInterval();
+          this.syncing = false;
+          this.resyncing = false;
+        },
       });
     }, this.refreshIntervalMs);
   }
 
   private handleSyncSuccess(toastMsg: string): void {
-    this.syncing = false;
-    this.resyncing = false;
     this.toastService.showToast('Success', toastMsg);
-    this.loadState();
-    this.startAutoRefresh();
+    this.loadState(
+      () => {
+        if (!this.autoRefreshUntilDone) {
+          this.syncing = false;
+          this.resyncing = false;
+        }
+        this.startAutoRefresh();
+      },
+      () => {
+        this.syncing = false;
+        this.resyncing = false;
+      }
+    );
   }
 
   onSyncNow(): void {
     if (!this.configured || this.syncing || this.resyncing) return;
     this.syncing = true;
     this.syncService.syncAll().subscribe({
-      next: () =>
-        this.handleSyncSuccess(
-          'Sync new changes started. Check logs for progress.'
-        ),
+      next: () => this.handleSyncSuccess('Sync new changes started.'),
       error: err => this.handleSyncError(err),
     });
   }
@@ -200,8 +269,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
     if (!this.configured || this.syncing || this.resyncing) return;
     this.resyncing = true;
     this.syncService.resyncAll().subscribe({
-      next: () =>
-        this.handleSyncSuccess('Full resync started. Check logs for progress.'),
+      next: () => this.handleSyncSuccess('Full resync started.'),
       error: err => this.handleResyncError(err),
     });
   }

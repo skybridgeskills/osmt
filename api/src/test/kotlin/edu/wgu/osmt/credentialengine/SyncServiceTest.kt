@@ -134,6 +134,32 @@ class SyncServiceTest :
     }
 
     @Test
+    fun `getPendingCount returns skill count when no watermark`() {
+        repeat(3) { randomSkill() }
+        val count = syncService.getPendingCount("default", SyncRecordType.SKILL)
+        assertThat(count).isEqualTo(3)
+    }
+
+    @Test
+    fun `getPendingCount returns 0 for skill when all synced`() {
+        val skill = randomSkill()
+        syncService.syncSinceWatermark("default", SyncRecordType.SKILL)
+        val count = syncService.getPendingCount("default", SyncRecordType.SKILL)
+        assertThat(count).isEqualTo(0)
+    }
+
+    @Test
+    fun `getSyncState includes integrations with lastRecordId`() {
+        randomSkill()
+        syncService.syncSinceWatermark("default", SyncRecordType.SKILL)
+        val states = syncService.getSyncState("default")
+        val skillState = states.find { it.recordType == SyncRecordType.SKILL }
+        assertThat(skillState).isNotNull()
+        assertThat(skillState!!.syncWatermark).isNotNull()
+        assertThat(skillState.lastRecordId).isNotNull()
+    }
+
+    @Test
     fun `sync publishes each skill exactly once no duplicates`() {
         val createdUuids = (1..25).map { randomSkill().uuid }
 
@@ -146,6 +172,27 @@ class SyncServiceTest :
                 .withFailMessage("Skill $uuid publish count")
                 .isEqualTo(1)
         }
+    }
+
+    @Test
+    fun `getPendingCount returns 0 for both types after full sync`() {
+        repeat(3) { randomSkill() }
+        val skill = randomSkill()
+        repeat(2) { randomCollectionWithSkill(skill) }
+
+        val result = syncService.syncAllSinceWatermark("default")
+        assertThat(result.isSuccess).isTrue()
+
+        val skillPending = syncService.getPendingCount("default", SyncRecordType.SKILL)
+        val collectionPending =
+            syncService.getPendingCount("default", SyncRecordType.COLLECTION)
+
+        assertThat(skillPending)
+            .withFailMessage("Skills pending after full sync should be 0")
+            .isEqualTo(0)
+        assertThat(collectionPending)
+            .withFailMessage("Collections pending after full sync should be 0")
+            .isEqualTo(0)
     }
 
     @Test

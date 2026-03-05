@@ -24,6 +24,7 @@ data class SyncIntegrationDto(
     val recordType: String,
     val syncWatermark: String?,
     val statusJson: String? = null,
+    val pendingCount: Int? = null,
 )
 
 @Controller
@@ -59,11 +60,20 @@ class SyncController
             val states = syncService.getSyncState()
             val integrations =
                 states.map {
+                    val inProgress =
+                        parseSyncStatusJson(it.statusJson)?.inProgress == true
+                    val pendingCount =
+                        if (inProgress) {
+                            null
+                        } else {
+                            syncService.getPendingCount(it.syncKey, it.recordType)
+                        }
                     SyncIntegrationDto(
                         syncKey = it.syncKey,
                         recordType = it.recordType,
                         syncWatermark = it.syncWatermark?.toString(),
                         statusJson = it.statusJson,
+                        pendingCount = pendingCount,
                     )
                 }
             return ResponseEntity.ok(SyncStateResponse(integrations = integrations))
@@ -147,6 +157,7 @@ class SyncController
                     "Sync already in progress",
                 )
             }
+            syncService.markSyncInProgress("default")
             ForkJoinPool.commonPool().submit {
                 try {
                     syncService.syncAllSinceWatermark()
@@ -170,6 +181,7 @@ class SyncController
                     "Sync already in progress",
                 )
             }
+            syncService.markSyncInProgress("default")
             ForkJoinPool.commonPool().submit {
                 try {
                     syncService.resyncAll()

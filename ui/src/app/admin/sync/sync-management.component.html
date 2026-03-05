@@ -5,6 +5,16 @@
     asynchronously; check logs for progress.
   </p>
 
+  <ng-container *ngIf="configured && !loading && state">
+    <label
+      class="t-type-body t-margin-small t-margin-bottom"
+      style="display: block"
+    >
+      <input type="checkbox" [(ngModel)]="autoRefreshUntilDone" />
+      Auto refresh until sync completes (up to 1 hour)
+    </label>
+  </ng-container>
+
   <app-system-message
     *ngIf="!configured"
     title="Sync not configured"
@@ -18,78 +28,89 @@
 
   <ng-container *ngIf="configured && !loading && state">
     <section
-      class="l-syncSection t-margin-medium t-margin-bottom"
-      aria-labelledby="sync-status-heading"
+      class="l-syncSummary t-margin-medium t-margin-bottom"
+      aria-label="Sync summary"
     >
-      <h2
-        id="sync-status-heading"
-        class="t-type-heading2 t-margin-small t-margin-bottom"
+      <div
+        *ngIf="summaryStatus === 'up-to-date' && totalPendingCount === 0"
+        class="m-inlineMessage l-syncSummary-success"
       >
-        Sync Status
-      </h2>
-      <p class="t-type-body t-margin-small t-margin-bottom">
-        Per-integration state for each sync target. Use this to monitor progress
-        and debug issues.
-      </p>
-      <table aria-label="Sync integrations">
-        <thead>
-          <tr class="m-tableHeader">
-            <th scope="col">Integration Key</th>
-            <th scope="col">Record Type</th>
-            <th scope="col">Watermark</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let i of state.integrations" class="m-tableRow">
-            <td>{{ i.syncKey }}</td>
-            <td>{{ i.recordType }}</td>
-            <td>{{ i.syncWatermark ?? '—' }}</td>
-            <td>
-              @let status = getStatusDisplay(i);
-              {{ status.label }}
-              @if (status.correlationId) {
-                <code
-                  class="m-code-copyable"
-                  [attr.title]="
-                    'Correlation ID: ' +
-                    status.correlationId +
-                    ' (click to copy)'
-                  "
-                  (click)="copyToClipboard(status.correlationId)"
-                >
-                  {{ status.correlationId }}
-                </code>
-              }
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <dl
-        class="t-type-bodySmall mt-6 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1"
-        aria-label="Column definitions"
+        <div class="m-inlineMessage-x-icon">
+          <svg class="t-icon" aria-hidden="true">
+            <use xlink:href="/assets/images/svg-defs.svg#icon-check"></use>
+          </svg>
+        </div>
+        <div class="m-inlineMessage-x-title">Sync is up to date</div>
+        <div class="m-inlineMessage-x-message">
+          All skills and collections are current.
+          @if (lastSyncedDisplay) {
+            Last synced: {{ lastSyncedDisplay | date: 'medium' }}.
+          }
+        </div>
+      </div>
+      <div
+        *ngIf="summaryStatus === 'up-to-date' && totalPendingCount > 0"
+        class="m-inlineMessage l-syncSummary-pending"
       >
-        <dt><strong>Integration Key</strong></dt>
-        <dd>
-          Identifies the sync target configuration (e.g. default). Used when
-          multiple Credential Engine destinations exist.
-        </dd>
-        <dt><strong>Record Type</strong></dt>
-        <dd>
-          skill (RSDs published as Competencies) or collection (Collections).
-          Each type syncs separately.
-        </dd>
-        <dt><strong>Watermark</strong></dt>
-        <dd>
-          Timestamp of the last successfully synced record for this integration.
-          Incremental sync processes only records updated after this point.
-        </dd>
-        <dt><strong>Status</strong></dt>
-        <dd>
-          Outcome of the last run—Ok (N batches), In progress…, or Error. The
-          correlation ID (if present) can be copied for log lookups.
-        </dd>
-      </dl>
+        <div class="m-inlineMessage-x-title">
+          {{ pendingByRecordType.skills }} skills and
+          {{ pendingByRecordType.collections }} collections pending sync.
+        </div>
+        <div class="m-inlineMessage-x-message">
+          Use Sync New Changes to publish.
+        </div>
+      </div>
+      <div
+        *ngIf="summaryStatus === 'in-progress'"
+        class="m-inlineMessage l-syncSummary-info"
+      >
+        <div class="m-inlineMessage-x-title">Sync is in progress…</div>
+        <div class="m-inlineMessage-x-message">
+          <label
+            class="t-type-body"
+            style="display: inline-flex; align-items: center; gap: 0.5rem"
+          >
+            <input type="checkbox" [(ngModel)]="autoRefreshUntilDone" />
+            Auto-refresh until complete (up to 1 hour)
+          </label>
+        </div>
+      </div>
+      <div
+        *ngIf="summaryStatus === 'error'"
+        class="m-inlineMessage m-inlineMessage-error"
+      >
+        <div class="m-inlineMessage-x-icon">
+          <svg class="t-icon" aria-hidden="true">
+            <use xlink:href="/assets/images/svg-defs.svg#icon-error"></use>
+          </svg>
+        </div>
+        <div class="m-inlineMessage-x-title">Sync failed</div>
+        <div class="m-inlineMessage-x-message">
+          {{ summaryError ? summaryError.label : 'Unknown error' }}
+          @if (summaryError && summaryError.correlationId) {
+            <code
+              class="m-code-copyable"
+              [attr.title]="
+                'Correlation ID: ' +
+                summaryError.correlationId +
+                ' (click to copy)'
+              "
+              (click)="copyToClipboard(summaryError.correlationId)"
+            >
+              {{ summaryError.correlationId }}
+            </code>
+          }
+        </div>
+      </div>
+      <div
+        *ngIf="summaryStatus === 'never-synced'"
+        class="m-inlineMessage l-syncSummary-info"
+      >
+        <div class="m-inlineMessage-x-title">Sync has not run yet</div>
+        <div class="m-inlineMessage-x-message">
+          Use Sync New Changes or Resync All to publish.
+        </div>
+      </div>
     </section>
 
     <section
@@ -107,10 +128,6 @@
         sync. Uses the watermark to skip already-synced records.
       </p>
       <div class="l-syncActions">
-        <label class="t-type-body t-margin-small" style="display: block">
-          <input type="checkbox" [(ngModel)]="autoRefreshUntilDone" />
-          Auto refresh until sync completes (up to 1 hour)
-        </label>
         <button
           class="m-button m-button-primary"
           type="button"
@@ -139,7 +156,7 @@
       </p>
       <div class="l-syncActions">
         <button
-          class="m-button bg-cherry text-white hover:brightness-90 disabled:opacity-50"
+          class="m-button m-button-resync-danger"
           type="button"
           [disabled]="syncing || resyncing"
           (click)="onResync()"
@@ -147,6 +164,87 @@
           {{ resyncing ? 'Resyncing...' : 'Resync All' }}
         </button>
       </div>
+    </section>
+
+    <section
+      class="l-syncSection t-margin-medium t-margin-bottom"
+      aria-labelledby="sync-details-heading"
+    >
+      <h2
+        id="sync-details-heading"
+        class="t-type-heading2 t-margin-small t-margin-bottom"
+      >
+        Technical Details
+      </h2>
+      <app-accordian
+        closedLabel="Show technical details"
+        openLabel="Hide technical details"
+      >
+        <table aria-label="Sync integrations">
+          <thead>
+            <tr class="m-tableHeader">
+              <th scope="col">Integration Key</th>
+              <th scope="col">Record Type</th>
+              <th scope="col">Watermark</th>
+              <th scope="col">Pending</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let i of state.integrations" class="m-tableRow">
+              <td>{{ i.syncKey }}</td>
+              <td>{{ i.recordType }}</td>
+              <td>{{ i.syncWatermark ?? '—' }}</td>
+              <td>{{ i.pendingCount ?? '—' }}</td>
+              <td>
+                @let status = getStatusDisplay(i);
+                {{ status.label }}
+                @if (status.correlationId) {
+                  <code
+                    class="m-code-copyable"
+                    [attr.title]="
+                      'Correlation ID: ' +
+                      status.correlationId +
+                      ' (click to copy)'
+                    "
+                    (click)="copyToClipboard(status.correlationId)"
+                  >
+                    {{ status.correlationId }}
+                  </code>
+                }
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <dl
+          class="t-type-bodySmall mt-6 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1"
+          aria-label="Column definitions"
+        >
+          <dt><strong>Integration Key</strong></dt>
+          <dd>
+            Identifies the sync target configuration (e.g. default). Used when
+            multiple Credential Engine destinations exist.
+          </dd>
+          <dt><strong>Record Type</strong></dt>
+          <dd>
+            skill (RSDs published as Competencies) or collection (Collections).
+            Each type syncs separately.
+          </dd>
+          <dt><strong>Watermark</strong></dt>
+          <dd>
+            Timestamp of the last successfully synced record for this
+            integration. Incremental sync processes only records updated after
+            this point.
+          </dd>
+          <dt><strong>Pending</strong></dt>
+          <dd>Number of records not yet synced for this integration.</dd>
+          <dt><strong>Status</strong></dt>
+          <dd>
+            Outcome of the last run—Ok (N batches), In progress…, or Error. The
+            correlation ID (if present) can be copied for log lookups.
+          </dd>
+        </dl>
+      </app-accordian>
     </section>
   </ng-container>
 </div>

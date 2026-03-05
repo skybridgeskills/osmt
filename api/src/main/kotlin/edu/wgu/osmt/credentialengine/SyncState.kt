@@ -8,4 +8,5 @@ data class SyncState(
     val recordType: String,
     val syncWatermark: LocalDateTime?,
     val statusJson: String? = null,
+    val lastRecordId: Long? = null,
 )

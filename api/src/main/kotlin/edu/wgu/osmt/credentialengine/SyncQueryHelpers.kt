@@ -105,16 +105,24 @@ fun findSkillsUpdatedSince(
         }
     }
 
-/** Raw JDBC count; see findSkillsUpdatedSinceRaw. */
+/**
+ * Raw JDBC count; see findSkillsUpdatedSinceRaw.
+ * Uses 1-second window around watermark for timestamp comparison to avoid overcounting
+ * when DB stores higher precision (e.g. microseconds) than the persisted watermark.
+ */
 private fun countSkillsUpdatedSinceRaw(
     watermarkDate: LocalDateTime,
     watermarkId: Long,
 ): Int {
-    val nextId = watermarkId + 1L
     val sql =
         """
         SELECT COUNT(*) FROM RichSkillDescriptor
-        WHERE ((updateDate > ?) OR ((updateDate = ?) AND (id >= ?)))
+        WHERE (
+          (updateDate > DATE_ADD(?, INTERVAL 1 SECOND))
+          OR
+          (updateDate BETWEEN DATE_SUB(?, INTERVAL 1 SECOND)
+            AND DATE_ADD(?, INTERVAL 1 SECOND) AND id > ?)
+        )
         AND (publishDate IS NOT NULL)
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
@@ -123,7 +131,8 @@ private fun countSkillsUpdatedSinceRaw(
         conn.prepareStatement(sql).use { ps ->
             ps.setTimestamp(1, ts)
             ps.setTimestamp(2, ts)
-            ps.setLong(3, nextId)
+            ps.setTimestamp(3, ts)
+            ps.setLong(4, watermarkId)
             ps.executeQuery().use { rs ->
                 if (rs.next()) rs.getInt(1) else 0
             }
@@ -158,16 +167,24 @@ fun countSkillsUpdatedSince(
         }
     }
 
-/** Raw JDBC count; see findCollectionsUpdatedSinceRaw. */
+/**
+ * Raw JDBC count; see findCollectionsUpdatedSinceRaw.
+ * Uses 1-second window around watermark for timestamp comparison to avoid overcounting
+ * when DB stores higher precision than the persisted watermark.
+ */
 private fun countCollectionsUpdatedSinceRaw(
     watermarkDate: LocalDateTime,
     watermarkId: Long,
 ): Int {
-    val nextId = watermarkId + 1L
     val sql =
         """
         SELECT COUNT(*) FROM Collection
-        WHERE ((updateDate > ?) OR ((updateDate = ?) AND (id >= ?)))
+        WHERE (
+          (updateDate > DATE_ADD(?, INTERVAL 1 SECOND))
+          OR
+          (updateDate BETWEEN DATE_SUB(?, INTERVAL 1 SECOND)
+            AND DATE_ADD(?, INTERVAL 1 SECOND) AND id > ?)
+        )
         AND (status IN ('Published', 'Archived'))
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
@@ -176,7 +193,8 @@ private fun countCollectionsUpdatedSinceRaw(
         conn.prepareStatement(sql).use { ps ->
             ps.setTimestamp(1, ts)
             ps.setTimestamp(2, ts)
-            ps.setLong(3, nextId)
+            ps.setTimestamp(3, ts)
+            ps.setLong(4, watermarkId)
             ps.executeQuery().use { rs ->
                 if (rs.next()) rs.getInt(1) else 0
             }

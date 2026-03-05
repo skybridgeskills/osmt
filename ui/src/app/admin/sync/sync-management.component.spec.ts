@@ -9,6 +9,7 @@ import { SyncService } from './sync.service';
 import { ToastService } from '../../toast/toast.service';
 import { AppConfig } from '../../app.config';
 import { SystemMessageComponent } from '../../core/system-message.component';
+import { AccordianComponent } from '../../core/accordian.component';
 import { AuthService } from '../../auth/auth-service';
 import { AuthServiceStub } from '../../../../test/resource/mock-stubs';
 
@@ -23,7 +24,11 @@ describe('SyncManagementComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, CommonModule, FormsModule],
-      declarations: [SyncManagementComponent, SystemMessageComponent],
+      declarations: [
+        SyncManagementComponent,
+        SystemMessageComponent,
+        AccordianComponent,
+      ],
       providers: [
         SyncService,
         ToastService,
@@ -139,7 +144,7 @@ describe('SyncManagementComponent', () => {
     expect(syncService.syncAll).toHaveBeenCalled();
     expect(toastService.showToast).toHaveBeenCalledWith(
       'Success',
-      'Sync new changes started. Check logs for progress.'
+      'Sync new changes started.'
     );
   });
 
@@ -156,7 +161,7 @@ describe('SyncManagementComponent', () => {
     expect(syncService.resyncAll).toHaveBeenCalled();
     expect(toastService.showToast).toHaveBeenCalledWith(
       'Success',
-      'Full resync started. Check logs for progress.'
+      'Full resync started.'
     );
   });
 
@@ -193,10 +198,135 @@ describe('SyncManagementComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     const html = fixture.nativeElement as HTMLElement;
-    expect(html.textContent).toContain('Sync Status');
+    expect(html.textContent).toContain('Technical Details');
     expect(html.textContent).toContain('Sync New Changes');
     expect(html.textContent).toContain('Resync All');
     expect(html.textContent).toContain('Integration Key');
     expect(html.textContent).toContain('Watermark');
+  });
+
+  it('summaryStatus returns up-to-date when done and no pending', () => {
+    component.state = {
+      integrations: [
+        {
+          syncKey: 'default',
+          recordType: 'skill',
+          syncWatermark: '2025-01-01',
+          pendingCount: 0,
+        },
+      ],
+    };
+    expect(component.summaryStatus).toBe('up-to-date');
+    expect(component.totalPendingCount).toBe(0);
+  });
+
+  it('summaryStatus returns error when integration has error', () => {
+    component.state = {
+      integrations: [
+        {
+          syncKey: 'default',
+          recordType: 'skill',
+          syncWatermark: '2025-01-01',
+          statusJson: JSON.stringify({ error: { message: 'Failed' } }),
+        },
+      ],
+    };
+    expect(component.summaryStatus).toBe('error');
+    expect(component.summaryError?.label).toContain('Failed');
+  });
+
+  it('summaryStatus returns in-progress when integration inProgress', () => {
+    component.state = {
+      integrations: [
+        {
+          syncKey: 'default',
+          recordType: 'skill',
+          syncWatermark: null,
+          statusJson: JSON.stringify({ inProgress: true }),
+        },
+      ],
+    };
+    expect(component.summaryStatus).toBe('in-progress');
+  });
+
+  it('clears syncing and resyncing when loadState completes without autoRefresh', () => {
+    component.syncing = true;
+    component.resyncing = true;
+    component.autoRefreshUntilDone = false;
+    spyOn(syncService, 'getState').and.returnValue(of({ integrations: [] }));
+
+    component.loadState(
+      () => {
+        if (!component.autoRefreshUntilDone) {
+          component.syncing = false;
+          component.resyncing = false;
+        }
+      },
+      () => {}
+    );
+
+    expect(component.syncing).toBe(false);
+    expect(component.resyncing).toBe(false);
+  });
+
+  it('keeps syncing when autoRefreshUntilDone and loadState succeeds', () => {
+    component.syncing = true;
+    component.autoRefreshUntilDone = true;
+    spyOn(syncService, 'getState').and.returnValue(of({ integrations: [] }));
+
+    component.loadState(
+      () => {
+        if (!component.autoRefreshUntilDone) {
+          component.syncing = false;
+          component.resyncing = false;
+        }
+      },
+      () => {}
+    );
+
+    expect(component.syncing).toBe(true);
+  });
+
+  it('clears syncing and resyncing when loadState fails after sync trigger', () => {
+    component.syncing = true;
+    component.resyncing = true;
+    spyOn(syncService, 'getState').and.returnValue(
+      throwError(() => ({ status: 500 }))
+    );
+
+    component.loadState(
+      () => {},
+      () => {
+        component.syncing = false;
+        component.resyncing = false;
+      }
+    );
+
+    expect(component.syncing).toBe(false);
+    expect(component.resyncing).toBe(false);
+  });
+
+  it('totalPendingCount sums pendingCount from integrations', () => {
+    component.state = {
+      integrations: [
+        {
+          syncKey: 'default',
+          recordType: 'skill',
+          syncWatermark: '2025-01-01',
+          pendingCount: 5,
+        },
+        {
+          syncKey: 'default',
+          recordType: 'collection',
+          syncWatermark: '2025-01-01',
+          pendingCount: 2,
+        },
+      ],
+    };
+    expect(component.totalPendingCount).toBe(7);
+    expect(component.pendingByRecordType).toEqual({
+      skills: 5,
+      collections: 2,
+    });
   });
 });

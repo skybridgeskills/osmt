@@ -9,6 +9,7 @@ export interface SyncIntegrationDto {
   recordType: string;
   syncWatermark: string | null;
   statusJson?: string | null;
+  pendingCount?: number | null;
 }
 
 export interface SyncStateResponse {
@@ -36,9 +37,13 @@ export class SyncService {
   }
 
   getState(): Observable<SyncStateResponse> {
-    return this.http.get<SyncStateResponse>(`${this.base}/state`, {
-      headers: this.headers(),
-    });
+    const cacheBuster = `t=${Date.now()}`;
+    return this.http.get<SyncStateResponse>(
+      `${this.base}/state?${cacheBuster}`,
+      {
+        headers: this.headers(),
+      }
+    );
   }
 
   syncAll(): Observable<string> {
