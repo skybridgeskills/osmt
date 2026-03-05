@@ -71,6 +71,14 @@ object RoutePaths {
     const val ES_ADMIN_DELETE_INDICES = "$ES_ADMIN/delete-indices"
     const val ES_ADMIN_REINDEX = "$ES_ADMIN/reindex"
 
+    private const val SYNC_PATH = "/sync"
+    const val SYNC_STATE = "$SYNC_PATH/state"
+    const val SYNC_SKILL = "$SYNC_PATH/skill"
+    const val SYNC_SKILL_UUID = "$SYNC_SKILL/{uuid}"
+    const val SYNC_COLLECTION = "$SYNC_PATH/collection"
+    const val SYNC_COLLECTION_UUID = "$SYNC_COLLECTION/{uuid}"
+    const val SYNC_ALL = "$SYNC_PATH/all"
+
     object QueryParams {
         const val FROM = "from"
         const val SIZE = "size"

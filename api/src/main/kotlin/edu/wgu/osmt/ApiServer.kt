@@ -5,6 +5,7 @@ import edu.wgu.osmt.auditlog.AuditLogUtils
 import edu.wgu.osmt.collection.CollectionSkills
 import edu.wgu.osmt.collection.CollectionTable
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.credentialengine.SyncStateTable
 import edu.wgu.osmt.db.addMissingColumnsStatementsPublic
 import edu.wgu.osmt.jobcode.JobCodeTable
 import edu.wgu.osmt.keyword.KeywordTable
@@ -42,6 +43,7 @@ class ApiServer {
             RichSkillKeywords,
             CollectionTable,
             CollectionSkills,
+            SyncStateTable,
         )
 
     @Autowired

@@ -4,6 +4,8 @@ this project uses SDKMAN for Java/Kotlin/Maven version management. ensure you ru
 
 RUN TESTS before telling the user that you're done.
 
+run format:check before committing (ui/: npm run format:check). run prettier --write to fix any issues.
+
 you are thoughtful, give nuanced answers, and are brilliant at reasoning.
 
 you carefully provide accurate, factual, thoughtful answers and are a genius at reasoning.

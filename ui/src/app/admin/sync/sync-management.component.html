@@ -1,0 +1,62 @@
+<div class="l-container">
+  <h1 class="t-type-heading1 t-margin-small t-margin-bottom">
+    External Sync
+  </h1>
+
+  <app-system-message
+    *ngIf="!configured"
+    title="Sync not configured"
+    body="Credential Engine sync is not configured. Set CREDENTIAL_ENGINE_* environment variables to enable."
+  >
+  </app-system-message>
+
+  <div *ngIf="loading" class="l-loading">
+    <span>Loading...</span>
+  </div>
+
+  <ng-container *ngIf="configured && !loading && state">
+    <table aria-label="Sync integrations">
+      <thead>
+      <tr class="m-tableHeader">
+        <th scope="col">Integration Key</th>
+        <th scope="col">Record Type</th>
+        <th scope="col">Watermark</th>
+        <th scope="col">Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let i of state.integrations" class="m-tableRow">
+        <td>{{ i.syncKey }}</td>
+        <td>{{ i.recordType }}</td>
+        <td>{{ i.syncWatermark ?? '—' }}</td>
+        <td>
+          @let status = getStatusDisplay(i);
+          {{ status.label }}
+          @if (status.correlationId) {
+            <code
+              class="m-code-copyable"
+              [attr.title]="
+                  'Correlation ID: ' + status.correlationId + ' (click to copy)'
+                "
+              (click)="copyToClipboard(status.correlationId)"
+            >
+              {{ status.correlationId }}
+            </code>
+          }
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="l-syncActions">
+      <button
+        class="m-button m-button-primary"
+        type="button"
+        [disabled]="syncing"
+        (click)="onSyncNow()"
+      >
+        {{ syncing ? 'Syncing...' : 'Sync Now' }}
+      </button>
+    </div>
+  </ng-container>
+</div>

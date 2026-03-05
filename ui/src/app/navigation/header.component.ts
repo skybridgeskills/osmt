@@ -16,6 +16,8 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
     ButtonAction.MyWorkspace
   );
 
+  canSyncManage = this.authService.isEnabledByRoles(ButtonAction.SyncManage);
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -54,6 +56,10 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
     return this.router.url.startsWith('/my-workspace');
   }
 
+  get syncActive(): boolean {
+    return this.router.url.startsWith('/admin/sync');
+  }
+
   get skillsActive(): boolean {
     return this.router.url.startsWith('/skills');
   }
@@ -73,11 +79,14 @@ export class HeaderComponent extends Whitelabelled implements OnInit {
   }
 
   shouldShowSearchBar(): boolean {
+    const url = this.location.path();
+    if (url.startsWith('/admin/sync')) {
+      return false;
+    }
     if (!this.showPublicNavbar()) {
       return true; // Show for authenticated users
     }
     // Show for unauthenticated users on skills page
-    const url = this.location.path();
     return (
       !this.isAuthenticated() &&
       (url === '/skills' || url.startsWith('/skills?'))
