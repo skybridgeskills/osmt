@@ -112,7 +112,10 @@ class CredentialEngineSyncTargetTest {
         @Suppress("UNCHECKED_CAST")
         val body = entitySlot.captured.body as String
         val json = objectMapper.readTree(body)
-        val competency = json.get("Competency")
+        val competencies = json.get("Competencies")
+        assertThat(competencies.isArray).isTrue()
+        assertThat(competencies.size()).isEqualTo(1)
+        val competency = competencies.get(0)
         assertThat(competency.get("CTID").asText()).isEqualTo("ce-$skillUuid")
         assertThat(competency.get("CompetencyLabel").asText()).isEqualTo("Test Skill")
         assertThat(competency.get("CompetencyText").asText()).isEqualTo("Can do X")
@@ -152,7 +155,8 @@ class CredentialEngineSyncTargetTest {
         @Suppress("UNCHECKED_CAST")
         val body = entitySlot.captured.body as String
         val json = objectMapper.readTree(body)
-        assertThat(json.get("Competency").get("PublicationStatusType").asText())
+        val competency = json.get("Competencies").get(0)
+        assertThat(competency.get("PublicationStatusType").asText())
             .isEqualTo("Deprecated")
     }
 

@@ -1,15 +1,16 @@
 # Credential Engine Sync
 
 OSMT can publish Rich Skill Descriptors (RSDs) and Collections to the Credential
-Engine Registry via the Registry Assistant API. This document describes the
-OSMT → Credential Engine translation mapping and how to use the feature.
+Engine Registry via the Registry Assistant API. See also [Implementation Notes (WGU)](2026-03-03-credential-engine-sync-implementation-notes.md) for WGU use-case mapping and API references.
+
+This document describes the OSMT → Credential Engine translation mapping and how to use the feature.
 
 ## OSMT → Credential Engine Translation
 
 ### Skill (RSD) → Competency
 
 | OSMT Field          | CE/CTDL Field           | Notes                           |
-|---------------------|-------------------------|---------------------------------|
+| ------------------- | ----------------------- | ------------------------------- |
 | `uuid`              | `CTID`                  | Prefixed as `ce-{uuid}`         |
 | `name`              | `CompetencyLabel`       | Skill name                      |
 | `statement`         | `CompetencyText`        | Skill statement                 |
@@ -25,7 +26,7 @@ OSMT → Credential Engine translation mapping and how to use the feature.
 ### Collection → Collection
 
 | OSMT Field    | CE/CTDL Field         | Notes                          |
-|---------------|-----------------------|--------------------------------|
+| ------------- | --------------------- | ------------------------------ |
 | `uuid`        | `CTID`                | Prefixed as `ce-{uuid}`        |
 | `name`        | `Name`                | Collection name                |
 | `description` | `Description`         | Collection description         |
@@ -40,6 +41,12 @@ OSMT → Credential Engine translation mapping and how to use the feature.
 - **Published collection** → `LifeCycleStatusType: "Active"`
 - **Archived collection** → Re-publish with `LifeCycleStatusType: "Ceased"`
 
+### API Documentation
+
+- **Registry Assistant Handbook**: <https://credreg.net/registry/assistant>
+- Competency Frameworks: <https://credreg.net/registry/assistant#publishcompetencyframework>
+- Publishing Competencies and Concepts: <https://credreg.net/registry/competencies>
+
 ### API Endpoints
 
 - Competency: `POST {registryUrl}/assistant/competency/publish`
@@ -53,11 +60,10 @@ OSMT → Credential Engine translation mapping and how to use the feature.
 ### Prerequisites
 
 1. **Environment variables** (required for live CE sync):
-
-    - `CREDENTIAL_ENGINE_API_KEY` – API key from Credential Engine
-    - `CREDENTIAL_ENGINE_ORG_CTID` – Your organization CTID (e.g. `ce-...`)
-    - `CREDENTIAL_ENGINE_REGISTRY_URL` – Registry URL (default:
-      `https://sandbox.credentialengine.org`)
+   - `CREDENTIAL_ENGINE_API_KEY` – API key from Credential Engine
+   - `CREDENTIAL_ENGINE_ORG_CTID` – Your organization CTID (e.g. `ce-...`)
+   - `CREDENTIAL_ENGINE_REGISTRY_URL` – Registry URL (default:
+     `https://sandbox.credentialengine.org`)
 
 2. **Admin role** – Sync endpoints and UI require `ROLE_Osmt_Admin`.
 
@@ -82,13 +88,25 @@ On 503 or “not configured,” the page shows instructions to set
 ### API Endpoints
 
 | Method | Path                          | Description                      |
-|--------|-------------------------------|----------------------------------|
+| ------ | ----------------------------- | -------------------------------- |
 | GET    | `/api/sync/state`             | List integrations and watermarks |
 | POST   | `/api/sync/skill/{uuid}`      | Sync one skill                   |
 | POST   | `/api/sync/collection/{uuid}` | Sync one collection              |
 | POST   | `/api/sync/all`               | Sync all (async, returns 202)    |
 
 All require admin authentication.
+
+### Test Script: Mock Skill Publish
+
+Before running a full sync, you can verify CE connectivity by publishing a
+single mock skill:
+
+```bash
+./bin/test-credential-engine-sync.sh
+```
+
+Uses the same `CREDENTIAL_ENGINE_*` env vars. Sources `api/osmt-dev-stack.env`
+and `api/osmt-staging.env` if present. Requires `curl` and `jq`.
 
 ### Sync Behavior
 

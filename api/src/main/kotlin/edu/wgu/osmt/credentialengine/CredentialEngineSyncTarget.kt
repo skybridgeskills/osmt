@@ -34,19 +34,9 @@ class CredentialEngineSyncTarget(
         val ctid = "$CTID_PREFIX${rsd.uuid}"
         val body =
             mapOf(
-                "Competency" to
-                    mapOf(
-                        "CTID" to ctid,
-                        "CompetencyText" to rsd.statement,
-                        "CompetencyLabel" to rsd.name,
-                        "Creator" to listOf(orgCtid),
-                        "Author" to (rsd.authors.firstOrNull()?.value ?: ""),
-                        "CompetencyCategory" to
-                            rsd.categories.mapNotNull { it.value }.take(10),
-                        "ConceptKeyword" to
-                            rsd.searchingKeywords.mapNotNull { it.value }.take(20),
-                        "PublicationStatusType" to "Published",
-                        "ExactAlignment" to listOf(rsd.canonicalUrl(appConfig.baseUrl)),
+                "Competencies" to
+                    listOf(
+                        buildSkillMap(rsd, ctid, "Published"),
                     ),
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
@@ -58,23 +48,47 @@ class CredentialEngineSyncTarget(
         val ctid = "$CTID_PREFIX${rsd.uuid}"
         val body =
             mapOf(
-                "Competency" to
-                    mapOf(
-                        "CTID" to ctid,
-                        "CompetencyText" to rsd.statement,
-                        "CompetencyLabel" to rsd.name,
-                        "Creator" to listOf(orgCtid),
-                        "Author" to (rsd.authors.firstOrNull()?.value ?: ""),
-                        "CompetencyCategory" to
-                            rsd.categories.mapNotNull { it.value }.take(10),
-                        "ConceptKeyword" to
-                            rsd.searchingKeywords.mapNotNull { it.value }.take(20),
-                        "PublicationStatusType" to "Deprecated",
+                "Competencies" to
+                    listOf(
+                        buildSkillMap(rsd, ctid, "Deprecated"),
                     ),
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
         return post("$baseUrl/competency/publish", body)
+    }
+
+    private fun buildSkillMap(
+        rsd: RichSkillDescriptor,
+        ctid: String,
+        status: String,
+    ): Map<String, Any> {
+        val map =
+            mutableMapOf<String, Any>(
+                "CTID" to ctid,
+                "CompetencyText" to rsd.statement,
+                "CompetencyLabel" to rsd.name,
+                "Creator" to listOf(orgCtid),
+                "ConceptKeyword" to
+                    rsd.searchingKeywords
+                        .mapNotNull { it.value }
+                        .take(20),
+                "PublicationStatusType" to status,
+            )
+        val author = rsd.authors.firstOrNull()?.value
+        if (!author.isNullOrBlank()) {
+            map["Author"] = author
+        }
+        val categories =
+            rsd.categories.mapNotNull { it.value }.take(10)
+        if (categories.isNotEmpty()) {
+            map["CompetencyCategory"] = categories
+        }
+        if (status != "Deprecated") {
+            map["ExactAlignment"] =
+                listOf(rsd.canonicalUrl(appConfig.baseUrl))
+        }
+        return map
     }
 
     override fun publishCollection(
