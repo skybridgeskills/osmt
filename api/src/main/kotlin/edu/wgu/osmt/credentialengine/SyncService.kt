@@ -336,7 +336,16 @@ class SyncService(
                     SyncRecordType.COLLECTION -> {
                         val colls = cursorFilteredBatch as List<CollectionDao>
                         val seen = mutableSetOf<String>()
-                        colls.filter { seen.add(it.uuid) }
+                        val deduped = colls.filter { seen.add(it.uuid) }
+                        if (deduped.size < colls.size) {
+                            log.warn(
+                                "[{}] Batch {} dropped {} duplicate collections",
+                                sessionCorrelationId,
+                                batchIndex,
+                                colls.size - deduped.size,
+                            )
+                        }
+                        deduped
                     }
 
                     else -> {

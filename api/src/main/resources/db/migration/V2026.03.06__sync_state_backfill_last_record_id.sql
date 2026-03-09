@@ -1,11 +1,11 @@
 USE osmt_db;
 
 -- Backfill last_record_id for sync state rows that have watermark but NULL last_record_id.
--- Uses max id among records with updateDate <= watermark so composite cursor works.
+-- Uses max id among records with updateDate = watermark (exact match) so we don't overshoot.
 UPDATE SyncState ss
 SET ss.last_record_id = (
     SELECT MAX(id) FROM RichSkillDescriptor
-    WHERE publishDate IS NOT NULL AND updateDate <= ss.sync_watermark
+    WHERE publishDate IS NOT NULL AND updateDate = ss.sync_watermark
 )
 WHERE ss.sync_type = 'credential-engine'
   AND ss.sync_key = 'default'
@@ -16,7 +16,7 @@ WHERE ss.sync_type = 'credential-engine'
 UPDATE SyncState ss
 SET ss.last_record_id = (
     SELECT MAX(id) FROM Collection
-    WHERE status IN ('Published', 'Archived') AND updateDate <= ss.sync_watermark
+    WHERE status IN ('Published', 'Archived') AND updateDate = ss.sync_watermark
 )
 WHERE ss.sync_type = 'credential-engine'
   AND ss.sync_key = 'default'

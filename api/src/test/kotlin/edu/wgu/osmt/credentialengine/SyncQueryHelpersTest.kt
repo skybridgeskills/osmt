@@ -147,4 +147,23 @@ class SyncQueryHelpersTest :
             countSkillsUpdatedSince(skill.updateDate, skill.id.value)
         assertThat(count).isEqualTo(0)
     }
+
+    @Test
+    fun `countSkillsUpdatedSince matches find count after partial sync`() {
+        repeat(5) { createPublishedSkill() }
+        val batch1 = findSkillsUpdatedSince(null, null, 3)
+        assertThat(batch1).hasSize(3)
+
+        val last =
+            batch1.maxWithOrNull(
+                compareBy<RichSkillDescriptorDao> { it.updateDate }
+                    .thenBy { it.id.value },
+            )!!
+        val remaining =
+            findSkillsUpdatedSince(last.updateDate, last.id.value, 100)
+        val count = countSkillsUpdatedSince(last.updateDate, last.id.value)
+        assertThat(count)
+            .describedAs("count should equal remaining find size")
+            .isEqualTo(remaining.size)
+    }
 }

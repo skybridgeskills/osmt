@@ -115,3 +115,10 @@ and `api/osmt-staging.env` if present. Requires `curl` and `jq`.
   each record.
 - **Watermarks:** Track last-synced timestamp per integration (syncKey +
   recordType) to support incremental sync.
+
+### Known Limitations
+
+- **Single-instance only:** The sync-all lock (`AtomicBoolean`) is in-process.
+  Running multiple API instances concurrently could start duplicate syncs.
+  If multi-instance deployment is needed, replace with a distributed lock
+  (e.g. database row lock or Redis).

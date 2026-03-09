@@ -12,16 +12,16 @@ import edu.wgu.osmt.richskill.RichSkillDescriptorDao
 import edu.wgu.osmt.richskill.RichSkillDescriptorTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 import java.sql.Timestamp
 import java.time.LocalDateTime
+
+private val log = LoggerFactory.getLogger("edu.wgu.osmt.credentialengine.SyncQueryHelpers")
 
 object SyncRecordType {
     const val SKILL = "skill"
@@ -64,8 +64,15 @@ private fun findSkillsUpdatedSinceRaw(
             }
         }
     if (ids.isEmpty()) return emptyList()
-    return ids.map {
-        RichSkillDescriptorDao.findById(EntityID(it, RichSkillDescriptorTable))!!
+    return ids.mapNotNull { id ->
+        RichSkillDescriptorDao
+            .findById(
+                EntityID(id, RichSkillDescriptorTable),
+            ).also { dao ->
+                if (dao == null) {
+                    log.warn("Skill id={} from cursor query missing on load", id)
+                }
+            }
     }
 }
 
@@ -105,11 +112,7 @@ fun findSkillsUpdatedSince(
         }
     }
 
-/**
- * Raw JDBC count; see findSkillsUpdatedSinceRaw.
- * Uses 1-second window around watermark for timestamp comparison to avoid overcounting
- * when DB stores higher precision (e.g. microseconds) than the persisted watermark.
- */
+/** Raw JDBC count; same predicate as findSkillsUpdatedSinceRaw. */
 private fun countSkillsUpdatedSinceRaw(
     watermarkDate: LocalDateTime,
     watermarkId: Long,
@@ -117,12 +120,7 @@ private fun countSkillsUpdatedSinceRaw(
     val sql =
         """
         SELECT COUNT(*) FROM RichSkillDescriptor
-        WHERE (
-          (updateDate > DATE_ADD(?, INTERVAL 1 SECOND))
-          OR
-          (updateDate BETWEEN DATE_SUB(?, INTERVAL 1 SECOND)
-            AND DATE_ADD(?, INTERVAL 1 SECOND) AND id > ?)
-        )
+        WHERE ((updateDate > ?) OR (updateDate = ? AND id > ?))
         AND (publishDate IS NOT NULL)
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
@@ -131,8 +129,7 @@ private fun countSkillsUpdatedSinceRaw(
         conn.prepareStatement(sql).use { ps ->
             ps.setTimestamp(1, ts)
             ps.setTimestamp(2, ts)
-            ps.setTimestamp(3, ts)
-            ps.setLong(4, watermarkId)
+            ps.setLong(3, watermarkId)
             ps.executeQuery().use { rs ->
                 if (rs.next()) rs.getInt(1) else 0
             }
@@ -167,11 +164,7 @@ fun countSkillsUpdatedSince(
         }
     }
 
-/**
- * Raw JDBC count; see findCollectionsUpdatedSinceRaw.
- * Uses 1-second window around watermark for timestamp comparison to avoid overcounting
- * when DB stores higher precision than the persisted watermark.
- */
+/** Raw JDBC count; same predicate as findCollectionsUpdatedSinceRaw. */
 private fun countCollectionsUpdatedSinceRaw(
     watermarkDate: LocalDateTime,
     watermarkId: Long,
@@ -179,12 +172,7 @@ private fun countCollectionsUpdatedSinceRaw(
     val sql =
         """
         SELECT COUNT(*) FROM Collection
-        WHERE (
-          (updateDate > DATE_ADD(?, INTERVAL 1 SECOND))
-          OR
-          (updateDate BETWEEN DATE_SUB(?, INTERVAL 1 SECOND)
-            AND DATE_ADD(?, INTERVAL 1 SECOND) AND id > ?)
-        )
+        WHERE ((updateDate > ?) OR (updateDate = ? AND id > ?))
         AND (status IN ('Published', 'Archived'))
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
@@ -193,8 +181,7 @@ private fun countCollectionsUpdatedSinceRaw(
         conn.prepareStatement(sql).use { ps ->
             ps.setTimestamp(1, ts)
             ps.setTimestamp(2, ts)
-            ps.setTimestamp(3, ts)
-            ps.setLong(4, watermarkId)
+            ps.setLong(3, watermarkId)
             ps.executeQuery().use { rs ->
                 if (rs.next()) rs.getInt(1) else 0
             }
@@ -265,8 +252,12 @@ private fun findCollectionsUpdatedSinceRaw(
             }
         }
     if (ids.isEmpty()) return emptyList()
-    return ids.map {
-        CollectionDao.findById(EntityID(it, CollectionTable))!!
+    return ids.mapNotNull { id ->
+        CollectionDao.findById(EntityID(id, CollectionTable)).also { dao ->
+            if (dao == null) {
+                log.warn("Collection id={} from cursor query missing on load", id)
+            }
+        }
     }
 }
 
