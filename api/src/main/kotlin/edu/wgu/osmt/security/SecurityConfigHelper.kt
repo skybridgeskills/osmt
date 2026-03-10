@@ -209,6 +209,9 @@ object SecurityConfigHelper {
                 // Workspace
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.WORKSPACE_PATH))
                 .hasAnyAuthority(admin, curator)
+                // Sync endpoints: admin-only (GET state, POST trigger/resync)
+                .requestMatchers("/api/sync/**")
+                .hasAnyAuthority(admin)
                 // Catch-all for other API endpoints
                 .requestMatchers("/api/**")
                 .hasAnyAuthority(admin, curator, view, read)
@@ -254,6 +257,9 @@ object SecurityConfigHelper {
                 // Collection delete is denied
                 .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
                 .denyAll()
+                // Sync endpoints: require authentication (ensureAdmin in controller)
+                .requestMatchers("/api/sync/**")
+                .authenticated()
                 // Fall-through: all other endpoints are public
                 .requestMatchers("/**")
                 .permitAll()

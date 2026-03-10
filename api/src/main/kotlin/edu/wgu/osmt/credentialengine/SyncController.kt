@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.server.ResponseStatusException
-import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 data class SyncStateResponse(
@@ -37,6 +37,10 @@ class SyncController
         private val oAuthHelper: OAuthHelper,
     ) {
         private val syncInProgress = AtomicBoolean(false)
+        private val syncExecutor =
+            Executors.newSingleThreadExecutor { r ->
+                Thread(r, "ce-sync").apply { isDaemon = true }
+            }
 
         private fun ensureAdmin() {
             if (!oAuthHelper.hasRole(appConfig.roleAdmin)) {
@@ -157,10 +161,10 @@ class SyncController
                     "Sync already in progress",
                 )
             }
-            syncService.markSyncInProgress("default")
-            ForkJoinPool.commonPool().submit {
+            val correlationId = syncService.markSyncInProgress("default")
+            syncExecutor.submit {
                 try {
-                    syncService.syncAllSinceWatermark()
+                    syncService.syncAllSinceWatermark("default", correlationId)
                 } finally {
                     syncInProgress.set(false)
                 }
@@ -181,10 +185,10 @@ class SyncController
                     "Sync already in progress",
                 )
             }
-            syncService.markSyncInProgress("default")
-            ForkJoinPool.commonPool().submit {
+            val correlationId = syncService.markSyncInProgress("default")
+            syncExecutor.submit {
                 try {
-                    syncService.resyncAll()
+                    syncService.resyncAll("default", correlationId)
                 } finally {
                     syncInProgress.set(false)
                 }
