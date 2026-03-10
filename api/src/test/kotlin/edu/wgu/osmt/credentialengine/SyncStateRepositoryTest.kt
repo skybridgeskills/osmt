@@ -26,7 +26,7 @@ class SyncStateRepositoryTest : SpringTest() {
     @Test
     fun `updateWatermark and getWatermark`() {
         syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
-        val now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+        val now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)
         syncStateRepository.updateWatermark(
             "credential-engine",
             "default",
@@ -41,6 +41,26 @@ class SyncStateRepositoryTest : SpringTest() {
             )
         assertThat(w).isNotNull
         assertThat(w).isEqualTo(now)
+    }
+
+    @Test
+    fun `updateWatermark preserves microsecond precision`() {
+        syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
+        val withMicros = LocalDateTime.of(2023, 3, 30, 14, 25, 2, 64_441_000)
+        syncStateRepository.updateWatermark(
+            "credential-engine",
+            "default",
+            "skill",
+            withMicros,
+            780L,
+        )
+        val w =
+            syncStateRepository.getWatermark(
+                "credential-engine",
+                "default",
+                "skill",
+            )
+        assertThat(w).isEqualTo(withMicros)
     }
 
     @Test
@@ -144,7 +164,7 @@ class SyncStateRepositoryTest : SpringTest() {
     @Test
     fun `resetWatermark clears watermark and lastRecordId`() {
         syncStateRepository.getOrCreateRow("credential-engine", "default", "skill")
-        val now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+        val now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)
         syncStateRepository.updateWatermark(
             "credential-engine",
             "default",

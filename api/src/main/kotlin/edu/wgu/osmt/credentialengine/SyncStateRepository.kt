@@ -4,10 +4,12 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Repository
 @Transactional
@@ -38,6 +40,11 @@ class SyncStateRepository {
             }.firstOrNull()
             ?.get(SyncStateTable.lastRecordId)
 
+    /**
+     * Raw JDBC write to preserve DATETIME(6) microsecond precision.
+     * Exposed's datetime() column type truncates to milliseconds via setObject/setTimestamp,
+     * but the actual MySQL column and the record updateDate columns store microseconds.
+     */
     fun updateWatermark(
         syncType: String,
         syncKey: String,
@@ -45,13 +52,21 @@ class SyncStateRepository {
         watermark: LocalDateTime,
         lastRecordId: Long? = null,
     ) {
-        SyncStateTable.update({
-            (SyncStateTable.syncType eq syncType) and
-                (SyncStateTable.syncKey eq syncKey) and
-                (SyncStateTable.recordType eq recordType)
-        }) {
-            it[SyncStateTable.syncWatermark] = watermark
-            it[SyncStateTable.lastRecordId] = lastRecordId
+        val sql =
+            """
+            UPDATE SyncState
+            SET sync_watermark = ?, last_record_id = ?
+            WHERE sync_type = ? AND sync_key = ? AND record_type = ?
+            """.trimIndent()
+        val formatted = watermark.format(DATETIME6_FORMATTER)
+        val conn = TransactionManager.current().connection.connection as java.sql.Connection
+        conn.prepareStatement(sql).use { ps ->
+            ps.setString(1, formatted)
+            if (lastRecordId != null) ps.setLong(2, lastRecordId) else ps.setNull(2, java.sql.Types.BIGINT)
+            ps.setString(3, syncType)
+            ps.setString(4, syncKey)
+            ps.setString(5, recordType)
+            ps.executeUpdate()
         }
     }
 
@@ -131,6 +146,11 @@ class SyncStateRepository {
             }
             SyncState(syncType, syncKey, recordType, null, null, null)
         }
+    }
+
+    companion object {
+        private val DATETIME6_FORMATTER: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
     }
 
     fun findAllBySyncKey(
