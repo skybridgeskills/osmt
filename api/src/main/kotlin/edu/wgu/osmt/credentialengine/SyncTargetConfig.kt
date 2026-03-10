@@ -17,6 +17,11 @@ class SyncTargetConfig {
     fun credentialEngineRestTemplate(): RestTemplate = RestTemplate()
 
     @Bean
+    fun ctidGenerator(
+        @Value("\${credential-engine.org-ctid:}") orgCtid: String,
+    ): CtidGenerator? = if (orgCtid.isNotBlank()) CtidGenerator(orgCtid) else null
+
+    @Bean
     fun syncTarget(
         @Value("\${credential-engine.api-key:}") apiKey: String,
         @Value("\${credential-engine.org-ctid:}") orgCtid: String,
@@ -26,6 +31,7 @@ class SyncTargetConfig {
         credentialEngineRestTemplate: RestTemplate,
         objectMapper: ObjectMapper,
         environment: Environment,
+        ctidGenerator: CtidGenerator?,
     ): SyncTarget? {
         val profiles = environment.activeProfiles.toList()
         return when {
@@ -38,6 +44,7 @@ class SyncTargetConfig {
                     appConfig = appConfig,
                     restTemplate = credentialEngineRestTemplate,
                     objectMapper = objectMapper,
+                    ctidGenerator = ctidGenerator!!,
                 )
             }
 

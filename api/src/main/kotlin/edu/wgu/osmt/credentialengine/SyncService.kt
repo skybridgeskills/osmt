@@ -16,7 +16,6 @@ import java.util.Optional
 
 private const val SYNC_TYPE = "credential-engine"
 private const val SYNC_KEY_DEFAULT = "default"
-private const val CTID_PREFIX = "ce-"
 private const val MDC_CORRELATION_ID = "syncCorrelationId"
 
 private val log = LoggerFactory.getLogger(SyncService::class.java)
@@ -25,6 +24,7 @@ private val log = LoggerFactory.getLogger(SyncService::class.java)
 @Transactional
 class SyncService(
     private val syncTargetOpt: Optional<SyncTarget>,
+    private val ctidGeneratorOpt: Optional<CtidGenerator>,
     private val syncStateRepository: SyncStateRepository,
     private val richSkillRepository: RichSkillRepository,
     private val collectionRepository: CollectionRepository,
@@ -94,7 +94,11 @@ class SyncService(
     }
 
     private fun skillCtids(collectionDao: CollectionDao): List<String> =
-        collectionDao.skills.map { "$CTID_PREFIX${it.uuid}" }
+        collectionDao.skills.map {
+            ctidGeneratorOpt
+                .map { g -> g.generate(it.uuid) }
+                .orElse("ce-${it.uuid}")
+        }
 
     /**
      * Marks both skill and collection integrations as in progress immediately.

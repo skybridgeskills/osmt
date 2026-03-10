@@ -11,7 +11,7 @@ This document describes the OSMT → Credential Engine translation mapping and h
 
 | OSMT Field          | CE/CTDL Field           | Notes                           |
 | ------------------- | ----------------------- | ------------------------------- |
-| `uuid`              | `CTID`                  | Prefixed as `ce-{uuid}`         |
+| `uuid`              | `CTID`                  | Hash-based; see [CTID Generation](#ctid-generation) |
 | `name`              | `CompetencyLabel`       | Skill name                      |
 | `statement`         | `CompetencyText`        | Skill statement                 |
 | (org CTID)          | `Creator`               | List with org CTID from config  |
@@ -27,12 +27,27 @@ This document describes the OSMT → Credential Engine translation mapping and h
 
 | OSMT Field    | CE/CTDL Field         | Notes                          |
 | ------------- | --------------------- | ------------------------------ |
-| `uuid`        | `CTID`                | Prefixed as `ce-{uuid}`        |
+| `uuid`        | `CTID`                | Hash-based; see [CTID Generation](#ctid-generation) |
 | `name`        | `Name`                | Collection name                |
 | `description` | `Description`         | Collection description         |
-| (derived)     | `HasMember`           | Skill CTIDs (`ce-{skillUuid}`) |
+| (derived)     | `HasMember`           | Skill CTIDs (hash-based)        |
 | (org CTID)    | `OwnedBy`             | List with org CTID from config |
 | (status)      | `LifeCycleStatusType` | `"Active"` or `"Ceased"`       |
+
+### CTID Generation
+
+CTIDs are deterministically derived using UUIDv5 (RFC 4122, SHA-1):
+
+    CTID = "ce-" + UUIDv5(namespaceUuid, entityUuid)
+
+Where `namespaceUuid = UUIDv5(OSMT_NAMESPACE, credential-engine.org-ctid)`.
+This ensures:
+
+- **Determinism:** Same record always produces the same CTID.
+- **Deployment isolation:** Different `credential-engine.org-ctid` values
+  produce different CTIDs, preventing collisions across instances.
+- **Reverse correlation:** Skills include `ExactAlignment` with the OSMT URL
+  containing the original UUID.
 
 ### Status and Deprecation
 

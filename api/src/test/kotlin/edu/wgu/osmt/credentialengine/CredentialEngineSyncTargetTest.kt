@@ -62,6 +62,7 @@ class CredentialEngineSyncTargetTest {
 
     private lateinit var restTemplate: RestTemplate
     private lateinit var target: CredentialEngineSyncTarget
+    private val ctidGenerator = CtidGenerator(orgCtid)
 
     @BeforeEach
     fun setUp() {
@@ -74,6 +75,7 @@ class CredentialEngineSyncTargetTest {
                 appConfig = appConfig,
                 restTemplate = restTemplate,
                 objectMapper = objectMapper,
+                ctidGenerator = ctidGenerator,
             )
     }
 
@@ -116,7 +118,8 @@ class CredentialEngineSyncTargetTest {
         assertThat(competencies.isArray).isTrue()
         assertThat(competencies.size()).isEqualTo(1)
         val competency = competencies.get(0)
-        assertThat(competency.get("CTID").asText()).isEqualTo("ce-$skillUuid")
+        assertThat(competency.get("CTID").asText())
+            .isEqualTo(ctidGenerator.generate(skillUuid))
         assertThat(competency.get("CompetencyLabel").asText()).isEqualTo("Test Skill")
         assertThat(competency.get("CompetencyText").asText()).isEqualTo("Can do X")
         assertThat(competency.get("PublicationStatusType").asText()).isEqualTo("Published")
@@ -190,7 +193,8 @@ class CredentialEngineSyncTargetTest {
         val body = entitySlot.captured.body as String
         val json = objectMapper.readTree(body)
         val coll = json.get("Collection")
-        assertThat(coll.get("CTID").asText()).isEqualTo("ce-$collUuid")
+        assertThat(coll.get("CTID").asText())
+            .isEqualTo(ctidGenerator.generate(collUuid))
         assertThat(coll.get("Name").asText()).isEqualTo("Test Collection")
         assertThat(coll.get("Description").asText()).isEqualTo("Desc")
         assertThat(coll.get("HasMember").get(0).asText()).isEqualTo("ce-s1")

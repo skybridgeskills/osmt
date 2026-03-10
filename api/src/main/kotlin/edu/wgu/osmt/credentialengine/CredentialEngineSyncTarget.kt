@@ -22,16 +22,13 @@ class CredentialEngineSyncTarget(
     private val appConfig: AppConfig,
     private val restTemplate: RestTemplate,
     private val objectMapper: ObjectMapper,
+    private val ctidGenerator: CtidGenerator,
 ) : SyncTarget {
-    companion object {
-        private const val CTID_PREFIX = "ce-"
-    }
-
     private val logger = LoggerFactory.getLogger(CredentialEngineSyncTarget::class.java)
     private val baseUrl = registryUrl.trimEnd('/') + "/assistant"
 
     override fun publishSkill(rsd: RichSkillDescriptor): Result<Unit> {
-        val ctid = "$CTID_PREFIX${rsd.uuid}"
+        val ctid = ctidGenerator.generate(rsd.uuid)
         val body =
             mapOf(
                 "Competencies" to
@@ -45,7 +42,7 @@ class CredentialEngineSyncTarget(
     }
 
     override fun deprecateSkill(rsd: RichSkillDescriptor): Result<Unit> {
-        val ctid = "$CTID_PREFIX${rsd.uuid}"
+        val ctid = ctidGenerator.generate(rsd.uuid)
         val body =
             mapOf(
                 "Competencies" to
@@ -95,7 +92,7 @@ class CredentialEngineSyncTarget(
         collection: Collection,
         skillCtids: List<String>,
     ): Result<Unit> {
-        val ctid = "$CTID_PREFIX${collection.uuid}"
+        val ctid = ctidGenerator.generate(collection.uuid)
         val body =
             mapOf(
                 "Collection" to
@@ -114,7 +111,7 @@ class CredentialEngineSyncTarget(
     }
 
     override fun deprecateCollection(collection: Collection): Result<Unit> {
-        val ctid = "$CTID_PREFIX${collection.uuid}"
+        val ctid = ctidGenerator.generate(collection.uuid)
         val body =
             mapOf(
                 "Collection" to
