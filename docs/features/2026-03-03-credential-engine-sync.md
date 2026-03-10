@@ -3,7 +3,187 @@
 OSMT can publish Rich Skill Descriptors (RSDs) and Collections to the Credential
 Engine Registry via the Registry Assistant API. See also [Implementation Notes (WGU)](2026-03-03-credential-engine-sync-implementation-notes.md) for WGU use-case mapping and API references.
 
-This document describes the OSMT → Credential Engine translation mapping and how to use the feature.
+---
+
+## Setup
+
+### Required Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CREDENTIAL_ENGINE_API_KEY` | Yes | _(empty — disables sync)_ | API key from Credential Engine |
+| `CREDENTIAL_ENGINE_ORG_CTID` | Yes | _(empty — disables sync)_ | Your organization CTID (e.g. `ce-12345678-...`) |
+| `CREDENTIAL_ENGINE_REGISTRY_URL` | No | `https://sandbox.credentialengine.org` | Registry base URL. Use `https://credentialengine.org` for production |
+
+Both `CREDENTIAL_ENGINE_API_KEY` and `CREDENTIAL_ENGINE_ORG_CTID` must be
+non-empty to enable live sync. When either is empty, sync is disabled and the
+API returns `503 Service Unavailable`.
+
+### Optional Tuning Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CREDENTIAL_ENGINE_SYNC_BATCH_SIZE` | `20` | Records fetched per batch |
+| `CREDENTIAL_ENGINE_SYNC_RETRY_ATTEMPTS` | `5` | Retries per record on failure (capped at 10) |
+| `CREDENTIAL_ENGINE_SYNC_RETRY_INITIAL_DELAY_MS` | `5000` | First retry delay in ms |
+| `CREDENTIAL_ENGINE_SYNC_RETRY_DELAY_MULTIPLIER` | `1.5` | Exponential backoff multiplier (delay capped at 60s) |
+
+### Target Selection
+
+| Condition | Sync target | Behavior |
+|-----------|-------------|----------|
+| API key + org CTID both set | `CredentialEngineSyncTarget` | Publishes to CE Registry via HTTP |
+| Empty, `dev` or `single-auth` profile active | `MockSyncTarget` | Logs sync calls, no HTTP |
+| Empty, other profiles | Disabled | 503 from all sync endpoints |
+
+### Database Migrations
+
+Flyway runs automatically on startup. The sync feature adds these migrations:
+
+- `V2026.03.02__sync_state.sql` — creates `SyncState` table
+- `V2026.03.04__sync_state_status_json.sql` — adds `status_json` column
+- `V2026.03.05__sync_state_last_record_id.sql` — adds `last_record_id` column
+- `V2026.03.06__sync_state_backfill_last_record_id.sql` — backfills existing rows
+- `V2026.03.09__sync_cursor_indexes.sql` — composite indexes on
+  `RichSkillDescriptor(updateDate, id)` and `Collection(updateDate, id)`
+
+No manual migration steps are needed — deploy the new version and Flyway
+handles it.
+
+### Authentication
+
+Sync endpoints require the admin role (`osmt.security.role.admin`, default
+`ROLE_Osmt_Admin`). Enforced at two levels:
+
+1. **Spring Security** — `/api/sync/**` requires admin authority (roles mode)
+   or authentication (no-roles mode)
+2. **Controller** — `ensureAdmin()` check against `appConfig.roleAdmin`
+
+---
+
+## API Endpoints
+
+All endpoints are under `/api/sync`. All require admin authentication.
+
+| Method | Path | Response | Description |
+|--------|------|----------|-------------|
+| GET | `/api/sync/state` | 200 JSON | Current sync state, watermarks, pending counts |
+| POST | `/api/sync/all` | 202 text | Start incremental sync (async) |
+| POST | `/api/sync/resync` | 202 text | Clear watermarks and resync everything (async) |
+| POST | `/api/sync/skill/{uuid}` | 200 | Sync a single skill (synchronous) |
+| POST | `/api/sync/collection/{uuid}` | 200 | Sync a single collection (synchronous) |
+
+### Error Responses
+
+| Status | Meaning |
+|--------|---------|
+| 401 | Not authenticated or missing admin role |
+| 404 | Skill/collection UUID not found (single-record endpoints) |
+| 409 | Sync already in progress (sync-all / resync endpoints) |
+| 503 | Sync not configured (CE env vars not set) |
+
+### `GET /api/sync/state` Response Shape
+
+```json
+{
+  "integrations": [
+    {
+      "syncKey": "default",
+      "recordType": "skill",
+      "syncWatermark": "2026-03-10T14:30:00.064441",
+      "pendingCount": 0,
+      "statusJson": "{\"inProgress\":false,\"batchesCompleted\":3,\"sessionCorrelationId\":\"abc123xyz0\",\"lastUpdatedAt\":\"2026-03-10T14:30:05\"}"
+    },
+    {
+      "syncKey": "default",
+      "recordType": "collection",
+      "syncWatermark": "2026-03-10T14:30:01.123456",
+      "pendingCount": 2,
+      "statusJson": null
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `syncKey` | string | Integration key (currently always `"default"`) |
+| `recordType` | string | `"skill"` or `"collection"` |
+| `syncWatermark` | string or null | ISO timestamp of last successfully synced record; null if never synced |
+| `pendingCount` | int or null | Records not yet synced; null while sync is in progress |
+| `statusJson` | string or null | JSON string with job status (see below) |
+
+**`statusJson` fields** (when parsed):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `inProgress` | boolean | `true` while sync is running |
+| `batchesCompleted` | int | Number of batches processed |
+| `sessionCorrelationId` | string | Correlation ID for searching application logs |
+| `lastUpdatedAt` | string | ISO timestamp of last status update |
+| `error` | object or null | Error details if sync failed |
+| `error.message` | string | Error description |
+| `error.correlationId` | string | Error-specific correlation ID |
+| `error.recordUuid` | string | UUID of the record that failed |
+| `error.recordName` | string | Name of the record that failed |
+
+---
+
+## UI: Admin Sync Page
+
+Navigate to `/admin/sync` (also linked from the admin nav as **Sync**).
+
+The page shows:
+- **Summary banner** — up-to-date, pending count, in progress, or error
+- **Details table** — per-integration watermarks, pending counts, status, and
+  correlation IDs (click to copy)
+
+**Actions:**
+
+- **Sync New Changes** — incremental sync of records modified since the last
+  watermark.
+- **Resync All** — clears all watermarks and re-publishes every published
+  skill and collection from scratch. Use for recovery after errors or bulk
+  changes. Can take a long time on large datasets.
+
+**Auto-refresh:** when sync is in progress, enable the auto-refresh checkbox
+to poll every 5 seconds until completion (auto-stops after 1 hour).
+
+---
+
+## Test Script
+
+Verify CE connectivity before running a full sync:
+
+```bash
+./bin/test-credential-engine-sync.sh
+```
+
+Sources `api/osmt-dev-stack.env` and `api/osmt-staging.env` if present.
+Requires `curl` and `jq`.
+
+---
+
+## Sync Behavior
+
+- **Incremental sync** (`POST /api/sync/all`): processes skills first (so
+  collection `HasMember` CTIDs are valid), then collections. Advances the
+  watermark after each successfully published record.
+- **Resync** (`POST /api/sync/resync`): clears watermarks for both record
+  types, then runs a full incremental sync from the beginning.
+- **Single-record sync** (`POST /api/sync/skill/{uuid}` or
+  `.../collection/{uuid}`): publishes or deprecates one record synchronously.
+  Does not update watermarks.
+- **Async execution**: sync-all and resync run on a dedicated background thread
+  (`ce-sync`). The API returns 202 immediately. Poll `GET /api/sync/state` to
+  track progress.
+- **Retry**: each record publish is retried with exponential backoff on failure.
+  A batch aborts on the first record that exhausts all retries; the error
+  is recorded in `statusJson`.
+- **Watermarks**: composite cursor `(updateDate, lastRecordId)` for
+  deterministic pagination. Incremental sync skips already-synced records.
+
+---
 
 ## OSMT → Credential Engine Translation
 
@@ -20,8 +200,6 @@ This document describes the OSMT → Credential Engine translation mapping and h
 | `searchingKeywords` | `ConceptKeyword`        | Keyword values, max 20          |
 | (status)            | `PublicationStatusType` | `"Published"` or `"Deprecated"` |
 | canonical URL       | `ExactAlignment`        | `{baseUrl}/api/skills/{uuid}`   |
-
-**Not yet mapped:** Job codes (SOC/ONET) → `OccupationType`/`CredentialAlignmentObject`
 
 ### Collection → Collection
 
@@ -56,84 +234,25 @@ This ensures:
 - **Published collection** → `LifeCycleStatusType: "Active"`
 - **Archived collection** → Re-publish with `LifeCycleStatusType: "Ceased"`
 
-### API Documentation
+### CE Registry Assistant API
 
-- **Registry Assistant Handbook**: <https://credreg.net/registry/assistant>
-- Competency Frameworks: <https://credreg.net/registry/assistant#publishcompetencyframework>
-- Publishing Competencies and Concepts: <https://credreg.net/registry/competencies>
-
-### API Endpoints
-
-- Competency: `POST {registryUrl}/assistant/competency/publish`
-- Collection: `POST {registryUrl}/assistant/Collection/publish`
-- Auth: `Authorization: ApiToken {apiKey}`
+- **Handbook**: <https://credreg.net/registry/assistant>
+- **Competencies**: <https://credreg.net/registry/competencies>
+- Competency endpoint: `POST {registryUrl}/assistant/competency/publish`
+- Collection endpoint: `POST {registryUrl}/assistant/Collection/publish`
+- Auth header: `Authorization: ApiToken {apiKey}`
 
 ---
 
-## How to Use
+## Known Limitations
 
-### Prerequisites
-
-1. **Environment variables** (required for live CE sync):
-   - `CREDENTIAL_ENGINE_API_KEY` – API key from Credential Engine
-   - `CREDENTIAL_ENGINE_ORG_CTID` – Your organization CTID (e.g. `ce-...`)
-   - `CREDENTIAL_ENGINE_REGISTRY_URL` – Registry URL (default:
-     `https://sandbox.credentialengine.org`)
-
-2. **Admin role** – Sync endpoints and UI require `ROLE_Osmt_Admin`.
-
-### Configuration
-
-When API key and org CTID are set, OSMT uses `CredentialEngineSyncTarget` and
-publishes to the configured registry. When both are empty:
-
-- **Dev profile:** `MockSyncTarget` – records sync locally, no HTTP calls
-- **Other profiles:** Sync disabled (503 from sync endpoints)
-
-### UI: Admin Sync Page
-
-1. Log in as an admin.
-2. Open **Sync** in the nav (or `/admin/sync`).
-3. View integrations table (sync keys, record types, watermarks).
-4. Click **Sync Now** to run incremental sync for all records since last watermark.
-
-On 503 or “not configured,” the page shows instructions to set
-`CREDENTIAL_ENGINE_*` environment variables.
-
-### API Endpoints
-
-| Method | Path                          | Description                      |
-| ------ | ----------------------------- | -------------------------------- |
-| GET    | `/api/sync/state`             | List integrations and watermarks |
-| POST   | `/api/sync/skill/{uuid}`      | Sync one skill                   |
-| POST   | `/api/sync/collection/{uuid}` | Sync one collection              |
-| POST   | `/api/sync/all`               | Sync all (async, returns 202)    |
-
-All require admin authentication.
-
-### Test Script: Mock Skill Publish
-
-Before running a full sync, you can verify CE connectivity by publishing a
-single mock skill:
-
-```bash
-./bin/test-credential-engine-sync.sh
-```
-
-Uses the same `CREDENTIAL_ENGINE_*` env vars. Sources `api/osmt-dev-stack.env`
-and `api/osmt-staging.env` if present. Requires `curl` and `jq`.
-
-### Sync Behavior
-
-- **Single sync:** Publishes or deprecates based on RSD/Collection status.
-- **Sync all:** Runs skills first, then collections; updates watermarks after
-  each record.
-- **Watermarks:** Track last-synced timestamp per integration (syncKey +
-  recordType) to support incremental sync.
-
-### Known Limitations
-
-- **Single-instance only:** The sync-all lock (`AtomicBoolean`) is in-process.
-  Running multiple API instances concurrently could start duplicate syncs.
-  If multi-instance deployment is needed, replace with a distributed lock
-  (e.g. database row lock or Redis).
+- **Single-instance only:** The sync-in-progress guard (`AtomicBoolean`) is
+  in-process. Running multiple API instances could start duplicate syncs.
+  For multi-instance deployment, add a distributed lock (database row lock
+  or Redis).
+- **Stale skill list on collections:** Collection sync reads the current skill
+  membership at sync time. If skills were added/removed between the
+  collection's modification and its sync, the published `HasMember` list may
+  differ from the state at modification time.
+- **No job code mapping:** SOC/O*NET job codes are not yet mapped to CE
+  `OccupationType` / `CredentialAlignmentObject`.
