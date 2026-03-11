@@ -83,6 +83,15 @@
             My Workspace
           </a>
         </li>
+        <li *ngIf="canSyncManage" id="li-sync">
+          <a
+            class="m-navItem"
+            [class.m-navItem-is-active]="syncActive"
+            routerLink="/admin/sync"
+          >
+            Sync
+          </a>
+        </li>
         <li>
           <a
             class="m-iconInteractive m-iconInteractive-onDark"

@@ -1,3 +1,8 @@
+/* Tailwind CSS - design tokens ported from WGU pattern library */
+/* Skip @tailwind base to avoid preflight conflicting with pattern lib during migration */
+@tailwind components;
+@tailwind utilities;
+
 /* You can add global styles to this file, and also import other style files */
 .disabled-content {
   pointer-events: none;
