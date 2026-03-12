@@ -48,9 +48,11 @@ private fun findSkillsUpdatedSinceRaw(
         LIMIT ?
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
-    val ids =
-        transaction {
-            val conn = TransactionManager.current().connection.connection as java.sql.Connection
+    return transaction {
+        val conn =
+            TransactionManager.current().connection.connection
+                as java.sql.Connection
+        val ids =
             conn.prepareStatement(sql).use { ps ->
                 ps.setTimestamp(1, ts)
                 ps.setTimestamp(2, ts)
@@ -62,17 +64,20 @@ private fun findSkillsUpdatedSinceRaw(
                     list
                 }
             }
-        }
-    if (ids.isEmpty()) return emptyList()
-    return ids.mapNotNull { id ->
-        RichSkillDescriptorDao
-            .findById(
-                EntityID(id, RichSkillDescriptorTable),
-            ).also { dao ->
-                if (dao == null) {
-                    log.warn("Skill id={} from cursor query missing on load", id)
+        if (ids.isEmpty()) return@transaction emptyList()
+        ids.mapNotNull { id ->
+            RichSkillDescriptorDao
+                .findById(
+                    EntityID(id, RichSkillDescriptorTable),
+                ).also { dao ->
+                    if (dao == null) {
+                        log.warn(
+                            "Skill id={} from cursor query missing on load",
+                            id,
+                        )
+                    }
                 }
-            }
+        }
     }
 }
 
@@ -88,27 +93,35 @@ fun findSkillsUpdatedSince(
         }
 
         else -> {
-            RichSkillDescriptorDao
-                .wrapRows(
-                    when {
-                        watermarkDate == null -> {
-                            RichSkillDescriptorTable.select {
-                                RichSkillDescriptorTable.publishDate.isNotNull()
+            transaction {
+                RichSkillDescriptorDao
+                    .wrapRows(
+                        when {
+                            watermarkDate == null -> {
+                                RichSkillDescriptorTable.select {
+                                    RichSkillDescriptorTable.publishDate
+                                        .isNotNull()
+                                }
                             }
-                        }
 
-                        else -> {
-                            RichSkillDescriptorTable.select {
-                                (RichSkillDescriptorTable.updateDate greater watermarkDate) and
-                                    RichSkillDescriptorTable.publishDate.isNotNull()
+                            else -> {
+                                RichSkillDescriptorTable.select {
+                                    (
+                                        RichSkillDescriptorTable.updateDate
+                                            greater watermarkDate
+                                    ) and
+                                        RichSkillDescriptorTable.publishDate
+                                            .isNotNull()
+                                }
                             }
-                        }
-                    }.orderBy(
-                        RichSkillDescriptorTable.updateDate to SortOrder.ASC,
-                        RichSkillDescriptorTable.id to SortOrder.ASC,
-                    ),
-                ).limit(limit, 0)
-                .toList()
+                        }.orderBy(
+                            RichSkillDescriptorTable.updateDate
+                                to SortOrder.ASC,
+                            RichSkillDescriptorTable.id to SortOrder.ASC,
+                        ),
+                    ).limit(limit, 0)
+                    .toList()
+            }
         }
     }
 
@@ -236,9 +249,11 @@ private fun findCollectionsUpdatedSinceRaw(
         LIMIT ?
         """.trimIndent()
     val ts = Timestamp.valueOf(watermarkDate)
-    val ids =
-        transaction {
-            val conn = TransactionManager.current().connection.connection as java.sql.Connection
+    return transaction {
+        val conn =
+            TransactionManager.current().connection.connection
+                as java.sql.Connection
+        val ids =
             conn.prepareStatement(sql).use { ps ->
                 ps.setTimestamp(1, ts)
                 ps.setTimestamp(2, ts)
@@ -250,13 +265,19 @@ private fun findCollectionsUpdatedSinceRaw(
                     list
                 }
             }
-        }
-    if (ids.isEmpty()) return emptyList()
-    return ids.mapNotNull { id ->
-        CollectionDao.findById(EntityID(id, CollectionTable)).also { dao ->
-            if (dao == null) {
-                log.warn("Collection id={} from cursor query missing on load", id)
-            }
+        if (ids.isEmpty()) return@transaction emptyList()
+        ids.mapNotNull { id ->
+            CollectionDao
+                .findById(EntityID(id, CollectionTable))
+                .also { dao ->
+                    if (dao == null) {
+                        log.warn(
+                            "Collection id={} from cursor query" +
+                                " missing on load",
+                            id,
+                        )
+                    }
+                }
         }
     }
 }
@@ -272,30 +293,41 @@ fun findCollectionsUpdatedSince(
         }
 
         else -> {
-            CollectionDao
-                .wrapRows(
-                    when {
-                        watermarkDate == null -> {
-                            CollectionTable.select {
-                                CollectionTable.status inList
-                                    listOf(PublishStatus.Published, PublishStatus.Archived)
+            transaction {
+                CollectionDao
+                    .wrapRows(
+                        when {
+                            watermarkDate == null -> {
+                                CollectionTable.select {
+                                    CollectionTable.status inList
+                                        listOf(
+                                            PublishStatus.Published,
+                                            PublishStatus.Archived,
+                                        )
+                                }
                             }
-                        }
 
-                        else -> {
-                            CollectionTable.select {
-                                (CollectionTable.updateDate greater watermarkDate) and
+                            else -> {
+                                CollectionTable.select {
                                     (
-                                        CollectionTable.status inList
-                                            listOf(PublishStatus.Published, PublishStatus.Archived)
-                                    )
+                                        CollectionTable.updateDate
+                                            greater watermarkDate
+                                    ) and
+                                        (
+                                            CollectionTable.status inList
+                                                listOf(
+                                                    PublishStatus.Published,
+                                                    PublishStatus.Archived,
+                                                )
+                                        )
+                                }
                             }
-                        }
-                    }.orderBy(
-                        CollectionTable.updateDate to SortOrder.ASC,
-                        CollectionTable.id to SortOrder.ASC,
-                    ),
-                ).limit(limit, 0)
-                .toList()
+                        }.orderBy(
+                            CollectionTable.updateDate to SortOrder.ASC,
+                            CollectionTable.id to SortOrder.ASC,
+                        ),
+                    ).limit(limit, 0)
+                    .toList()
+            }
         }
     }
