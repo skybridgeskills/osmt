@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.web.client.RestTemplate
 
 @Configuration
@@ -14,7 +15,14 @@ class SyncTargetConfig {
     private val log = LoggerFactory.getLogger(SyncTargetConfig::class.java)
 
     @Bean
-    fun credentialEngineRestTemplate(): RestTemplate = RestTemplate()
+    fun credentialEngineRestTemplate(): RestTemplate {
+        val factory =
+            SimpleClientHttpRequestFactory().apply {
+                setConnectTimeout(30_000)
+                setReadTimeout(60_000)
+            }
+        return RestTemplate(factory)
+    }
 
     @Bean
     fun ctidGenerator(
