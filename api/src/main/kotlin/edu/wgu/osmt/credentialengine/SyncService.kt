@@ -5,7 +5,6 @@ import edu.wgu.osmt.collection.CollectionRepository
 import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.richskill.RichSkillDescriptorDao
 import edu.wgu.osmt.richskill.RichSkillRepository
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
@@ -531,7 +530,7 @@ class SyncService(
         target: SyncTarget,
         dao: RichSkillDescriptorDao,
     ): Result<Unit> {
-        val rsd = transaction { dao.toModel() }
+        val rsd = dao.toModel()
         return syncRetryHelper.withRetry(
             retryAttempts,
             retryInitialDelayMs,
@@ -549,8 +548,7 @@ class SyncService(
         target: SyncTarget,
         dao: CollectionDao,
     ): Result<Unit> {
-        val (collection, ctids) =
-            transaction { dao.toModel() to skillCtids(dao) }
+        val collection = dao.toModel()
         return syncRetryHelper.withRetry(
             retryAttempts,
             retryInitialDelayMs,
@@ -558,7 +556,7 @@ class SyncService(
         ) {
             when (collection.status) {
                 PublishStatus.Published -> {
-                    target.publishCollection(collection, ctids)
+                    target.publishCollection(collection, skillCtids(dao))
                 }
 
                 PublishStatus.Archived -> {
@@ -624,46 +622,8 @@ class SyncService(
                             }
                     }
                 }.orElse(Result.failure(IllegalStateException("Sync not configured")))
-        } catch (e: Exception) {
-            log.error("[{}] Sync aborted with unexpected exception", id, e)
-            markSyncAborted(syncKey, id, e)
-            Result.failure(e)
         } finally {
             MDC.remove(MDC_CORRELATION_ID)
-        }
-    }
-
-    private fun markSyncAborted(
-        syncKey: String,
-        sessionCorrelationId: String,
-        cause: Exception,
-    ) {
-        for (rt in listOf(SyncRecordType.SKILL, SyncRecordType.COLLECTION)) {
-            try {
-                syncStateRepository.updateStatusJson(
-                    SYNC_TYPE,
-                    syncKey,
-                    rt,
-                    SyncStatusJson(
-                        inProgress = false,
-                        sessionCorrelationId = sessionCorrelationId,
-                        lastUpdatedAt = nowIso(),
-                        error =
-                            SyncStatusError(
-                                message = cause.message ?: "Unexpected error",
-                                correlationId = sessionCorrelationId,
-                                occurredAt = nowIso(),
-                            ),
-                    ).toJsonString(),
-                )
-            } catch (e2: Exception) {
-                log.error(
-                    "[{}] Failed to update status for {} after abort",
-                    sessionCorrelationId,
-                    rt,
-                    e2,
-                )
-            }
         }
     }
 
