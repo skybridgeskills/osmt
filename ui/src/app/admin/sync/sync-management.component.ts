@@ -23,6 +23,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   loading = true;
   syncing = false;
   resyncing = false;
+  unpublishing = false;
   autoRefreshUntilDone = false;
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly refreshIntervalMs = 5000;
@@ -207,6 +208,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
             this.clearRefreshInterval();
             this.syncing = false;
             this.resyncing = false;
+            this.unpublishing = false;
             if (this.hasSyncError()) {
               this.toastService.showToast(
                 'Sync finished',
@@ -223,6 +225,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
             this.clearRefreshInterval();
             this.syncing = false;
             this.resyncing = false;
+            this.unpublishing = false;
             this.toastService.showToast(
               'Auto refresh stopped',
               'Stopped after 1 hour. Sync may still be running.',
@@ -234,6 +237,7 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
           this.clearRefreshInterval();
           this.syncing = false;
           this.resyncing = false;
+          this.unpublishing = false;
         },
       });
     }, this.refreshIntervalMs);
@@ -257,7 +261,8 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   }
 
   onSyncNow(): void {
-    if (!this.configured || this.syncing || this.resyncing) return;
+    if (!this.configured || this.syncing || this.resyncing || this.unpublishing)
+      return;
     this.syncing = true;
     this.syncService.syncAll().subscribe({
       next: () => this.handleSyncSuccess('Sync new changes started.'),
@@ -266,12 +271,50 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   }
 
   onResync(): void {
-    if (!this.configured || this.syncing || this.resyncing) return;
+    if (!this.configured || this.syncing || this.resyncing || this.unpublishing)
+      return;
     this.resyncing = true;
     this.syncService.resyncAll().subscribe({
       next: () => this.handleSyncSuccess('Full resync started.'),
       error: err => this.handleResyncError(err),
     });
+  }
+
+  onUnpublishAll(): void {
+    if (!this.configured || this.syncing || this.resyncing || this.unpublishing)
+      return;
+    this.unpublishing = true;
+    this.syncService.unpublishAll().subscribe({
+      next: () => this.handleUnpublishSuccess(),
+      error: err => this.handleUnpublishError(err),
+    });
+  }
+
+  private handleUnpublishSuccess(): void {
+    this.toastService.showToast('Success', 'Unpublish started.');
+    this.unpublishing = false;
+    this.loadState(
+      () => this.startAutoRefresh(),
+      () => {
+        this.unpublishing = false;
+      }
+    );
+  }
+
+  private handleUnpublishError(err: {
+    status?: number;
+    error?: { message?: string };
+  }): void {
+    this.unpublishing = false;
+    if (err?.status === 503) {
+      this.toastService.showToast(
+        'Unpublish not enabled',
+        'Unpublish all is not enabled for this environment.',
+        true
+      );
+    } else {
+      this.handleError(err, 'Unpublish request failed');
+    }
   }
 
   private handleSyncError(err: {

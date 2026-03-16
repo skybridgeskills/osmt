@@ -131,7 +131,7 @@
         <button
           class="m-button m-button-primary"
           type="button"
-          [disabled]="syncing || resyncing"
+          [disabled]="syncing || resyncing || unpublishing"
           (click)="onSyncNow()"
         >
           {{ syncing ? 'Syncing...' : 'Sync New Changes' }}
@@ -158,10 +158,37 @@
         <button
           class="m-button m-button-resync-danger"
           type="button"
-          [disabled]="syncing || resyncing"
+          [disabled]="syncing || resyncing || unpublishing"
           (click)="onResync()"
         >
           {{ resyncing ? 'Resyncing...' : 'Resync All' }}
+        </button>
+      </div>
+    </section>
+
+    <section
+      *ngIf="state?.allowUnpublishAll"
+      class="l-syncSection t-margin-medium t-margin-bottom"
+      aria-labelledby="unpublish-all-heading"
+    >
+      <h2
+        id="unpublish-all-heading"
+        class="t-type-heading2 t-margin-small t-margin-bottom"
+      >
+        Unpublish All
+      </h2>
+      <p class="t-type-body t-margin-small t-margin-bottom">
+        Remove all published skills and collections from the Credential Engine
+        Registry. Use to clean up dev/test data. This cannot be undone.
+      </p>
+      <div class="l-syncActions">
+        <button
+          class="m-button m-button-resync-danger"
+          type="button"
+          [disabled]="syncing || resyncing || unpublishing"
+          (click)="onUnpublishAll()"
+        >
+          {{ unpublishing ? 'Unpublishing...' : 'Unpublish All' }}
         </button>
       </div>
     </section>

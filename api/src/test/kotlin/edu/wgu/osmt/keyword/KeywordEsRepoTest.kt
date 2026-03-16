@@ -26,10 +26,17 @@ class KeywordEsRepoTest
         HasElasticsearchReset {
         @BeforeEach
         fun generateKeywordNoise() {
-            KeywordTypeEnum.values().map {
-                TestObjectHelpers.keywordsGenerator(50, it).also { keywords ->
-                    keywordEsRepo.saveAll(keywords)
-                }
+            KeywordTypeEnum.values().forEach { type ->
+                val keywords =
+                    if (type == KeywordTypeEnum.Keyword) {
+                        // Deterministic noise to avoid flaky matches with test search terms
+                        (1..50).map {
+                            TestObjectHelpers.keyword("Zzq%02d".format(it), type)
+                        }
+                    } else {
+                        TestObjectHelpers.keywordsGenerator(50, type)
+                    }
+                keywordEsRepo.saveAll(keywords)
             }
         }
 

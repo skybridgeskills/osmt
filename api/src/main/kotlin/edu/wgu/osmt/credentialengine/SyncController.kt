@@ -3,6 +3,7 @@ package edu.wgu.osmt.credentialengine
 import edu.wgu.osmt.RoutePaths
 import edu.wgu.osmt.config.AppConfig
 import edu.wgu.osmt.security.OAuthHelper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 data class SyncStateResponse(
     val integrations: List<SyncIntegrationDto>,
+    val allowUnpublishAll: Boolean = false,
 )
 
 data class SyncIntegrationDto(
@@ -36,6 +38,7 @@ class SyncController
         private val appConfig: AppConfig,
         private val oAuthHelper: OAuthHelper,
     ) {
+        private val log = LoggerFactory.getLogger(SyncController::class.java)
         private val syncInProgress = AtomicBoolean(false)
         private val syncExecutor =
             Executors.newSingleThreadExecutor { r ->
@@ -80,7 +83,12 @@ class SyncController
                         pendingCount = pendingCount,
                     )
                 }
-            return ResponseEntity.ok(SyncStateResponse(integrations = integrations))
+            return ResponseEntity.ok(
+                SyncStateResponse(
+                    integrations = integrations,
+                    allowUnpublishAll = syncService.isUnpublishAllAllowed(),
+                ),
+            )
         }
 
         @PostMapping(RoutePaths.SYNC_SKILL_UUID)
@@ -165,6 +173,12 @@ class SyncController
             syncExecutor.submit {
                 try {
                     syncService.syncAllSinceWatermark("default", correlationId)
+                } catch (e: Throwable) {
+                    log.error(
+                        "[{}] Sync all failed with exception",
+                        correlationId,
+                        e,
+                    )
                 } finally {
                     syncInProgress.set(false)
                 }
@@ -189,12 +203,54 @@ class SyncController
             syncExecutor.submit {
                 try {
                     syncService.resyncAll("default", correlationId)
+                } catch (e: Throwable) {
+                    log.error(
+                        "[{}] Resync failed with exception",
+                        correlationId,
+                        e,
+                    )
                 } finally {
                     syncInProgress.set(false)
                 }
             }
             return ResponseEntity(
                 "Full resync started. Check logs for progress.",
+                HttpStatus.ACCEPTED,
+            )
+        }
+
+        @PostMapping(RoutePaths.SYNC_UNPUBLISH_ALL)
+        fun unpublishAll(): ResponseEntity<String> {
+            ensureAdmin()
+            ensureConfigured()
+            if (!syncService.isUnpublishAllAllowed()) {
+                throw ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Unpublish all is not enabled for this environment",
+                )
+            }
+            if (!syncInProgress.compareAndSet(false, true)) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Sync or unpublish already in progress",
+                )
+            }
+            val correlationId = syncService.markSyncInProgress("default")
+            syncExecutor.submit {
+                try {
+                    syncService.unpublishAll("default")
+                } catch (e: Throwable) {
+                    log.error(
+                        "[{}] Unpublish failed with exception",
+                        correlationId,
+                        e,
+                    )
+                } finally {
+                    syncInProgress.set(false)
+                }
+            }
+            return ResponseEntity(
+                "Unpublish started. Check logs for progress.",
                 HttpStatus.ACCEPTED,
             )
         }

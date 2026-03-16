@@ -47,6 +47,18 @@ class MockSyncTarget : SyncTarget {
         return Result.success(Unit)
     }
 
+    override fun unpublishAll(
+        collectionUuids: List<String>,
+        skillUuids: List<String>,
+    ): Result<Unit> {
+        publishedSkills.clear()
+        publishedCollections.clear()
+        deprecatedSkills.clear()
+        deprecatedCollections.clear()
+        logger.info("MockSyncTarget: unpublishAll cleared all lists")
+        return Result.success(Unit)
+    }
+
     fun getPublishedSkillUuids(): List<String> = publishedSkills.toList()
 
     fun getPublishCountPerSkill(): Map<String, Int> = publishedSkills.groupingBy { it }.eachCount()

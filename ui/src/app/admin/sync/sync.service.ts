@@ -14,6 +14,7 @@ export interface SyncIntegrationDto {
 
 export interface SyncStateResponse {
   integrations: SyncIntegrationDto[];
+  allowUnpublishAll?: boolean;
 }
 
 @Injectable()
@@ -55,6 +56,13 @@ export class SyncService {
 
   resyncAll(): Observable<string> {
     return this.http.post(`${this.base}/resync`, null, {
+      headers: this.headers(),
+      responseType: 'text',
+    });
+  }
+
+  unpublishAll(): Observable<string> {
+    return this.http.post(`${this.base}/unpublish-all`, null, {
       headers: this.headers(),
       responseType: 'text',
     });

@@ -1,16 +1,19 @@
 package edu.wgu.osmt.credentialengine
 
+import edu.wgu.osmt.collection.Collection
 import edu.wgu.osmt.collection.CollectionDao
 import edu.wgu.osmt.collection.CollectionRepository
 import edu.wgu.osmt.db.PublishStatus
+import edu.wgu.osmt.richskill.RichSkillDescriptor
 import edu.wgu.osmt.richskill.RichSkillDescriptorDao
 import edu.wgu.osmt.richskill.RichSkillRepository
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Optional
@@ -45,14 +48,22 @@ class SyncService(
     private val richSkillRepository: RichSkillRepository,
     private val collectionRepository: CollectionRepository,
     private val syncRetryHelper: SyncRetryHelper,
+    transactionManager: PlatformTransactionManager,
     @Value("\${credential-engine.sync.batch-size:20}") private val batchSize: Int,
     @Value("\${credential-engine.sync.retry-attempts:5}") private val retryAttempts: Int,
     @Value("\${credential-engine.sync.retry-initial-delay-ms:5000}")
     private val retryInitialDelayMs: Long,
     @Value("\${credential-engine.sync.retry-delay-multiplier:1.5}")
     private val retryDelayMultiplier: Double,
+    @Value("\${credential-engine.allow-unpublish-all:false}")
+    private val allowUnpublishAll: Boolean,
 ) {
-    @Transactional(readOnly = true)
+    private val txReadOnly =
+        TransactionTemplate(transactionManager).apply {
+            isReadOnly = true
+        }
+    private val txWrite = TransactionTemplate(transactionManager)
+
     fun syncRecord(
         recordType: String,
         uuid: String,
@@ -67,47 +78,53 @@ class SyncService(
         uuid: String,
     ): Result<Unit> =
         when (recordType) {
-            SyncRecordType.SKILL -> syncSkill(target, uuid)
-            SyncRecordType.COLLECTION -> syncCollection(target, uuid)
-            else -> Result.failure(IllegalArgumentException("Unknown recordType: $recordType"))
+            SyncRecordType.SKILL -> {
+                syncSkill(target, uuid)
+            }
+
+            SyncRecordType.COLLECTION -> {
+                syncCollection(target, uuid)
+            }
+
+            else -> {
+                Result.failure(
+                    IllegalArgumentException("Unknown recordType: $recordType"),
+                )
+            }
         }
 
     private fun syncSkill(
         target: SyncTarget,
         uuid: String,
     ): Result<Unit> {
-        val dao =
-            richSkillRepository.findByUUID(uuid)
-                ?: return Result.failure(NoSuchElementException("Skill not found: $uuid"))
-        val rsd = dao.toModel()
-        return when (rsd.publishStatus()) {
-            PublishStatus.Published -> target.publishSkill(rsd)
-            PublishStatus.Archived -> target.deprecateSkill(rsd)
-            else -> Result.success(Unit)
-        }
+        val rsd =
+            txReadOnly.execute {
+                richSkillRepository.findByUUID(uuid)?.toModel()
+            } ?: return Result.failure(
+                NoSuchElementException("Skill not found: $uuid"),
+            )
+        return publishSkillWithRetry(target, rsd)
     }
 
     private fun syncCollection(
         target: SyncTarget,
         uuid: String,
     ): Result<Unit> {
-        val dao =
-            collectionRepository.findByUUID(uuid)
-                ?: return Result.failure(NoSuchElementException("Collection not found: $uuid"))
-        val collection = dao.toModel()
-        return when (collection.status) {
-            PublishStatus.Published -> {
-                target.publishCollection(collection, skillCtids(dao))
-            }
-
-            PublishStatus.Archived -> {
-                target.deprecateCollection(collection)
-            }
-
-            else -> {
-                Result.success(Unit)
-            }
-        }
+        val item =
+            txReadOnly.execute {
+                val dao =
+                    collectionRepository.findByUUID(uuid)
+                        ?: return@execute null
+                CollectionItem(
+                    dao.uuid,
+                    dao.name,
+                    dao.toModel(),
+                    skillCtids(dao),
+                )
+            } ?: return Result.failure(
+                NoSuchElementException("Collection not found: $uuid"),
+            )
+        return publishCollectionWithRetry(target, item.model, item.ctids)
     }
 
     private fun skillCtids(collectionDao: CollectionDao): List<String> =
@@ -248,7 +265,10 @@ class SyncService(
                 watermarkDate,
                 watermarkId,
             )
-            val batch = params.fetchBatch(watermarkDate, watermarkId, batchSize)
+            val batch =
+                txReadOnly.execute {
+                    params.fetchBatch(watermarkDate, watermarkId, batchSize)
+                } ?: emptyList()
             if (batch.isEmpty()) break
 
             log.debug(
@@ -383,6 +403,12 @@ class SyncService(
         return Result.success(Unit)
     }
 
+    private data class SkillItem(
+        val uuid: String,
+        val name: String,
+        val model: RichSkillDescriptor,
+    )
+
     private fun processSkillBatch(
         target: SyncTarget,
         batch: List<RichSkillDescriptorDao>,
@@ -391,28 +417,39 @@ class SyncService(
         batchIndex: Int,
         sessionCorrelationId: String,
     ): Result<Unit> {
-        for (dao in batch) {
+        val items =
+            txReadOnly.execute {
+                batch.map { dao ->
+                    SkillItem(dao.uuid, dao.name, dao.toModel())
+                }
+            } ?: return Result.success(Unit)
+
+        var last: SkillItem? = null
+        for (item in items) {
             log.debug(
-                "[{}] Processing skill id={} uuid={} batch={}",
+                "[{}] Processing skill uuid={} batch={}",
                 sessionCorrelationId,
-                dao.id.value,
-                dao.uuid,
+                item.uuid,
                 batchIndex,
             )
-            val result = syncOneSkillWithRetry(target, dao)
+            last = item
+            val result = publishSkillWithRetry(target, item.model)
             if (result.isFailure) {
                 val err = result.exceptionOrNull()
                 log.error(
                     "[{}] Sync failed skill={} batch={} error={}",
                     sessionCorrelationId,
-                    dao.uuid,
+                    item.uuid,
                     batchIndex,
                     err?.message,
                 )
-                val status =
+                syncStateRepository.updateStatusJson(
+                    SYNC_TYPE,
+                    syncKey,
+                    recordType,
                     SyncStatusJson(
-                        lastRecordUuid = dao.uuid,
-                        lastRecordName = dao.name,
+                        lastRecordUuid = item.uuid,
+                        lastRecordName = item.name,
                         batchIndex = batchIndex,
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
@@ -420,40 +457,46 @@ class SyncService(
                         inProgress = false,
                         error =
                             SyncStatusError(
-                                message = err?.message ?: "Unknown error",
-                                correlationId = generateCorrelationId(),
-                                recordUuid = dao.uuid,
-                                recordName = dao.name,
+                                message =
+                                    err?.message ?: "Unknown error",
+                                correlationId =
+                                    generateCorrelationId(),
+                                recordUuid = item.uuid,
+                                recordName = item.name,
                                 occurredAt = nowIso(),
                             ),
-                    )
-                syncStateRepository.updateStatusJson(
-                    SYNC_TYPE,
-                    syncKey,
-                    recordType,
-                    status.toJsonString(),
+                    ).toJsonString(),
                 )
-                return Result.failure(err ?: IllegalStateException("Sync failed"))
+                return Result.failure(
+                    err ?: IllegalStateException("Sync failed"),
+                )
             }
-            val progress =
+        }
+        last?.let { s ->
+            syncStateRepository.updateStatusJson(
+                SYNC_TYPE,
+                syncKey,
+                recordType,
                 SyncStatusJson(
-                    lastRecordUuid = dao.uuid,
-                    lastRecordName = dao.name,
+                    lastRecordUuid = s.uuid,
+                    lastRecordName = s.name,
                     batchIndex = batchIndex,
                     batchesCompleted = batchIndex,
                     lastUpdatedAt = nowIso(),
                     sessionCorrelationId = sessionCorrelationId,
                     inProgress = true,
-                )
-            syncStateRepository.updateStatusJson(
-                SYNC_TYPE,
-                syncKey,
-                recordType,
-                progress.toJsonString(),
+                ).toJsonString(),
             )
         }
         return Result.success(Unit)
     }
+
+    private data class CollectionItem(
+        val uuid: String,
+        val name: String,
+        val model: Collection,
+        val ctids: List<String>,
+    )
 
     private fun processCollectionBatch(
         target: SyncTarget,
@@ -463,28 +506,45 @@ class SyncService(
         batchIndex: Int,
         sessionCorrelationId: String,
     ): Result<Unit> {
-        for (dao in batch) {
+        val items =
+            txReadOnly.execute {
+                batch.map { dao ->
+                    CollectionItem(
+                        dao.uuid,
+                        dao.name,
+                        dao.toModel(),
+                        skillCtids(dao),
+                    )
+                }
+            } ?: return Result.success(Unit)
+
+        var last: CollectionItem? = null
+        for (item in items) {
             log.debug(
-                "[{}] Processing collection id={} uuid={} batch={}",
+                "[{}] Processing collection uuid={} batch={}",
                 sessionCorrelationId,
-                dao.id.value,
-                dao.uuid,
+                item.uuid,
                 batchIndex,
             )
-            val result = syncOneCollectionWithRetry(target, dao)
+            last = item
+            val result =
+                publishCollectionWithRetry(target, item.model, item.ctids)
             if (result.isFailure) {
                 val err = result.exceptionOrNull()
                 log.error(
                     "[{}] Sync failed collection={} batch={} error={}",
                     sessionCorrelationId,
-                    dao.uuid,
+                    item.uuid,
                     batchIndex,
                     err?.message,
                 )
-                val status =
+                syncStateRepository.updateStatusJson(
+                    SYNC_TYPE,
+                    syncKey,
+                    recordType,
                     SyncStatusJson(
-                        lastRecordUuid = dao.uuid,
-                        lastRecordName = dao.name,
+                        lastRecordUuid = item.uuid,
+                        lastRecordName = item.name,
                         batchIndex = batchIndex,
                         batchesCompleted = batchIndex,
                         lastUpdatedAt = nowIso(),
@@ -492,66 +552,77 @@ class SyncService(
                         inProgress = false,
                         error =
                             SyncStatusError(
-                                message = err?.message ?: "Unknown error",
-                                correlationId = generateCorrelationId(),
-                                recordUuid = dao.uuid,
-                                recordName = dao.name,
+                                message =
+                                    err?.message ?: "Unknown error",
+                                correlationId =
+                                    generateCorrelationId(),
+                                recordUuid = item.uuid,
+                                recordName = item.name,
                                 occurredAt = nowIso(),
                             ),
-                    )
-                syncStateRepository.updateStatusJson(
-                    SYNC_TYPE,
-                    syncKey,
-                    recordType,
-                    status.toJsonString(),
+                    ).toJsonString(),
                 )
-                return Result.failure(err ?: IllegalStateException("Sync failed"))
+                return Result.failure(
+                    err ?: IllegalStateException("Sync failed"),
+                )
             }
-            val progress =
+        }
+        last?.let { c ->
+            syncStateRepository.updateStatusJson(
+                SYNC_TYPE,
+                syncKey,
+                recordType,
                 SyncStatusJson(
-                    lastRecordUuid = dao.uuid,
-                    lastRecordName = dao.name,
+                    lastRecordUuid = c.uuid,
+                    lastRecordName = c.name,
                     batchIndex = batchIndex,
                     batchesCompleted = batchIndex,
                     lastUpdatedAt = nowIso(),
                     sessionCorrelationId = sessionCorrelationId,
                     inProgress = true,
-                )
-            syncStateRepository.updateStatusJson(
-                SYNC_TYPE,
-                syncKey,
-                recordType,
-                progress.toJsonString(),
+                ).toJsonString(),
             )
         }
         return Result.success(Unit)
     }
 
-    private fun syncOneSkillWithRetry(
+    private fun publishSkillWithRetry(
         target: SyncTarget,
-        dao: RichSkillDescriptorDao,
+        rsd: RichSkillDescriptor,
     ): Result<Unit> {
-        val rsd = transaction { dao.toModel() }
-        return syncRetryHelper.withRetry(
-            retryAttempts,
-            retryInitialDelayMs,
-            retryDelayMultiplier,
-        ) {
-            when (rsd.publishStatus()) {
-                PublishStatus.Published -> target.publishSkill(rsd)
-                PublishStatus.Archived -> target.deprecateSkill(rsd)
-                else -> Result.success(Unit)
+        val status = rsd.publishStatus()
+        return when (status) {
+            PublishStatus.Published, PublishStatus.Archived -> {
+                syncRetryHelper.withRetry(
+                    retryAttempts,
+                    retryInitialDelayMs,
+                    retryDelayMultiplier,
+                ) {
+                    when (status) {
+                        PublishStatus.Published -> target.publishSkill(rsd)
+                        PublishStatus.Archived -> target.deprecateSkill(rsd)
+                        else -> Result.success(Unit)
+                    }
+                }
+            }
+
+            else -> {
+                log.debug(
+                    "CE sync skipping skill uuid={} status={}",
+                    rsd.uuid,
+                    status,
+                )
+                Result.success(Unit)
             }
         }
     }
 
-    private fun syncOneCollectionWithRetry(
+    private fun publishCollectionWithRetry(
         target: SyncTarget,
-        dao: CollectionDao,
-    ): Result<Unit> {
-        val (collection, ctids) =
-            transaction { dao.toModel() to skillCtids(dao) }
-        return syncRetryHelper.withRetry(
+        collection: Collection,
+        ctids: List<String>,
+    ): Result<Unit> =
+        syncRetryHelper.withRetry(
             retryAttempts,
             retryInitialDelayMs,
             retryDelayMultiplier,
@@ -570,7 +641,6 @@ class SyncService(
                 }
             }
         }
-    }
 
     private fun nowIso(): String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
@@ -624,46 +694,8 @@ class SyncService(
                             }
                     }
                 }.orElse(Result.failure(IllegalStateException("Sync not configured")))
-        } catch (e: Exception) {
-            log.error("[{}] Sync aborted with unexpected exception", id, e)
-            markSyncAborted(syncKey, id, e)
-            Result.failure(e)
         } finally {
             MDC.remove(MDC_CORRELATION_ID)
-        }
-    }
-
-    private fun markSyncAborted(
-        syncKey: String,
-        sessionCorrelationId: String,
-        cause: Exception,
-    ) {
-        for (rt in listOf(SyncRecordType.SKILL, SyncRecordType.COLLECTION)) {
-            try {
-                syncStateRepository.updateStatusJson(
-                    SYNC_TYPE,
-                    syncKey,
-                    rt,
-                    SyncStatusJson(
-                        inProgress = false,
-                        sessionCorrelationId = sessionCorrelationId,
-                        lastUpdatedAt = nowIso(),
-                        error =
-                            SyncStatusError(
-                                message = cause.message ?: "Unexpected error",
-                                correlationId = sessionCorrelationId,
-                                occurredAt = nowIso(),
-                            ),
-                    ).toJsonString(),
-                )
-            } catch (e2: Exception) {
-                log.error(
-                    "[{}] Failed to update status for {} after abort",
-                    sessionCorrelationId,
-                    rt,
-                    e2,
-                )
-            }
         }
     }
 
@@ -696,6 +728,115 @@ class SyncService(
     }
 
     fun isConfigured(): Boolean = syncTargetOpt.isPresent
+
+    fun isUnpublishAllAllowed(): Boolean = allowUnpublishAll
+
+    fun unpublishAll(syncKey: String = SYNC_KEY_DEFAULT): Result<Unit> {
+        if (!allowUnpublishAll) {
+            return Result.failure(
+                IllegalStateException("Unpublish all is not enabled"),
+            )
+        }
+        val sessionCorrelationId = generateCorrelationId()
+        MDC.put(MDC_CORRELATION_ID, sessionCorrelationId)
+        return try {
+            syncTargetOpt
+                .map { target ->
+                    val (colUuids, skillUuids) =
+                        txReadOnly.execute {
+                            findAllPublishedOrArchivedCollectionUuids() to
+                                findAllPublishedOrArchivedSkillUuids()
+                        }!!
+                    log.info(
+                        "[{}] Unpublish all started collections={} skills={}",
+                        sessionCorrelationId,
+                        colUuids.size,
+                        skillUuids.size,
+                    )
+                    val result = target.unpublishAll(colUuids, skillUuids)
+                    result.fold(
+                        onSuccess = {
+                            syncStateRepository.resetWatermark(
+                                SYNC_TYPE,
+                                syncKey,
+                                SyncRecordType.SKILL,
+                            )
+                            syncStateRepository.resetWatermark(
+                                SYNC_TYPE,
+                                syncKey,
+                                SyncRecordType.COLLECTION,
+                            )
+                            markUnpublishComplete(syncKey, sessionCorrelationId)
+                            log.info(
+                                "[{}] Unpublish all completed",
+                                sessionCorrelationId,
+                            )
+                        },
+                        onFailure = { e ->
+                            log.error(
+                                "[{}] Unpublish all failed: {}",
+                                sessionCorrelationId,
+                                e.message,
+                            )
+                            markUnpublishAborted(
+                                syncKey,
+                                sessionCorrelationId,
+                                e,
+                            )
+                        },
+                    )
+                    result
+                }.orElse(
+                    Result.failure(IllegalStateException("Sync not configured")),
+                )
+        } finally {
+            MDC.remove(MDC_CORRELATION_ID)
+        }
+    }
+
+    private fun markUnpublishComplete(
+        syncKey: String,
+        sessionCorrelationId: String,
+    ) {
+        for (rt in listOf(SyncRecordType.SKILL, SyncRecordType.COLLECTION)) {
+            syncStateRepository.updateStatusJson(
+                SYNC_TYPE,
+                syncKey,
+                rt,
+                SyncStatusJson(
+                    inProgress = false,
+                    batchesCompleted = 0,
+                    sessionCorrelationId = sessionCorrelationId,
+                    lastUpdatedAt = nowIso(),
+                ).toJsonString(),
+            )
+        }
+    }
+
+    private fun markUnpublishAborted(
+        syncKey: String,
+        sessionCorrelationId: String,
+        cause: Throwable,
+    ) {
+        for (rt in listOf(SyncRecordType.SKILL, SyncRecordType.COLLECTION)) {
+            syncStateRepository.updateStatusJson(
+                SYNC_TYPE,
+                syncKey,
+                rt,
+                SyncStatusJson(
+                    inProgress = false,
+                    sessionCorrelationId = sessionCorrelationId,
+                    lastUpdatedAt = nowIso(),
+                    error =
+                        SyncStatusError(
+                            message = cause.message ?: "Unpublish failed",
+                            correlationId = sessionCorrelationId,
+                            occurredAt = nowIso(),
+                        ),
+                ).toJsonString(),
+            )
+        }
+    }
 
     fun resyncAll(
         syncKey: String = SYNC_KEY_DEFAULT,

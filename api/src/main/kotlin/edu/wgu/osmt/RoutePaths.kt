@@ -79,6 +79,7 @@ object RoutePaths {
     const val SYNC_COLLECTION_UUID = "$SYNC_COLLECTION/{uuid}"
     const val SYNC_ALL = "$SYNC_PATH/all"
     const val SYNC_RESYNC = "$SYNC_PATH/resync"
+    const val SYNC_UNPUBLISH_ALL = "$SYNC_PATH/unpublish-all"
 
     object QueryParams {
         const val FROM = "from"
