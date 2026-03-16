@@ -27,6 +27,8 @@ class SyncTargetConfig {
         @Value("\${credential-engine.org-ctid:}") orgCtid: String,
         @Value("\${credential-engine.registry-url:https://sandbox.credentialengine.org}")
         registryUrl: String,
+        @Value("\${credential-engine.label-prefix:}") labelPrefix: String,
+        @Value("\${credential-engine.canonical-url-base:}") canonicalUrlBase: String,
         appConfig: AppConfig,
         credentialEngineRestTemplate: RestTemplate,
         objectMapper: ObjectMapper,
@@ -41,6 +43,8 @@ class SyncTargetConfig {
                     registryUrl = registryUrl,
                     apiKey = apiKey,
                     orgCtid = orgCtid,
+                    labelPrefix = labelPrefix.trim(),
+                    canonicalUrlBase = canonicalUrlBase.trim().trimEnd('/'),
                     appConfig = appConfig,
                     restTemplate = credentialEngineRestTemplate,
                     objectMapper = objectMapper,

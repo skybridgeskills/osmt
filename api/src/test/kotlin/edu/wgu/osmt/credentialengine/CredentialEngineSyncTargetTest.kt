@@ -72,6 +72,8 @@ class CredentialEngineSyncTargetTest {
                 registryUrl = registryUrl,
                 apiKey = apiKey,
                 orgCtid = orgCtid,
+                labelPrefix = "",
+                canonicalUrlBase = "",
                 appConfig = appConfig,
                 restTemplate = restTemplate,
                 objectMapper = objectMapper,

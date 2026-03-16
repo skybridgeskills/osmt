@@ -7,6 +7,7 @@ import edu.wgu.osmt.richskill.RichSkillDescriptor
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
@@ -19,6 +20,8 @@ class CredentialEngineSyncTarget(
     private val registryUrl: String,
     private val apiKey: String,
     private val orgCtid: String,
+    private val labelPrefix: String,
+    private val canonicalUrlBase: String,
     private val appConfig: AppConfig,
     private val restTemplate: RestTemplate,
     private val objectMapper: ObjectMapper,
@@ -29,6 +32,7 @@ class CredentialEngineSyncTarget(
 
     override fun publishSkill(rsd: RichSkillDescriptor): Result<Unit> {
         val ctid = ctidGenerator.generate(rsd.uuid)
+        logger.info("CE publish skill uuid={} ctid={}", rsd.uuid, ctid)
         val body =
             mapOf(
                 "Competencies" to
@@ -43,6 +47,7 @@ class CredentialEngineSyncTarget(
 
     override fun deprecateSkill(rsd: RichSkillDescriptor): Result<Unit> {
         val ctid = ctidGenerator.generate(rsd.uuid)
+        logger.info("CE deprecate skill uuid={} ctid={}", rsd.uuid, ctid)
         val body =
             mapOf(
                 "Competencies" to
@@ -63,27 +68,23 @@ class CredentialEngineSyncTarget(
         val map =
             mutableMapOf<String, Any>(
                 "CTID" to ctid,
-                "CompetencyText" to rsd.statement,
-                "CompetencyLabel" to rsd.name,
+                "CompetencyText" to (rsd.statement.ifBlank { rsd.name }),
+                "CompetencyLabel" to applyPrefix(rsd.name).ifBlank { "Skill $ctid" },
                 "Creator" to listOf(orgCtid),
                 "ConceptKeyword" to
-                    rsd.searchingKeywords
-                        .mapNotNull { it.value }
-                        .take(20),
+                    (rsd.searchingKeywords.mapNotNull { it.value }.take(20))
+                        .ifEmpty { listOf(rsd.name.take(100)) },
                 "PublicationStatusType" to status,
             )
         val author = rsd.authors.firstOrNull()?.value
-        if (!author.isNullOrBlank()) {
-            map["Author"] = author
-        }
+        if (!author.isNullOrBlank()) map["Author"] = author
         val categories =
             rsd.categories.mapNotNull { it.value }.take(10)
-        if (categories.isNotEmpty()) {
-            map["CompetencyCategory"] = categories
-        }
+        if (categories.isNotEmpty()) map["CompetencyCategory"] = categories
         if (status != "Deprecated") {
-            map["ExactAlignment"] =
-                listOf(rsd.canonicalUrl(appConfig.baseUrl))
+            val base =
+                canonicalUrlBase.ifBlank { appConfig.baseUrl }.trimEnd('/')
+            map["ExactAlignment"] = listOf(rsd.canonicalUrl(base))
         }
         return map
     }
@@ -98,7 +99,7 @@ class CredentialEngineSyncTarget(
                 "Collection" to
                     mapOf(
                         "CTID" to ctid,
-                        "Name" to collection.name,
+                        "Name" to applyPrefix(collection.name),
                         "Description" to (collection.description ?: ""),
                         "HasMember" to skillCtids,
                         "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
@@ -117,7 +118,7 @@ class CredentialEngineSyncTarget(
                 "Collection" to
                     mapOf(
                         "CTID" to ctid,
-                        "Name" to collection.name,
+                        "Name" to applyPrefix(collection.name),
                         "Description" to (collection.description ?: ""),
                         "HasMember" to emptyList<String>(),
                         "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
@@ -127,6 +128,64 @@ class CredentialEngineSyncTarget(
                 "DefaultLanguage" to "en-US",
             )
         return post("$baseUrl/Collection/publish", body)
+    }
+
+    override fun unpublishAll(
+        collectionUuids: List<String>,
+        skillUuids: List<String>,
+    ): Result<Unit> {
+        for (uuid in collectionUuids) {
+            val ctid = ctidGenerator.generate(uuid)
+            delete("Collection", ctid).onFailure { return Result.failure(it) }
+        }
+        for (uuid in skillUuids) {
+            val ctid = ctidGenerator.generate(uuid)
+            delete("competency", ctid).onFailure { return Result.failure(it) }
+        }
+        return Result.success(Unit)
+    }
+
+    private fun delete(
+        type: String,
+        ctid: String,
+    ): Result<Unit> {
+        val url = "$baseUrl/$type/delete"
+        val body =
+            mapOf(
+                "CTID" to ctid,
+                "PublishForOrganizationIdentifier" to orgCtid,
+            )
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+                set("Authorization", "ApiToken $apiKey")
+            }
+        val entity = HttpEntity(objectMapper.writeValueAsString(body), headers)
+        return try {
+            val response =
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    entity,
+                    String::class.java,
+                )
+            checkResponseBody(url, response.body, null)
+        } catch (e: HttpStatusCodeException) {
+            logger.warn(
+                "CE delete failed: {} {}",
+                e.statusCode,
+                e.responseBodyAsString,
+            )
+            Result.failure(
+                Exception(
+                    "CE delete failed: ${e.statusCode} - " +
+                        e.responseBodyAsString.take(200),
+                ),
+            )
+        } catch (e: Exception) {
+            logger.warn("CE delete error", e)
+            Result.failure(e)
+        }
     }
 
     private fun post(
@@ -139,10 +198,12 @@ class CredentialEngineSyncTarget(
                 set("Authorization", "ApiToken $apiKey")
             }
         val json = objectMapper.writeValueAsString(body)
+        logger.debug("CE publish request: {} body={}", url, json.take(2000))
         val entity = HttpEntity(json, headers)
         return try {
-            restTemplate.postForEntity(url, entity, String::class.java)
-            Result.success(Unit)
+            val response =
+                restTemplate.postForEntity(url, entity, String::class.java)
+            checkResponseBody(url, response.body, json)
         } catch (e: HttpStatusCodeException) {
             logger.warn(
                 "CE publish failed: {} {}",
@@ -160,4 +221,71 @@ class CredentialEngineSyncTarget(
             Result.failure(e)
         }
     }
+
+    /**
+     * CE returns HTTP 200 even on logical failures. Check response body
+     * for Successful: false. See bin/test-credential-engine-sync.sh.
+     */
+    private fun checkResponseBody(
+        url: String,
+        responseBody: String?,
+        requestBody: String?,
+    ): Result<Unit> {
+        if (responseBody.isNullOrBlank()) return Result.success(Unit)
+        return try {
+            val tree = objectMapper.readTree(responseBody)
+            val first =
+                when {
+                    tree.isArray && tree.size() > 0 -> tree[0]
+                    tree.isObject -> tree
+                    else -> null
+                }
+            val successful = first?.get("Successful")?.asBoolean() ?: true
+            val messagesNode = first?.get("Messages")
+            val messages =
+                when {
+                    messagesNode != null && messagesNode.isArray -> {
+                        (0 until messagesNode.size())
+                            .map { messagesNode.get(it).asText() }
+                    }
+
+                    else -> {
+                        emptyList()
+                    }
+                }
+            val message =
+                first?.get("Message")?.asText()
+                    ?: messages.joinToString("; ")
+            if (!successful) {
+                logger.warn(
+                    "CE publish failed (Successful=false): {} message={}",
+                    url,
+                    message,
+                )
+                requestBody?.let { body ->
+                    val escaped = body.replace("'", "'\\''")
+                    val curlCmd =
+                        """
+                        curl -sS -X POST "$url" \
+                          -H "Content-Type: application/json" \
+                          -H "Authorization: ApiToken ${'$'}CREDENTIAL_ENGINE_API_KEY" \
+                          -d '$escaped'
+                        """.trimIndent()
+                    logger.info("CE publish failed - copy to reproduce (env: CREDENTIAL_ENGINE_API_KEY): {}", curlCmd)
+                }
+                Result.failure(
+                    Exception(
+                        "CE publish failed: Successful=false. $message",
+                    ),
+                )
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            logger.warn("CE response parse error: {}", e.message)
+            Result.success(Unit)
+        }
+    }
+
+    private fun applyPrefix(s: String): String = if (labelPrefix.isNotBlank()) "$labelPrefix $s" else s
 }

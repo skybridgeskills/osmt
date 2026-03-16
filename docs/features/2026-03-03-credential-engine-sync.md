@@ -27,6 +27,9 @@ API returns `503 Service Unavailable`.
 | `CREDENTIAL_ENGINE_SYNC_RETRY_ATTEMPTS` | `5` | Retries per record on failure (capped at 10) |
 | `CREDENTIAL_ENGINE_SYNC_RETRY_INITIAL_DELAY_MS` | `5000` | First retry delay in ms |
 | `CREDENTIAL_ENGINE_SYNC_RETRY_DELAY_MULTIPLIER` | `1.5` | Exponential backoff multiplier (delay capped at 60s) |
+| `CREDENTIAL_ENGINE_LABEL_PREFIX` | _(empty)_ | Prefix for CE labels (e.g. `(osmt-dev)`). Dev profile defaults to `(osmt-dev)` when unset. |
+| `CREDENTIAL_ENGINE_CANONICAL_URL_BASE` | _(empty)_ | Base URL for ExactAlignment links (e.g. `https://osmt.staging.example.org`). When empty, uses `app.baseUrl`. **Must be publicly resolvable** — CE validates ExactAlignment URLs at publish time. |
+| `CREDENTIAL_ENGINE_ALLOW_UNPUBLISH_ALL` | `false` | Enable Unpublish All. Dev profile defaults to `true` when unset. Not for production. |
 
 ### Target Selection
 
@@ -67,9 +70,10 @@ All endpoints are under `/api/sync`. All require admin authentication.
 
 | Method | Path | Response | Description |
 |--------|------|----------|-------------|
-| GET | `/api/sync/state` | 200 JSON | Current sync state, watermarks, pending counts |
+| GET | `/api/sync/state` | 200 JSON | Current sync state, watermarks, pending counts, allowUnpublishAll |
 | POST | `/api/sync/all` | 202 text | Start incremental sync (async) |
 | POST | `/api/sync/resync` | 202 text | Clear watermarks and resync everything (async) |
+| POST | `/api/sync/unpublish-all` | 202 text | Delete all from CE (async). Requires allow-unpublish-all. |
 | POST | `/api/sync/skill/{uuid}` | 200 | Sync a single skill (synchronous) |
 | POST | `/api/sync/collection/{uuid}` | 200 | Sync a single collection (synchronous) |
 
@@ -79,8 +83,8 @@ All endpoints are under `/api/sync`. All require admin authentication.
 |--------|---------|
 | 401 | Not authenticated or missing admin role |
 | 404 | Skill/collection UUID not found (single-record endpoints) |
-| 409 | Sync already in progress (sync-all / resync endpoints) |
-| 503 | Sync not configured (CE env vars not set) |
+| 409 | Sync or unpublish already in progress |
+| 503 | Sync not configured (CE env vars not set) or unpublish-all not enabled |
 
 ### `GET /api/sync/state` Response Shape
 
@@ -145,6 +149,10 @@ The page shows:
 - **Resync All** — clears all watermarks and re-publishes every published
   skill and collection from scratch. Use for recovery after errors or bulk
   changes. Can take a long time on large datasets.
+- **Unpublish All** — deletes all published skills and collections from CE.
+  Shown only when `allow-unpublish-all` is enabled (dev default). Use to clean
+  up dev/test data. CE policy prefers deprecation for normal lifecycle; delete
+  is for test/dev cleanup.
 
 **Auto-refresh:** when sync is in progress, enable the auto-refresh checkbox
 to poll every 5 seconds until completion (auto-stops after 1 hour).
@@ -192,7 +200,7 @@ Requires `curl` and `jq`.
 | OSMT Field          | CE/CTDL Field           | Notes                           |
 | ------------------- | ----------------------- | ------------------------------- |
 | `uuid`              | `CTID`                  | Hash-based; see [CTID Generation](#ctid-generation) |
-| `name`              | `CompetencyLabel`       | Skill name                      |
+| `name`              | `CompetencyLabel`       | Skill name; optional prefix via `label-prefix` |
 | `statement`         | `CompetencyText`        | Skill statement                 |
 | (org CTID)          | `Creator`               | List with org CTID from config  |
 | `authors` (first)   | `Author`                | First author keyword value      |
@@ -206,7 +214,7 @@ Requires `curl` and `jq`.
 | OSMT Field    | CE/CTDL Field         | Notes                          |
 | ------------- | --------------------- | ------------------------------ |
 | `uuid`        | `CTID`                | Hash-based; see [CTID Generation](#ctid-generation) |
-| `name`        | `Name`                | Collection name                |
+| `name`        | `Name`                | Collection name; optional prefix via `label-prefix` |
 | `description` | `Description`         | Collection description         |
 | (derived)     | `HasMember`           | Skill CTIDs (hash-based)        |
 | (org CTID)    | `OwnedBy`             | List with org CTID from config |

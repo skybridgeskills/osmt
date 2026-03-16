@@ -27,7 +27,10 @@ import java.util.UUID
 @Transactional
 @ContextConfiguration(classes = [SyncServiceTest.SyncTestConfig::class])
 @TestPropertySource(
-    properties = ["spring.main.allow-bean-definition-overriding=true"],
+    properties = [
+        "spring.main.allow-bean-definition-overriding=true",
+        "credential-engine.allow-unpublish-all=true",
+    ],
 )
 class SyncServiceTest :
     SpringTest(),
@@ -193,6 +196,27 @@ class SyncServiceTest :
         assertThat(collectionPending)
             .withFailMessage("Collections pending after full sync should be 0")
             .isEqualTo(0)
+    }
+
+    @Test
+    fun `MockSyncTarget unpublishAll clears published state`() {
+        val skill = randomSkill()
+        syncService.syncSinceWatermark("default", SyncRecordType.SKILL)
+        assertThat(mockSyncTarget.getPublishedSkillUuids()).contains(skill.uuid)
+
+        mockSyncTarget.unpublishAll(emptyList(), emptyList())
+        assertThat(mockSyncTarget.getPublishedSkillUuids()).isEmpty()
+    }
+
+    @Test
+    fun `unpublishAll clears mock target when allowed`() {
+        val skill = randomSkill()
+        syncService.syncSinceWatermark("default", SyncRecordType.SKILL)
+        assertThat(mockSyncTarget.getPublishedSkillUuids()).contains(skill.uuid)
+
+        val result = syncService.unpublishAll("default")
+        assertThat(result.isSuccess).isTrue()
+        assertThat(mockSyncTarget.getPublishedSkillUuids()).isEmpty()
     }
 
     @Test

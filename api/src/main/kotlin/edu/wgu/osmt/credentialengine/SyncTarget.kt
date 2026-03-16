@@ -14,4 +14,13 @@ interface SyncTarget {
     fun deprecateSkill(rsd: RichSkillDescriptor): Result<Unit>
 
     fun deprecateCollection(collection: Collection): Result<Unit>
+
+    /**
+     * Deletes the given records from the target. Collections first, then skills.
+     * For CE: calls delete API per CTID. For mock: clears in-memory state.
+     */
+    fun unpublishAll(
+        collectionUuids: List<String>,
+        skillUuids: List<String>,
+    ): Result<Unit>
 }
