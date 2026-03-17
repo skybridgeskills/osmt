@@ -8,8 +8,20 @@
 #        CREDENTIAL_ENGINE_API_KEY=xxx CREDENTIAL_ENGINE_ORG_CTID=ce-xxx ./bin/test-credential-engine-sync.sh
 #
 # Optional: BASE_URL for ExactAlignment (default: https://example.org)
+# Optional: --app-like  Mimic app minimal payload (works with CE)
+# Optional: --full      Full payload: Author, CompetencyCategory, "Curriculum & Instruction" (reproduces staging failure)
 #
 set -euo pipefail
+
+APP_LIKE=false
+FULL=false
+for arg in "$@"; do
+  if [[ "$arg" == "--app-like" ]]; then
+    APP_LIKE=true
+  elif [[ "$arg" == "--full" ]]; then
+    FULL=true
+  fi
+done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -24,6 +36,9 @@ exit_with_help() {
   echo_err "Optional:"
   echo_err "  CREDENTIAL_ENGINE_REGISTRY_URL - Default: https://sandbox.credentialengine.org"
   echo_err "  BASE_URL                   - For ExactAlignment (default: https://example.org)"
+  echo_err "                             - Use https://osmt.staging.prettygoodskills.com for staging"
+  echo_err "  --app-like                 - Mimic app minimal payload (works with CE)"
+  echo_err "  --full                     - Full payload: Author, CompetencyCategory, & in keywords (reproduces staging failure)"
   echo_err ""
   echo_err "You can set these in your shell or in an env file."
   echo_err "Env files (if present) are sourced in order:"
@@ -79,37 +94,86 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Fixed UUID so repeated runs update the same competency
-SKILL_UUID="a0000000-0000-4000-a000-000000000001"
+# Use different UUID for app-like/full to avoid overwriting OsmtTestSkill
+SKILL_UUID="$([ "$APP_LIKE" = true ] || [ "$FULL" = true ] && echo "a0000000-0000-4000-a000-000000000002" || echo "a0000000-0000-4000-a000-000000000001")"
 
 CTID="ce-${SKILL_UUID}"
 PUBLISH_URL="${REGISTRY_URL%/}/assistant/competency/publish"
 CANONICAL_URL="${BASE_URL%/}/api/skills/${SKILL_UUID}"
 
 echo "Publishing mock skill to Credential Engine..."
-echo "  Registry: ${REGISTRY_URL}"
-echo "  CTID:     ${CTID}"
-echo "  Org:      ${ORG_CTID}"
+echo "  Registry:  ${REGISTRY_URL}"
+echo "  CTID:      ${CTID}"
+echo "  Org:       ${ORG_CTID}"
+echo "  Mode:      $([ "$FULL" = true ] && echo 'full (Author, Category, & in keywords)' || [ "$APP_LIKE" = true ] && echo 'app-like (minimal)' || echo 'minimal')"
+echo "  ExactAlign: ${CANONICAL_URL}"
 echo ""
 
-PAYLOAD=$(jq -n \
-  --arg ctid "$CTID" \
-  --arg canonical "$CANONICAL_URL" \
-  --arg org "$ORG_CTID" \
-  '{
-    Competencies: [
-      {
-        CTID: $ctid,
-        CompetencyText: "OsmtTestSkill. Mock skill for Credential Engine connectivity test.",
-        CompetencyLabel: "OsmtTestSkill",
-        Creator: [$org],
-        ConceptKeyword: ["OsmtTestSkill", "osmt-test", "test-sync"],
-        PublicationStatusType: "Published",
-        ExactAlignment: [$canonical]
-      }
-    ],
-    PublishForOrganizationIdentifier: $org,
-    DefaultLanguage: "en-US"
-  }')
+if [[ "$FULL" == true ]]; then
+  # Full payload: Author, CompetencyCategory, "Curriculum & Instruction" (unstaged app; should fail)
+  PAYLOAD=$(jq -n \
+    --arg ctid "$CTID" \
+    --arg canonical "$CANONICAL_URL" \
+    --arg org "$ORG_CTID" \
+    '{
+      Competencies: [
+        {
+          CTID: $ctid,
+          CompetencyText: "Conduct frequent self-evaluations to reflect on needs for professional practice.",
+          CompetencyLabel: "Conduct Self-Evaluations",
+          Creator: [$org],
+          ConceptKeyword: ["Curriculum & Instruction", "Reflective Practice", "WGUSID: 1212.1"],
+          PublicationStatusType: "Published",
+          Author: "Western Governors University",
+          CompetencyCategory: ["Reflective Practice"],
+          ExactAlignment: [$canonical]
+        }
+      ],
+      PublishForOrganizationIdentifier: $org,
+      DefaultLanguage: "en-US"
+    }')
+elif [[ "$APP_LIKE" == true ]]; then
+  # Mimic app minimal payload: label prefix, ConceptKeyword shape, no Author/Category (works)
+  PAYLOAD=$(jq -n \
+    --arg ctid "$CTID" \
+    --arg canonical "$CANONICAL_URL" \
+    --arg org "$ORG_CTID" \
+    '{
+      Competencies: [
+        {
+          CTID: $ctid,
+          CompetencyText: "Conduct frequent self-evaluations to reflect on needs for professional practice.",
+          CompetencyLabel: "(osmt-dev) Conduct Self-Evaluations",
+          Creator: [$org],
+          ConceptKeyword: ["Curriculum and Instruction", "Reflective Practice", "WGUSID: 1212.1"],
+          PublicationStatusType: "Published",
+          ExactAlignment: [$canonical]
+        }
+      ],
+      PublishForOrganizationIdentifier: $org,
+      DefaultLanguage: "en-US"
+    }')
+else
+  PAYLOAD=$(jq -n \
+    --arg ctid "$CTID" \
+    --arg canonical "$CANONICAL_URL" \
+    --arg org "$ORG_CTID" \
+    '{
+      Competencies: [
+        {
+          CTID: $ctid,
+          CompetencyText: "OsmtTestSkill. Mock skill for Credential Engine connectivity test.",
+          CompetencyLabel: "OsmtTestSkill",
+          Creator: [$org],
+          ConceptKeyword: ["OsmtTestSkill", "osmt-test", "test-sync"],
+          PublicationStatusType: "Published",
+          ExactAlignment: [$canonical]
+        }
+      ],
+      PublishForOrganizationIdentifier: $org,
+      DefaultLanguage: "en-US"
+    }')
+fi
 
 HTTP_CODE=$(curl -sS -w "%{http_code}" -o /tmp/ce-test-response.$$.json \
   -X POST "$PUBLISH_URL" \
@@ -140,6 +204,7 @@ if [[ -n "$RESPONSE" ]]; then
 fi
 
 if [[ "$HTTP_CODE" =~ ^2 && "$CE_SUCCESS" != "false" ]]; then
+  LABEL="$([ "$FULL" = true ] && echo "Conduct Self-Evaluations" || [ "$APP_LIKE" = true ] && echo "(osmt-dev) Conduct Self-Evaluations" || echo "OsmtTestSkill")"
   FINDER_URL=$(echo "$RESPONSE" \
     | jq -r '
         if type == "array" then .[0].CredentialFinderUrl
@@ -148,9 +213,9 @@ if [[ "$HTTP_CODE" =~ ^2 && "$CE_SUCCESS" != "false" ]]; then
     | jq -r '
         if type == "array" then .[0].GraphUrl
         else .GraphUrl end' 2>/dev/null) || GRAPH_URL=""
-  SEARCH_URL="${REGISTRY_URL%/}/finder/search?keywords=OsmtTestSkill&searchType=competency"
+  SEARCH_URL="${REGISTRY_URL%/}/finder/search?keywords=$([ "$APP_LIKE" = true ] || [ "$FULL" = true ] && echo "Conduct" || echo "OsmtTestSkill")&searchType=competency"
   echo "SUCCESS: Mock skill published. (HTTP $HTTP_CODE)"
-  echo "  Label:  OsmtTestSkill"
+  echo "  Label:  ${LABEL:-OsmtTestSkill}"
   echo "  CTID:   ${CTID}"
   echo ""
   [[ -n "$FINDER_URL" && "$FINDER_URL" != "null" ]] \

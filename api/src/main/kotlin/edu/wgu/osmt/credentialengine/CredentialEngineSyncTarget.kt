@@ -29,6 +29,7 @@ class CredentialEngineSyncTarget(
 ) : SyncTarget {
     private val logger = LoggerFactory.getLogger(CredentialEngineSyncTarget::class.java)
     private val baseUrl = registryUrl.trimEnd('/') + "/assistant"
+    private val registryBase = registryUrl.trimEnd('/')
 
     override fun publishSkill(rsd: RichSkillDescriptor): Result<Unit> {
         val ctid = ctidGenerator.generate(rsd.uuid)
@@ -42,7 +43,15 @@ class CredentialEngineSyncTarget(
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
-        return post("$baseUrl/competency/publish", body)
+        return post("$baseUrl/competency/publish", body).also { r ->
+            if (r.isSuccess) {
+                logger.info(
+                    "CE publish skill success uuid={} {}",
+                    rsd.uuid,
+                    "$registryBase/finder/competency/$ctid",
+                )
+            }
+        }
     }
 
     override fun deprecateSkill(rsd: RichSkillDescriptor): Result<Unit> {
@@ -57,7 +66,15 @@ class CredentialEngineSyncTarget(
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
-        return post("$baseUrl/competency/publish", body)
+        return post("$baseUrl/competency/publish", body).also { r ->
+            if (r.isSuccess) {
+                logger.info(
+                    "CE deprecate skill success uuid={} {}",
+                    rsd.uuid,
+                    "$registryBase/finder/competency/$ctid",
+                )
+            }
+        }
     }
 
     private fun buildSkillMap(
@@ -73,17 +90,20 @@ class CredentialEngineSyncTarget(
                 "Creator" to listOf(orgCtid),
                 "ConceptKeyword" to
                     (rsd.searchingKeywords.mapNotNull { it.value }.take(20))
+                        .map { it.replace("&", "and") }
                         .ifEmpty { listOf(rsd.name.take(100)) },
                 "PublicationStatusType" to status,
             )
-        val author = rsd.authors.firstOrNull()?.value
-        if (!author.isNullOrBlank()) map["Author"] = author
-        val categories =
-            rsd.categories.mapNotNull { it.value }.take(10)
-        if (categories.isNotEmpty()) map["CompetencyCategory"] = categories
+        // CE rejects Author and CompetencyCategory with "please provide a valid Competency publish request"
         if (status != "Deprecated") {
-            val base =
+            val raw =
                 canonicalUrlBase.ifBlank { appConfig.baseUrl }.trimEnd('/')
+            val base =
+                if (raw.contains("osmt.dev.")) {
+                    "http://localhost:8080"
+                } else {
+                    raw
+                }
             map["ExactAlignment"] = listOf(rsd.canonicalUrl(base))
         }
         return map
@@ -108,7 +128,15 @@ class CredentialEngineSyncTarget(
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
-        return post("$baseUrl/Collection/publish", body)
+        return post("$baseUrl/Collection/publish", body).also { r ->
+            if (r.isSuccess) {
+                logger.info(
+                    "CE publish collection success uuid={} {}",
+                    collection.uuid,
+                    "$registryBase/finder/competencyframework/$ctid",
+                )
+            }
+        }
     }
 
     override fun deprecateCollection(collection: Collection): Result<Unit> {
@@ -127,7 +155,15 @@ class CredentialEngineSyncTarget(
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
-        return post("$baseUrl/Collection/publish", body)
+        return post("$baseUrl/Collection/publish", body).also { r ->
+            if (r.isSuccess) {
+                logger.info(
+                    "CE deprecate collection success uuid={} {}",
+                    collection.uuid,
+                    "$registryBase/finder/competencyframework/$ctid",
+                )
+            }
+        }
     }
 
     override fun unpublishAll(
@@ -271,7 +307,7 @@ class CredentialEngineSyncTarget(
                           -H "Authorization: ApiToken ${'$'}CREDENTIAL_ENGINE_API_KEY" \
                           -d '$escaped'
                         """.trimIndent()
-                    logger.info("CE publish failed - copy to reproduce (env: CREDENTIAL_ENGINE_API_KEY): {}", curlCmd)
+                    logger.warn("CE publish failed - copy to reproduce: {}", curlCmd)
                 }
                 Result.failure(
                     Exception(

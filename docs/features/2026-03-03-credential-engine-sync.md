@@ -28,8 +28,10 @@ API returns `503 Service Unavailable`.
 | `CREDENTIAL_ENGINE_SYNC_RETRY_INITIAL_DELAY_MS` | `5000` | First retry delay in ms |
 | `CREDENTIAL_ENGINE_SYNC_RETRY_DELAY_MULTIPLIER` | `1.5` | Exponential backoff multiplier (delay capped at 60s) |
 | `CREDENTIAL_ENGINE_LABEL_PREFIX` | _(empty)_ | Prefix for CE labels (e.g. `(osmt-dev)`). Dev profile defaults to `(osmt-dev)` when unset. |
-| `CREDENTIAL_ENGINE_CANONICAL_URL_BASE` | _(empty)_ | Base URL for ExactAlignment links (e.g. `https://osmt.staging.example.org`). When empty, uses `app.baseUrl`. **Must be publicly resolvable** — CE validates ExactAlignment URLs at publish time. |
+| `CREDENTIAL_ENGINE_CANONICAL_URL_BASE` | _(empty)_ | Base URL for ExactAlignment links. When empty, uses `app.baseUrl`. Localhost works for local dev. |
 | `CREDENTIAL_ENGINE_ALLOW_UNPUBLISH_ALL` | `false` | Enable Unpublish All. Dev profile defaults to `true` when unset. Not for production. |
+
+OSMT omits Author and CompetencyCategory (CE rejects them) and replaces `&` with `and` in ConceptKeyword.
 
 ### Target Selection
 
@@ -203,9 +205,9 @@ Requires `curl` and `jq`.
 | `name`              | `CompetencyLabel`       | Skill name; optional prefix via `label-prefix` |
 | `statement`         | `CompetencyText`        | Skill statement                 |
 | (org CTID)          | `Creator`               | List with org CTID from config  |
-| `authors` (first)   | `Author`                | First author keyword value      |
-| `categories`        | `CompetencyCategory`    | Category keyword values, max 10 |
-| `searchingKeywords` | `ConceptKeyword`        | Keyword values, max 20          |
+| `authors`           | _(omitted)_             | CE rejects; see Known Limitations |
+| `categories`        | _(omitted)_             | CE rejects; see Known Limitations |
+| `searchingKeywords` | `ConceptKeyword`        | Keyword values, max 20; `&` → `and` |
 | (status)            | `PublicationStatusType` | `"Published"` or `"Deprecated"` |
 | canonical URL       | `ExactAlignment`        | `{baseUrl}/api/skills/{uuid}`   |
 
@@ -254,6 +256,13 @@ This ensures:
 
 ## Known Limitations
 
+- **CE rejects Author, CompetencyCategory, and ampersand in ConceptKeyword:**
+  The CE Registry Assistant API returns HTTP 200 with `Successful: false` and
+  message "Error - please provide a valid Competency publish request." when the
+  competency payload includes `Author`, `CompetencyCategory`, or an ampersand
+  (`&`) in any `ConceptKeyword` value. OSMT therefore omits Author and
+  CompetencyCategory entirely, and replaces `&` with `and` in keywords.
+  Reproduce with: `./bin/test-credential-engine-sync.sh --full`.
 - **Single-instance only:** The sync-in-progress guard (`AtomicBoolean`) is
   in-process. Running multiple API instances could start duplicate syncs.
   For multi-instance deployment, add a distributed lock (database row lock
