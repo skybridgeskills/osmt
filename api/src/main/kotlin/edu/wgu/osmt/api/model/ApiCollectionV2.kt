@@ -40,7 +40,7 @@ class ApiCollectionV2(
                     keywords = apiCollection.keywords,
                     appConfig,
                 )
-
+            result.credentialEngineUrl = apiCollection.credentialEngineUrl
             return result
         }
     }
