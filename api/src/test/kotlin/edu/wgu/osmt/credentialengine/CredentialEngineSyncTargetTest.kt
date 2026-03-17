@@ -126,11 +126,51 @@ class CredentialEngineSyncTargetTest {
         assertThat(competency.get("CompetencyText").asText()).isEqualTo("Can do X")
         assertThat(competency.get("PublicationStatusType").asText()).isEqualTo("Published")
         assertThat(competency.get("Creator").get(0).asText()).isEqualTo(orgCtid)
-        assertThat(competency.get("Author").asText()).isEqualTo("Jane")
-        assertThat(competency.get("CompetencyCategory").get(0).asText()).isEqualTo("Cat1")
+        assertThat(competency.has("Author")).isFalse()
+        assertThat(competency.has("CompetencyCategory")).isFalse()
         assertThat(competency.get("ConceptKeyword").get(0).asText()).isEqualTo("kw1")
         assertThat(competency.get("ExactAlignment").get(0).asText())
             .isEqualTo("https://osmt.example.org/api/skills/$skillUuid")
+    }
+
+    @Test
+    fun `publishSkill replaces ampersand with and in ConceptKeyword`() {
+        val skillUuid = UUID.randomUUID().toString()
+        val rsd =
+            RichSkillDescriptor(
+                id = 1L,
+                creationDate = LocalDateTime.now(),
+                updateDate = LocalDateTime.now(),
+                uuid = skillUuid,
+                name = "Test",
+                statement = "Test",
+                keywords =
+                    listOf(
+                        Keyword(
+                            1L,
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                            KeywordTypeEnum.Keyword,
+                            "Curriculum & Instruction",
+                        ),
+                    ),
+            )
+        val entitySlot = slot<HttpEntity<*>>()
+        every {
+            restTemplate.postForEntity(
+                any<String>(),
+                capture(entitySlot),
+                String::class.java,
+            )
+        } returns ResponseEntity.ok("{}")
+
+        target.publishSkill(rsd)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = entitySlot.captured.body as String
+        val json = objectMapper.readTree(body)
+        val kw = json.get("Competencies").get(0).get("ConceptKeyword")
+        assertThat(kw.get(0).asText()).isEqualTo("Curriculum and Instruction")
     }
 
     @Test
