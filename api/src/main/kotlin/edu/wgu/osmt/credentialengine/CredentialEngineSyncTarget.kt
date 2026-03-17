@@ -129,7 +129,7 @@ class CredentialEngineSyncTarget(
             "Name" to applyPrefix(collection.name),
             "Description" to (collection.description ?: ""),
             "HasMember" to skillCtids,
-            "SubjectWebpage" to listOf(collection.canonicalUrl(base)),
+            "SubjectWebpage" to collection.canonicalUrl(base),
             "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
             "LifeCycleStatusType" to lifeCycleStatus,
         )
