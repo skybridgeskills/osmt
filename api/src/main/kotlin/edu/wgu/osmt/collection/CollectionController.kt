@@ -16,6 +16,7 @@ import edu.wgu.osmt.auditlog.AuditLogRepository
 import edu.wgu.osmt.auditlog.AuditLogSortEnum
 import edu.wgu.osmt.config.AppConfig
 import edu.wgu.osmt.config.DEFAULT_WORKSPACE_NAME
+import edu.wgu.osmt.credentialengine.CredentialEngineUrlProvider
 import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.elasticsearch.OffsetPageable
 import edu.wgu.osmt.richskill.RichSkillRepository
@@ -64,6 +65,7 @@ class CollectionController
         val collectionEsRepo: CollectionEsRepo,
         val appConfig: AppConfig,
         val oAuthHelper: OAuthHelper,
+        val credentialEngineUrlProvider: CredentialEngineUrlProvider,
     ) : HasAllPaginated<CollectionDoc> {
         override val elasticRepository = collectionEsRepo
         override val allPaginatedPath: String = "${RoutePaths.API_V3}${RoutePaths.COLLECTIONS_LIST}"
@@ -101,7 +103,12 @@ class CollectionController
             @PathVariable uuid: String,
         ): ApiCollection? =
             collectionRepository.findByUUID(uuid)?.let {
-                ApiCollection.fromDao(it, appConfig)
+                ApiCollection.fromDao(it, appConfig).also { coll ->
+                    if (it.status in listOf(PublishStatus.Published, PublishStatus.Archived)) {
+                        coll.credentialEngineUrl =
+                            credentialEngineUrlProvider.collectionFinderUrl(it.uuid.toString())
+                    }
+                }
             }
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
@@ -149,7 +156,17 @@ class CollectionController
                     oAuthHelper.readableUserName(user),
                     oAuthHelper.readableUserIdentifier(user),
                 ).map {
-                    ApiCollection.fromDao(it, appConfig)
+                    ApiCollection.fromDao(it, appConfig).also { coll ->
+                        if (it.status in
+                            listOf(
+                                PublishStatus.Published,
+                                PublishStatus.Archived,
+                            )
+                        ) {
+                            coll.credentialEngineUrl =
+                                credentialEngineUrlProvider.collectionFinderUrl(it.uuid.toString())
+                        }
+                    }
                 }
 
         @PostMapping(
@@ -197,7 +214,17 @@ class CollectionController
                 )
                     ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
-            return ApiCollection.fromDao(updated, appConfig)
+            return ApiCollection.fromDao(updated, appConfig).also { coll ->
+                if (updated.status in
+                    listOf(
+                        PublishStatus.Published,
+                        PublishStatus.Archived,
+                    )
+                ) {
+                    coll.credentialEngineUrl =
+                        credentialEngineUrlProvider.collectionFinderUrl(updated.uuid.toString())
+                }
+            }
         }
 
         @PostMapping(
@@ -471,7 +498,17 @@ class CollectionController
             @AuthenticationPrincipal user: Jwt?,
         ): ApiCollection? =
             collectionRepository.findByOwner(oAuthHelper.readableUserIdentifier(user))?.let {
-                ApiCollection.fromDao(it, appConfig)
+                ApiCollection.fromDao(it, appConfig).also { coll ->
+                    if (it.status in
+                        listOf(
+                            PublishStatus.Published,
+                            PublishStatus.Archived,
+                        )
+                    ) {
+                        coll.credentialEngineUrl =
+                            credentialEngineUrlProvider.collectionFinderUrl(it.uuid.toString())
+                    }
+                }
             } ?: collectionRepository
                 .createFromApi(
                     listOf(
@@ -486,7 +523,19 @@ class CollectionController
                     oAuthHelper.readableUserName(user),
                     oAuthHelper.readableUserIdentifier(user),
                 ).firstOrNull()
-                ?.let { ApiCollection.fromDao(it, appConfig) }
+                ?.let {
+                    ApiCollection.fromDao(it, appConfig).also { coll ->
+                        if (it.status in
+                            listOf(
+                                PublishStatus.Published,
+                                PublishStatus.Archived,
+                            )
+                        ) {
+                            coll.credentialEngineUrl =
+                                credentialEngineUrlProvider.collectionFinderUrl(it.uuid.toString())
+                        }
+                    }
+                }
 
         @GetMapping(
             path = [

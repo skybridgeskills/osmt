@@ -141,6 +141,7 @@ export interface ISkill {
   occupations: IJobCode[];
   employers: INamedReference[];
   authors: string[];
+  credentialEngineUrl?: string;
 }
 
 export class ApiSkill {
@@ -163,6 +164,7 @@ export class ApiSkill {
   occupations: IJobCode[];
   employers: INamedReference[];
   authors: string[];
+  credentialEngineUrl?: string;
 
   constructor(iRichSkill: ISkill) {
     this.id = iRichSkill.id;
@@ -197,6 +199,7 @@ export class ApiSkill {
       iRichSkill.employers?.map(it => new ApiNamedReference(it)) ?? null;
     this.occupations =
       iRichSkill.occupations?.map(it => new ApiJobCode(it)) ?? null;
+    this.credentialEngineUrl = iRichSkill.credentialEngineUrl;
   }
 
   get sortedAlignments(): IAlignment[] {

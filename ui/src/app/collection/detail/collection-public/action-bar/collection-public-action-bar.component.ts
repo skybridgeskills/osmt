@@ -17,6 +17,7 @@ export class CollectionPublicActionBarComponent implements OnInit {
   @Input() collectionUrl = '';
   @Input() collectionUuid = '';
   @Input() collectionName = '';
+  @Input() credentialEngineUrl?: string;
 
   duplicateIcon = SvgHelper.path(SvgIcon.DUPLICATE);
   downloadIcon = SvgHelper.path(SvgIcon.DOWNLOAD);

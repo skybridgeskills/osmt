@@ -115,6 +115,11 @@ describe('RichSkillManageComponent', () => {
         showIfEmpty: true,
       },
       {
+        label: 'Credential Engine',
+        bodyString: '',
+        showIfEmpty: false,
+      },
+      {
         label: 'Collections With This RSD',
         bodyString: skill.collections
           .map(

@@ -82,6 +82,10 @@ open class ApiCollection(
     val owner: String?
         get() = collection.workspaceOwner
 
+    @JsonProperty
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var credentialEngineUrl: String? = null
+
     companion object {
         fun fromDao(
             collectionDao: CollectionDao,
