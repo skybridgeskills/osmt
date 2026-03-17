@@ -242,7 +242,7 @@ class CredentialEngineSyncTargetTest {
         assertThat(coll.get("HasMember").get(0).asText()).isEqualTo("ce-s1")
         assertThat(coll.get("HasMember").get(1).asText()).isEqualTo("ce-s2")
         assertThat(coll.get("LifeCycleStatusType").asText()).isEqualTo("Active")
-        assertThat(coll.get("SubjectWebpage").get(0).asText())
+        assertThat(coll.get("SubjectWebpage").asText())
             .isEqualTo("https://osmt.example.org/api/collections/$collUuid")
     }
 
@@ -275,7 +275,7 @@ class CredentialEngineSyncTargetTest {
         val json = objectMapper.readTree(body)
         val coll = json.get("Collection")
         assertThat(coll.get("LifeCycleStatusType").asText()).isEqualTo("Ceased")
-        assertThat(coll.get("SubjectWebpage").get(0).asText())
+        assertThat(coll.get("SubjectWebpage").asText())
             .isEqualTo("https://osmt.example.org/api/collections/$collUuid")
     }
 

@@ -219,7 +219,7 @@ Requires `curl` and `jq`.
 | `name`        | `Name`                | Collection name; optional prefix via `label-prefix` |
 | `description` | `Description`         | Collection description         |
 | (derived)     | `HasMember`           | Skill CTIDs (hash-based)        |
-| (derived)     | `SubjectWebpage`      | OSMT collection URL (CTDL: webpage that describes the entity) |
+| (derived)     | `SubjectWebpage`      | OSMT collection URL, single string (CE API expects string, not array) |
 | (org CTID)    | `OwnedBy`             | List with org CTID from config |
 | (status)      | `LifeCycleStatusType` | `"Active"` or `"Ceased"`       |
 
