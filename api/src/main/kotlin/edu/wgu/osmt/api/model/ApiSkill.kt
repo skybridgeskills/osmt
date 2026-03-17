@@ -144,6 +144,10 @@ open class ApiSkill(
     val collections: List<ApiUuidReference>
         get() = cs.map { ApiUuidReference.fromCollection(it) }
 
+    @JsonProperty
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    var credentialEngineUrl: String? = null
+
     companion object {
         fun fromDao(
             rsdDao: RichSkillDescriptorDao,

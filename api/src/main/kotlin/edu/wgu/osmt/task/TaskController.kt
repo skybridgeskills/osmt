@@ -4,6 +4,8 @@ import edu.wgu.osmt.RoutePaths
 import edu.wgu.osmt.api.model.ApiSkill
 import edu.wgu.osmt.api.model.ApiSkillV2
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.credentialengine.CredentialEngineUrlProvider
+import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.richskill.RichSkillRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpEntity
@@ -23,6 +25,7 @@ class TaskController
         val taskMessageService: TaskMessageService,
         val richSkillRepository: RichSkillRepository,
         val appConfig: AppConfig,
+        val credentialEngineUrlProvider: CredentialEngineUrlProvider,
     ) {
         private fun taskResult(uuid: String): HttpEntity<*> {
             val task = taskMessageService.opsForHash.get(TaskMessageService.taskHashTable, uuid)
@@ -75,7 +78,20 @@ class TaskController
                     // CreateSkillsTask.results is a list of skill uuids, look them up and return
                     val createSkillsTask: CreateSkillsTask = task as CreateSkillsTask
                     val skillDaos = richSkillRepository.findManyByUUIDs(createSkillsTask.result!!)
-                    val apiSkills = skillDaos?.map { ApiSkill.fromDao(it, appConfig) }
+                    val apiSkills =
+                        skillDaos?.map {
+                            ApiSkill.fromDao(it, appConfig).also { skill ->
+                                if (it.toModel().publishStatus() in
+                                    listOf(
+                                        PublishStatus.Published,
+                                        PublishStatus.Archived,
+                                    )
+                                ) {
+                                    skill.credentialEngineUrl =
+                                        credentialEngineUrlProvider.skillFinderUrl(it.uuid)
+                                }
+                            }
+                        }
 
                     val responseHeaders = HttpHeaders()
                     responseHeaders.add("Content-Type", task.contentType)
@@ -105,7 +121,20 @@ class TaskController
                     // CreateSkillsTask.results is a list of skill uuids, look them up and return
                     val createSkillsTaskV2: CreateSkillsTaskV2 = task as CreateSkillsTaskV2
                     val skillDaos = richSkillRepository.findManyByUUIDs(createSkillsTaskV2.result!!)
-                    val apiSkills = skillDaos?.map { ApiSkillV2.fromDao(it, appConfig) }
+                    val apiSkills =
+                        skillDaos?.map {
+                            ApiSkillV2.fromDao(it, appConfig).also { skill ->
+                                if (it.toModel().publishStatus() in
+                                    listOf(
+                                        PublishStatus.Published,
+                                        PublishStatus.Archived,
+                                    )
+                                ) {
+                                    skill.credentialEngineUrl =
+                                        credentialEngineUrlProvider.skillFinderUrl(it.uuid)
+                                }
+                            }
+                        }
 
                     val responseHeaders = HttpHeaders()
                     responseHeaders.add("Content-Type", task.contentType)

@@ -35,6 +35,7 @@
             [skillPublicUrl]="getSkillUrl()"
             [archived]="getArchivedDate()"
             [published]="getPublishedDate()"
+            [credentialEngineUrl]="richSkill?.credentialEngineUrl"
             (reloadSkill)="loadSkill()"
           ></app-manage-skill-action-bar-vertical>
 
@@ -58,6 +59,7 @@
         [skillPublicUrl]="getSkillUrl()"
         [archived]="getArchivedDate()"
         [published]="getPublishedDate()"
+        [credentialEngineUrl]="richSkill?.credentialEngineUrl"
         (reloadSkill)="loadSkill()"
       ></app-manage-skill-action-bar-horizontal>
     </div>

@@ -321,6 +321,18 @@ export class ManageCollectionComponent
         })
       );
     }
+
+    if (this.collection?.credentialEngineUrl) {
+      actions.push(
+        new TableActionDefinition({
+          label: 'View on Credential Engine',
+          icon: this.publishIcon,
+          callback: () =>
+            window.open(this.collection!.credentialEngineUrl!, '_blank'),
+          visible: () => !!this.collection?.credentialEngineUrl,
+        })
+      );
+    }
     return actions;
   }
 

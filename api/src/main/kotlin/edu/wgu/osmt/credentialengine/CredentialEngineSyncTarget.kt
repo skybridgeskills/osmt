@@ -109,22 +109,41 @@ class CredentialEngineSyncTarget(
         return map
     }
 
+    /**
+     * CE requires SubjectWebpage or at least one member (HasMember, etc.);
+     * "realistically at least two" members. SubjectWebpage = webpage that
+     * describes the entity (CTDL); we always include the OSMT collection URL.
+     */
+    private fun buildCollectionMap(
+        collection: Collection,
+        ctid: String,
+        skillCtids: List<String>,
+        lifeCycleStatus: String,
+    ): Map<String, Any> {
+        val raw =
+            canonicalUrlBase.ifBlank { appConfig.baseUrl }.trimEnd('/')
+        val base =
+            if (raw.contains("osmt.dev.")) "http://localhost:8080" else raw
+        return mapOf(
+            "CTID" to ctid,
+            "Name" to applyPrefix(collection.name),
+            "Description" to (collection.description ?: ""),
+            "HasMember" to skillCtids,
+            "SubjectWebpage" to listOf(collection.canonicalUrl(base)),
+            "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
+            "LifeCycleStatusType" to lifeCycleStatus,
+        )
+    }
+
     override fun publishCollection(
         collection: Collection,
         skillCtids: List<String>,
     ): Result<Unit> {
         val ctid = ctidGenerator.generate(collection.uuid)
+        val collMap = buildCollectionMap(collection, ctid, skillCtids, "Active")
         val body =
             mapOf(
-                "Collection" to
-                    mapOf(
-                        "CTID" to ctid,
-                        "Name" to applyPrefix(collection.name),
-                        "Description" to (collection.description ?: ""),
-                        "HasMember" to skillCtids,
-                        "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
-                        "LifeCycleStatusType" to "Active",
-                    ),
+                "Collection" to collMap,
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )
@@ -141,17 +160,10 @@ class CredentialEngineSyncTarget(
 
     override fun deprecateCollection(collection: Collection): Result<Unit> {
         val ctid = ctidGenerator.generate(collection.uuid)
+        val collMap = buildCollectionMap(collection, ctid, emptyList(), "Ceased")
         val body =
             mapOf(
-                "Collection" to
-                    mapOf(
-                        "CTID" to ctid,
-                        "Name" to applyPrefix(collection.name),
-                        "Description" to (collection.description ?: ""),
-                        "HasMember" to emptyList<String>(),
-                        "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
-                        "LifeCycleStatusType" to "Ceased",
-                    ),
+                "Collection" to collMap,
                 "PublishForOrganizationIdentifier" to orgCtid,
                 "DefaultLanguage" to "en-US",
             )

@@ -17,6 +17,7 @@ export interface ICollection {
   status: PublishStatus;
   updateDate?: Date;
   uuid: string;
+  credentialEngineUrl?: string;
 }
 
 export class ApiCollection {
@@ -34,6 +35,7 @@ export class ApiCollection {
   status: PublishStatus;
   updateDate?: Date;
   uuid: string;
+  credentialEngineUrl?: string;
 
   constructor({
     archiveDate,
@@ -50,6 +52,7 @@ export class ApiCollection {
     status,
     updateDate,
     uuid,
+    credentialEngineUrl,
   }: ICollection) {
     this.archiveDate = archiveDate;
     this.author = author;
@@ -65,6 +68,7 @@ export class ApiCollection {
     this.status = status;
     this.updateDate = updateDate;
     this.uuid = uuid;
+    this.credentialEngineUrl = credentialEngineUrl;
   }
 }
 

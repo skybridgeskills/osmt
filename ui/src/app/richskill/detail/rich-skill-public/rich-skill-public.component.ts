@@ -83,11 +83,6 @@ export class RichSkillPublicComponent extends AbstractRichSkillDetailComponent {
             ?.join('') ?? '',
         showIfEmpty: false,
       },
-      // {
-      //   label: "Employers",
-      //   bodyHtml: this.richSkill?.employers?.map(employer => employer.name)?.join("; ") ?? "",
-      //   showIfEmpty: false
-      // },
       {
         label: 'Collections With This RSD',
         bodyString: this.formatAssociatedCollections(false),

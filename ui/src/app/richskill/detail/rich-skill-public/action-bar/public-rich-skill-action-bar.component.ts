@@ -19,6 +19,7 @@ export class PublicRichSkillActionBarComponent implements OnInit {
   @Input() skillName = '';
   @Input() skillUrl = '';
   @Input() skillStatus?: PublishStatus;
+  @Input() credentialEngineUrl?: string;
 
   skillJsonObservable = new Observable<string>();
   jsonClipboard = '';

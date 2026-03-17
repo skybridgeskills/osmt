@@ -219,6 +219,7 @@ Requires `curl` and `jq`.
 | `name`        | `Name`                | Collection name; optional prefix via `label-prefix` |
 | `description` | `Description`         | Collection description         |
 | (derived)     | `HasMember`           | Skill CTIDs (hash-based)        |
+| (derived)     | `SubjectWebpage`      | OSMT collection URL (CTDL: webpage that describes the entity) |
 | (org CTID)    | `OwnedBy`             | List with org CTID from config |
 | (status)      | `LifeCycleStatusType` | `"Active"` or `"Ceased"`       |
 
@@ -263,6 +264,10 @@ This ensures:
   (`&`) in any `ConceptKeyword` value. OSMT therefore omits Author and
   CompetencyCategory entirely, and replaces `&` with `and` in keywords.
   Reproduce with: `./bin/test-credential-engine-sync.sh --full`.
+- **CE requires SubjectWebpage or 2+ members for collections:** Collections with
+  fewer than two `HasMember` entries are rejected without `SubjectWebpage`.
+  OSMT always includes `SubjectWebpage` (OSMT collection URL) per CTDL: webpage
+  that describes the entity.
 - **Single-instance only:** The sync-in-progress guard (`AtomicBoolean`) is
   in-process. Running multiple API instances could start duplicate syncs.
   For multi-instance deployment, add a distributed lock (database row lock

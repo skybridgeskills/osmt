@@ -23,6 +23,7 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
   abstract skillPublicUrl: string;
   abstract archived: string | undefined;
   abstract published: string | undefined;
+  abstract credentialEngineUrl: string | undefined;
 
   abstract reloadSkill: EventEmitter<void>;
 

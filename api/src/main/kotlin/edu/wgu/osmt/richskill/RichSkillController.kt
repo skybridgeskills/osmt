@@ -16,6 +16,7 @@ import edu.wgu.osmt.auditlog.AuditLog
 import edu.wgu.osmt.auditlog.AuditLogRepository
 import edu.wgu.osmt.auditlog.AuditLogSortEnum
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.credentialengine.CredentialEngineUrlProvider
 import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.elasticsearch.OffsetPageable
 import edu.wgu.osmt.elasticsearch.PaginatedLinks
@@ -71,6 +72,7 @@ class RichSkillController
         val auditLogRepository: AuditLogRepository,
         val appConfig: AppConfig,
         val oAuthHelper: OAuthHelper,
+        val credentialEngineUrlProvider: CredentialEngineUrlProvider,
     ) : HasAllPaginated<RichSkillDoc> {
         override val elasticRepository = richSkillEsRepo
 
@@ -249,7 +251,12 @@ class RichSkillController
                     throw ResponseStatusException(HttpStatus.NOT_FOUND)
                 }
 
-                ApiSkill.fromDao(it, appConfig)
+                ApiSkill.fromDao(it, appConfig).also { skill ->
+                    if (it.publishStatus() in listOf(PublishStatus.Published, PublishStatus.Archived)) {
+                        skill.credentialEngineUrl =
+                            credentialEngineUrlProvider.skillFinderUrl(it.uuid.toString())
+                    }
+                }
             } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
         @GetMapping(
@@ -367,7 +374,17 @@ class RichSkillController
                 )
                     ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
-            return ApiSkill.fromDao(updatedSkill, appConfig)
+            return ApiSkill.fromDao(updatedSkill, appConfig).also { skill ->
+                if (updatedSkill.publishStatus() in
+                    listOf(
+                        PublishStatus.Published,
+                        PublishStatus.Archived,
+                    )
+                ) {
+                    skill.credentialEngineUrl =
+                        credentialEngineUrlProvider.skillFinderUrl(updatedSkill.uuid.toString())
+                }
+            }
         }
 
         @PostMapping(

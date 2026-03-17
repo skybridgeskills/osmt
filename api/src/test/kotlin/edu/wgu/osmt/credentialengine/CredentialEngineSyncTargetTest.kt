@@ -242,6 +242,8 @@ class CredentialEngineSyncTargetTest {
         assertThat(coll.get("HasMember").get(0).asText()).isEqualTo("ce-s1")
         assertThat(coll.get("HasMember").get(1).asText()).isEqualTo("ce-s2")
         assertThat(coll.get("LifeCycleStatusType").asText()).isEqualTo("Active")
+        assertThat(coll.get("SubjectWebpage").get(0).asText())
+            .isEqualTo("https://osmt.example.org/api/collections/$collUuid")
     }
 
     @Test
@@ -271,8 +273,10 @@ class CredentialEngineSyncTargetTest {
         @Suppress("UNCHECKED_CAST")
         val body = entitySlot.captured.body as String
         val json = objectMapper.readTree(body)
-        assertThat(json.get("Collection").get("LifeCycleStatusType").asText())
-            .isEqualTo("Ceased")
+        val coll = json.get("Collection")
+        assertThat(coll.get("LifeCycleStatusType").asText()).isEqualTo("Ceased")
+        assertThat(coll.get("SubjectWebpage").get(0).asText())
+            .isEqualTo("https://osmt.example.org/api/collections/$collUuid")
     }
 
     @Test

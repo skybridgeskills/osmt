@@ -22,6 +22,7 @@ export class ManageSkillActionBarHorizontalComponent extends ManageRichSkillActi
   @Input() skillPublicUrl = '';
   @Input() archived = undefined;
   @Input() published = undefined;
+  @Input() credentialEngineUrl: string | undefined = undefined;
 
   @Output() reloadSkill = new EventEmitter<void>();
 
