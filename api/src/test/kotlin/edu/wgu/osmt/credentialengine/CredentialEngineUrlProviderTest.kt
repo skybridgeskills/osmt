@@ -52,7 +52,7 @@ class CredentialEngineUrlProviderTest {
         val uuid = "xyz-789-ghi"
         val ctid = ctidGenerator.generate(uuid)
         val url = provider.collectionFinderUrl(uuid)
-        assertThat(url).isEqualTo("$registryUrl/finder/competencyframework/$ctid")
+        assertThat(url).isEqualTo("$registryUrl/finder/collection/$ctid")
     }
 
     @Test
