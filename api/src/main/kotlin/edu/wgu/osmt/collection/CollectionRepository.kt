@@ -454,6 +454,9 @@ class CollectionRepositoryImpl
                 }
             }
 
+            // touch updateDate so CE sync watermark picks up the change
+            collectionDao.updateDate = LocalDateTime.now(ZoneOffset.UTC)
+
             // update affected elasticsearch indexes
             this.findByUUID(collectionUuid)?.let {
                 collectionEsRepo.save(it.toDoc())
