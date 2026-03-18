@@ -27,13 +27,17 @@
         *ngIf="!!skill"
       >
         <div class="t-hidden-tabletMax">
-          {{ getFormattedCategories(skill) }}
+          <app-category-links
+            [categories]="skill?.categories ?? []"
+          ></app-category-links>
         </div>
         <div class="t-hidden-tabletMin">
           <div class="m-inlineHeading">
             <h5 class="m-inlineHeading-x-heading">Categories:</h5>
             <p class="m-inlineHeading-x-text">
-              {{ getFormattedCategories(skill) }}
+              <app-category-links
+                [categories]="skill?.categories ?? []"
+              ></app-category-links>
             </p>
           </div>
         </div>

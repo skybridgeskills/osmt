@@ -58,6 +58,7 @@ import { CategoryDetailCardComponent } from './category/detail/card/category-det
 import { CategoryLibraryComponent } from './category/library/category-library.component';
 import { CategoryListComponent } from './category/list/category-list.component';
 import { CategoryTableComponent } from './category/table/category-table.component';
+import { CategoryLinksComponent } from './category/category-links/category-links.component';
 import { CategoryTableRowComponent } from './category/table/row/category-table-row.component';
 import { AddSkillsCollectionComponent } from './collection/add-skills-collection.component';
 import { CollectionTableComponent } from './collection/collection-table.component';
@@ -203,6 +204,7 @@ export function initializeApp(
     CategoryDetailComponent,
     CategoryDetailCardComponent,
     CategoryLibraryComponent,
+    CategoryLinksComponent,
     CategoryListComponent,
     CategoryTableComponent,
     CategoryTableRowComponent,

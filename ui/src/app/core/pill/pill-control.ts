@@ -9,6 +9,10 @@ export abstract class AbstractPillControl {
 
   abstract get primaryLabel(): string;
 
+  get linkUrl(): string | undefined {
+    return undefined;
+  }
+
   get secondaryLabel(): string | undefined {
     return undefined;
   }
@@ -28,10 +32,12 @@ export abstract class AbstractPillControl {
 
 export class KeywordCountPillControl extends AbstractPillControl {
   readonly keywordCount: KeywordCount;
+  readonly categoryLinkPrefix?: string;
 
-  constructor(keywordCount: KeywordCount) {
+  constructor(keywordCount: KeywordCount, categoryLinkPrefix?: string) {
     super();
     this.keywordCount = keywordCount;
+    this.categoryLinkPrefix = categoryLinkPrefix;
   }
 
   get keyword(): IAlignment | INamedReference | string {
@@ -43,7 +49,24 @@ export class KeywordCountPillControl extends AbstractPillControl {
   }
 
   get primaryLabel(): string {
-    return `${this.keyword}`;
+    const kw = this.keyword;
+    if (typeof kw === 'object' && kw !== null && 'name' in kw) {
+      return (kw as INamedReference).name ?? '';
+    }
+    if (typeof kw === 'object' && kw !== null && 'skillName' in kw) {
+      return (kw as IAlignment).skillName ?? '';
+    }
+    return String(kw ?? '');
+  }
+
+  get linkUrl(): string | undefined {
+    if (!this.categoryLinkPrefix) return undefined;
+    const kw = this.keyword;
+    const id =
+      typeof kw === 'object' && kw !== null && 'id' in kw
+        ? (kw as INamedReference).id
+        : undefined;
+    return id ? `${this.categoryLinkPrefix}${id}` : undefined;
   }
 
   get secondaryLabel(): string | undefined {
