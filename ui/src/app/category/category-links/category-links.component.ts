@@ -5,7 +5,6 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
-import { AuthService } from '../../auth/auth-service';
 import { CategoryService } from '../service/category.service';
 
 @Component({
@@ -17,10 +16,7 @@ export class CategoryLinksComponent implements OnInit, OnChanges {
   nameToId: Map<string, number> = new Map();
   private loaded = false;
 
-  constructor(
-    private categoryService: CategoryService,
-    private authService: AuthService
-  ) {}
+  constructor(private categoryService: CategoryService) {}
 
   ngOnInit(): void {
     this.loadCategoryIds();
@@ -33,11 +29,7 @@ export class CategoryLinksComponent implements OnInit, OnChanges {
   }
 
   private loadCategoryIds(): void {
-    if (
-      this.categories.length === 0 ||
-      this.loaded ||
-      !this.authService.isAuthenticated()
-    ) {
+    if (this.categories.length === 0 || this.loaded) {
       return;
     }
     this.loaded = true;

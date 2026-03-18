@@ -61,8 +61,12 @@ class KeywordController
             size: Int,
             from: Int,
             sort: String?,
-        ): HttpEntity<List<ApiKeyword>> =
-            allPaginated(
+            @AuthenticationPrincipal user: Jwt? = null,
+        ): HttpEntity<List<ApiKeyword>> {
+            if (!appConfig.allowPublicLists && user == null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
+            return allPaginated(
                 keywordType = KeywordTypeEnum.Category,
                 uriComponentsBuilder = uriComponentsBuilder,
                 path = "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.CATEGORY_LIST}",
@@ -70,6 +74,7 @@ class KeywordController
                 from = from,
                 sort = sort,
             )
+        }
 
         @GetMapping(
             "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.CATEGORY_DETAIL}",
@@ -78,7 +83,11 @@ class KeywordController
         @ResponseBody
         fun categoryById(
             @PathVariable identifier: String,
+            @AuthenticationPrincipal user: Jwt? = null,
         ): ApiKeyword? {
+            if (!appConfig.allowPublicLists && user == null) {
+                throw GeneralApiException("Unauthorized", HttpStatus.UNAUTHORIZED)
+            }
             val id: Long = identifier.toLong()
             return this.byId(KeywordTypeEnum.Category, id)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)

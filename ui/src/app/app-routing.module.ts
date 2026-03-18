@@ -89,18 +89,15 @@ const routes: Routes = [
     },
   },
 
-  /* CATEGORIES */
+  /* CATEGORIES (public, like skills/collections) */
 
-  // category detail
   {
     path: 'categories/:id',
     component: CategoryDetailComponent,
-    canActivate: [AuthGuard],
   },
   {
     path: 'categories',
     component: CategoryLibraryComponent,
-    canActivate: [AuthGuard],
   },
 
   /* COLLECTIONS */

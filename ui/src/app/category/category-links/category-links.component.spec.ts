@@ -4,13 +4,11 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { CategoryLinksComponent } from './category-links.component';
 import { CategoryService } from '../service/category.service';
-import { AuthService } from '../../auth/auth-service';
 
 describe('CategoryLinksComponent', () => {
   let component: CategoryLinksComponent;
   let fixture: ComponentFixture<CategoryLinksComponent>;
   let categoryService: jasmine.SpyObj<CategoryService>;
-  let authService: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
     const categoryServiceSpy = jasmine.createSpyObj('CategoryService', [
@@ -25,24 +23,16 @@ describe('CategoryLinksComponent', () => {
         totalCount: 2,
       })
     );
-    const authServiceSpy = jasmine.createSpyObj('AuthService', [
-      'isAuthenticated',
-    ]);
-    authServiceSpy.isAuthenticated.and.returnValue(true);
 
     await TestBed.configureTestingModule({
       declarations: [CategoryLinksComponent],
       imports: [HttpClientTestingModule, RouterTestingModule],
-      providers: [
-        { provide: CategoryService, useValue: categoryServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy },
-      ],
+      providers: [{ provide: CategoryService, useValue: categoryServiceSpy }],
     }).compileComponents();
 
     categoryService = TestBed.inject(
       CategoryService
     ) as jasmine.SpyObj<CategoryService>;
-    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     fixture = TestBed.createComponent(CategoryLinksComponent);
     component = fixture.componentInstance;
     component.categories = ['Category A', 'Category B'];
@@ -53,7 +43,7 @@ describe('CategoryLinksComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load category ids when authenticated', () => {
+  it('should load category ids', () => {
     expect(categoryService.getAllPaginated).toHaveBeenCalledWith(
       1000,
       0,

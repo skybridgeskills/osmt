@@ -98,6 +98,15 @@ object SecurityConfigHelper {
                 .permitAll()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.SEARCH_JOBCODES_PATH))
                 .permitAll()
+                // Public category endpoints (list, detail, skills)
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.CATEGORY_LIST))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.CATEGORY_DETAIL))
+                .permitAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.CATEGORY_SKILLS))
+                .permitAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.CATEGORY_SKILLS))
+                .permitAll()
         }
 
     /**
