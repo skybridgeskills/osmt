@@ -76,8 +76,8 @@ All endpoints are under `/api/sync`. All require admin authentication.
 | POST | `/api/sync/all` | 202 text | Start incremental sync (async) |
 | POST | `/api/sync/resync` | 202 text | Clear watermarks and resync everything (async) |
 | POST | `/api/sync/unpublish-all` | 202 text | Delete all from CE (async). Requires allow-unpublish-all. |
-| POST | `/api/sync/skill/{uuid}` | 200 | Sync a single skill (synchronous) |
-| POST | `/api/sync/collection/{uuid}` | 200 | Sync a single collection (synchronous) |
+| POST | `/api/sync/skill/{uuid}` | 200 | Sync a single skill (synchronous). Curator or Admin. |
+| POST | `/api/sync/collection/{uuid}` | 200 | Sync a single collection (synchronous). Curator or Admin. |
 
 ### Error Responses
 
@@ -158,6 +158,15 @@ The page shows:
 
 **Auto-refresh:** when sync is in progress, enable the auto-refresh checkbox
 to poll every 5 seconds until completion (auto-stops after 1 hour).
+
+### Individual Resync (Skill and Collection Pages)
+
+On the manage page for a skill (`/skills/:uuid/manage`) or collection
+(`/collections/:uuid/manage`), a **Sync to Credential Engine** button is
+available to authors (Curator role) and admins. It triggers an immediate
+single-record sync for that skill or collection, useful when CE data is out
+of date (e.g. a collection shows no RSDs). Success triggers a toast and
+reload; on 503, the toast indicates sync is not configured.
 
 ---
 

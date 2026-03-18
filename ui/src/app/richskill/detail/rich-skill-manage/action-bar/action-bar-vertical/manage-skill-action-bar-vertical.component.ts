@@ -14,6 +14,7 @@ import { ToastService } from '../../../../../toast/toast.service';
 import { ManageRichSkillActionBarComponent } from '../manage-rich-skill-action-bar.component';
 import { SvgHelper } from '../../../../../core/SvgHelper';
 import { AuthService } from '../../../../../auth/auth-service';
+import { SyncService } from '../../../../../admin/sync/sync.service';
 
 @Component({
   selector: 'app-manage-skill-action-bar-vertical',
@@ -37,8 +38,16 @@ export class ManageSkillActionBarVerticalComponent extends ManageRichSkillAction
     richSkillService: RichSkillService,
     toastService: ToastService,
     @Inject(LOCALE_ID) locale: string,
-    authService: AuthService
+    authService: AuthService,
+    syncService: SyncService
   ) {
-    super(router, richSkillService, toastService, locale, authService);
+    super(
+      router,
+      richSkillService,
+      toastService,
+      locale,
+      authService,
+      syncService
+    );
   }
 }

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MyWorkspaceComponent } from './my-workspace.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '../auth/auth-service';
+import { SyncService } from '../admin/sync/sync.service';
 import { RichSkillService } from '../richskill/service/rich-skill.service';
 import {
   AuthServiceStub,
@@ -86,6 +87,7 @@ describe('MyWorkspaceComponent', () => {
         AppConfig,
         Title,
         ToastService,
+        SyncService,
         { provide: EnvironmentService, useClass: EnvironmentServiceStub }, // Example of using a service stub
         { provide: RichSkillService, useClass: RichSkillServiceStub },
         { provide: CollectionService, useClass: CollectionServiceStub },

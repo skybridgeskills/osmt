@@ -15,6 +15,7 @@ import { ExtrasSelectedSkillsState } from '../../../../collection/add-skills-col
 import { ApiSkillSummary } from '../../../ApiSkillSummary';
 import { AuthService } from '../../../../auth/auth-service';
 import { ButtonAction } from '../../../../auth/auth-roles';
+import { SyncService } from '../../../../admin/sync/sync.service';
 
 @Component({ template: '' })
 export abstract class ManageRichSkillActionBarComponent implements OnInit {
@@ -46,13 +47,15 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
   canCollectionPublish = false;
   canCollectionSkillsUpdate = false;
   isDraftAndDisabled = false;
+  canSyncRecord = false;
 
   constructor(
     protected router: Router,
     protected richSkillService: RichSkillService,
     protected toastService: ToastService,
     @Inject(LOCALE_ID) protected locale: string,
-    private authService: AuthService
+    private authService: AuthService,
+    protected syncService: SyncService
   ) {}
 
   ngOnInit(): void {
@@ -172,7 +175,32 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
     this.canCollectionSkillsUpdate = this.authService.isEnabledByRoles(
       ButtonAction.CollectionSkillsUpdate
     );
+    this.canSyncRecord = this.authService.isEnabledByRoles(
+      ButtonAction.SyncRecord
+    );
 
     this.isDraftAndDisabled = !this.isPublished() && !this.canSkillPublish;
+  }
+
+  handleSyncToCredentialEngine(): void {
+    this.toastService.showBlockingLoader();
+    this.syncService.syncSkill(this.skillUuid).subscribe({
+      next: () => {
+        this.toastService.hideBlockingLoader();
+        this.toastService.showToast(
+          'Success',
+          'Skill synced to Credential Engine'
+        );
+        this.reloadSkill.emit();
+      },
+      error: err => {
+        this.toastService.hideBlockingLoader();
+        const msg =
+          err?.status === 503
+            ? 'Credential Engine sync is not configured'
+            : (err?.error?.message ?? err?.message ?? 'Sync failed');
+        this.toastService.showToast('Error', msg);
+      },
+    });
   }
 }

@@ -33,6 +33,7 @@ import { ApiCollection } from '../ApiCollection';
 import { CollectionService } from '../service/collection.service';
 import { ManageCollectionComponent } from './manage-collection.component';
 import { AuthService } from '../../auth/auth-service';
+import { SyncService } from '../../admin/sync/sync.service';
 import * as FileSaver from 'file-saver';
 import * as Auth from '../../auth/auth-roles';
 import { CollectionsLibraryComponent } from '../../table/collections-library.component';
@@ -96,6 +97,7 @@ describe('ManageCollectionComponent', () => {
         AppConfig,
         Title,
         ToastService,
+        SyncService,
         { provide: EnvironmentService, useClass: EnvironmentServiceStub }, // Example of using a service stub
         { provide: RichSkillService, useClass: RichSkillServiceStub },
         { provide: CollectionService, useClass: CollectionServiceStub },
