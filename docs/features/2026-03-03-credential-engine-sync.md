@@ -218,6 +218,7 @@ Requires `curl` and `jq`.
 | `uuid`        | `CTID`                | Hash-based; see [CTID Generation](#ctid-generation) |
 | `name`        | `Name`                | Collection name; optional prefix via `label-prefix` |
 | `description` | `Description`         | Collection description         |
+| (static)      | `CollectionType`      | `["collectionCategory:Competency"]` — requested by CE |
 | (derived)     | `HasMember`           | Skill CTIDs (hash-based)        |
 | (derived)     | `SubjectWebpage`      | OSMT collection URL, single string (CE API expects string, not array) |
 | (org CTID)    | `OwnedBy`             | List with org CTID from config |

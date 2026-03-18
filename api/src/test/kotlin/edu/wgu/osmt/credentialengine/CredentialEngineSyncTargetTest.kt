@@ -242,6 +242,8 @@ class CredentialEngineSyncTargetTest {
         assertThat(coll.get("HasMember").get(0).asText()).isEqualTo("ce-s1")
         assertThat(coll.get("HasMember").get(1).asText()).isEqualTo("ce-s2")
         assertThat(coll.get("LifeCycleStatusType").asText()).isEqualTo("Active")
+        assertThat(coll.get("CollectionType").get(0).asText())
+            .isEqualTo("collectionCategory:Competency")
         assertThat(coll.get("SubjectWebpage").asText())
             .isEqualTo("https://osmt.example.org/api/collections/$collUuid")
     }

@@ -12,6 +12,10 @@ import org.springframework.http.MediaType
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 
+/** CTDL CollectionCategory concept for competency collections. */
+private const val COLLECTION_TYPE_COMPETENCY =
+    "collectionCategory:Competency"
+
 /**
  * SyncTarget implementation that publishes to the Credential Engine Registry
  * via the Registry Assistant API.
@@ -128,6 +132,7 @@ class CredentialEngineSyncTarget(
             "CTID" to ctid,
             "Name" to applyPrefix(collection.name),
             "Description" to (collection.description ?: ""),
+            "CollectionType" to listOf(COLLECTION_TYPE_COMPETENCY),
             "HasMember" to skillCtids,
             "SubjectWebpage" to collection.canonicalUrl(base),
             "OwnedBy" to listOf(mapOf("CTID" to orgCtid)),
