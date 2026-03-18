@@ -209,7 +209,10 @@ object SecurityConfigHelper {
                 // Workspace
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.WORKSPACE_PATH))
                 .hasAnyAuthority(admin, curator)
-                // Sync endpoints: admin-only (GET state, POST trigger/resync)
+                // Sync single-record endpoints: admin or curator
+                .requestMatchers(POST, "/api/sync/skill/**", "/api/sync/collection/**")
+                .hasAnyAuthority(admin, curator)
+                // Sync bulk endpoints: admin-only (GET state, POST trigger/resync)
                 .requestMatchers("/api/sync/**")
                 .hasAnyAuthority(admin)
                 // Catch-all for other API endpoints

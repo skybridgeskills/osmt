@@ -15,7 +15,6 @@ interface SyncStatusDisplay {
   selector: 'app-sync-management',
   templateUrl: './sync-management.component.html',
   styleUrls: ['./sync-management.component.scss'],
-  providers: [SyncService],
 })
 export class SyncManagementComponent implements OnInit, OnDestroy {
   state: SyncStateResponse | null = null;

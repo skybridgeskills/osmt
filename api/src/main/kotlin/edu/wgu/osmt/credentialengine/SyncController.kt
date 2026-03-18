@@ -51,6 +51,14 @@ class SyncController
             }
         }
 
+        private fun ensureCuratorOrAdmin() {
+            if (!oAuthHelper.hasRole(appConfig.roleAdmin) &&
+                !oAuthHelper.hasRole(appConfig.roleCurator)
+            ) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+            }
+        }
+
         private fun ensureConfigured() {
             if (!syncService.isConfigured()) {
                 throw ResponseStatusException(
@@ -95,7 +103,7 @@ class SyncController
         fun syncSkill(
             @PathVariable uuid: String,
         ): ResponseEntity<Unit> {
-            ensureAdmin()
+            ensureCuratorOrAdmin()
             ensureConfigured()
             return syncService
                 .syncRecord(SyncRecordType.SKILL, uuid)
@@ -129,7 +137,7 @@ class SyncController
         fun syncCollection(
             @PathVariable uuid: String,
         ): ResponseEntity<Unit> {
-            ensureAdmin()
+            ensureCuratorOrAdmin()
             ensureConfigured()
             return syncService
                 .syncRecord(SyncRecordType.COLLECTION, uuid)

@@ -36,7 +36,7 @@ Notes from WGU OSMT Use Case and CTDL Mapping and Project Tracker documents.
 
 Published as **Competency Framework** (not standalone competencies) to CE sandbox:
 
-- [Finder view](https://sandbox.credentialengine.org/finder/competencyframework/ce-3e7df7ec-1a9b-4503-9ff3-21256022b515/)
+- [Finder view](https://sandbox.credentialengine.org/finder/collection/ce-3e7df7ec-1a9b-4503-9ff3-21256022b515/)
 - Via CaSS integrated with CE publishing stack (not Registry Assistant directly)
 
 ## Competency Publish Workflow

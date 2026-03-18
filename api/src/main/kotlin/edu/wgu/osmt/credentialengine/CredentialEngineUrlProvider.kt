@@ -25,6 +25,6 @@ class CredentialEngineUrlProvider
 
         fun collectionFinderUrl(uuid: String): String? =
             ctidGenerator?.let {
-                "$registryBase/finder/competencyframework/${it.generate(uuid)}"
+                "$registryBase/finder/collection/${it.generate(uuid)}"
             }
     }

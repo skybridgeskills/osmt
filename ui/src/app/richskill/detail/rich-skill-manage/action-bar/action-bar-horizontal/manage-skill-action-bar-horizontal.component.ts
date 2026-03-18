@@ -11,6 +11,7 @@ import { ManageRichSkillActionBarComponent } from '../manage-rich-skill-action-b
 import { RichSkillService } from '../../../../service/rich-skill.service';
 import { ToastService } from '../../../../../toast/toast.service';
 import { AuthService } from '../../../../../auth/auth-service';
+import { SyncService } from '../../../../../admin/sync/sync.service';
 
 @Component({
   selector: 'app-manage-skill-action-bar-horizontal',
@@ -35,8 +36,16 @@ export class ManageSkillActionBarHorizontalComponent extends ManageRichSkillActi
     richSkillService: RichSkillService,
     toastService: ToastService,
     @Inject(LOCALE_ID) locale: string,
-    authService: AuthService
+    authService: AuthService,
+    syncService: SyncService
   ) {
-    super(router, richSkillService, toastService, locale, authService);
+    super(
+      router,
+      richSkillService,
+      toastService,
+      locale,
+      authService,
+      syncService
+    );
   }
 }

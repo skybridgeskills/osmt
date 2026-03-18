@@ -15,6 +15,7 @@ import { RichSkillService } from '../richskill/service/rich-skill.service';
 import { ApiSearch } from '../richskill/service/rich-skill-search.service';
 import { TableActionDefinition } from '../table/skills-library-table/has-action-definitions';
 import { ToastService } from '../toast/toast.service';
+import { SyncService } from '../admin/sync/sync.service';
 
 export const WORKSPACE_COLLECTIONS_UUIDS = 'workspace-collections-uuids';
 
@@ -37,7 +38,8 @@ export class MyWorkspaceComponent
     protected titleService: Title,
     protected authService: AuthService,
     @Inject(LOCALE_ID) protected locale: string,
-    protected cdr: ChangeDetectorRef
+    protected cdr: ChangeDetectorRef,
+    protected syncService: SyncService
   ) {
     super(
       router,
@@ -48,7 +50,8 @@ export class MyWorkspaceComponent
       titleService,
       authService,
       locale,
-      cdr
+      cdr,
+      syncService
     );
   }
 

@@ -152,7 +152,7 @@ class CredentialEngineSyncTarget(
                 logger.info(
                     "CE publish collection success uuid={} {}",
                     collection.uuid,
-                    "$registryBase/finder/competencyframework/$ctid",
+                    "$registryBase/finder/collection/$ctid",
                 )
             }
         }
@@ -172,7 +172,7 @@ class CredentialEngineSyncTarget(
                 logger.info(
                     "CE deprecate collection success uuid={} {}",
                     collection.uuid,
-                    "$registryBase/finder/competencyframework/$ctid",
+                    "$registryBase/finder/collection/$ctid",
                 )
             }
         }

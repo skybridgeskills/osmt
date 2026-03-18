@@ -33,6 +33,7 @@ import { ToastService } from '../../toast/toast.service';
 import { ApiNamedReference, KeywordType } from '../../richskill/ApiSkill';
 import { FilterDropdown } from '../../models/filter-dropdown.model';
 import { KeywordCountPillControl } from '../../core/pill/pill-control';
+import { SyncService } from '../../admin/sync/sync.service';
 
 @Component({
   selector: 'app-manage-collection',
@@ -96,7 +97,8 @@ export class ManageCollectionComponent
     protected titleService: Title,
     protected authService: AuthService,
     @Inject(LOCALE_ID) protected locale: string,
-    protected cdr: ChangeDetectorRef
+    protected cdr: ChangeDetectorRef,
+    protected syncService: SyncService
   ) {
     super(
       router,
@@ -322,6 +324,22 @@ export class ManageCollectionComponent
       );
     }
 
+    if (
+      this.authService.isEnabledByRoles(ButtonAction.SyncRecord) &&
+      this.uuidParam
+    ) {
+      actions.push(
+        new TableActionDefinition({
+          label: 'Sync to Credential Engine',
+          icon: this.publishIcon,
+          callback: () => this.syncCollectionToCredentialEngine(),
+          visible: () =>
+            this.authService.isEnabledByRoles(ButtonAction.SyncRecord) &&
+            !!this.uuidParam,
+        })
+      );
+    }
+
     if (this.collection?.credentialEngineUrl) {
       actions.push(
         new TableActionDefinition({
@@ -386,6 +404,29 @@ export class ManageCollectionComponent
           this.router.navigate([`/collections/${this.uuidParam}/publish`]);
         }
       });
+  }
+
+  syncCollectionToCredentialEngine(): void {
+    if (!this.uuidParam) return;
+    this.toastService.showBlockingLoader();
+    this.syncService.syncCollection(this.uuidParam).subscribe({
+      next: () => {
+        this.toastService.hideBlockingLoader();
+        this.toastService.showToast(
+          'Success',
+          'Collection synced to Credential Engine'
+        );
+        this.reloadCollection();
+      },
+      error: err => {
+        this.toastService.hideBlockingLoader();
+        const msg =
+          err?.status === 503
+            ? 'Credential Engine sync is not configured'
+            : (err?.error?.message ?? err?.message ?? 'Sync failed');
+        this.toastService.showToast('Error', msg);
+      },
+    });
   }
 
   archiveAction(): void {
