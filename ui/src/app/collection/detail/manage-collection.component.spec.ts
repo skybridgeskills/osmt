@@ -320,7 +320,7 @@ describe('ManageCollectionComponent', () => {
 
       // Assert
       expect(actions).toBeTruthy();
-      expect(actions.length).toEqual(6);
+      expect(actions.length).toEqual(7);
 
       let action = actions[0];
       expect(action.label).toEqual('Add RSDs to This Collection');
@@ -358,16 +358,16 @@ describe('ManageCollectionComponent', () => {
     const actions = component.actionDefinitions();
     const action = actions[5];
     expect(action.label).toEqual('Delete Collection');
-    expect(actions.length).toEqual(6);
+    expect(actions.length).toEqual(7);
   });
 
   xit('delete collection should not be visible', () => {
     // @ts-ignore
     const spy = spyOnProperty(Auth, 'ENABLE_ROLES').and.returnValue(false);
     const actions = component.actionDefinitions();
-    const action = actions[5];
-    expect(action).toBeUndefined();
-    expect(actions.length).toEqual(5);
+    const deleteAction = actions.find(a => a.label === 'Delete Collection');
+    expect(deleteAction).toBeUndefined();
+    expect(actions.length).toEqual(6);
   });
 
   it('when delete collection action is called template should be confirm-delete-collection', () => {
