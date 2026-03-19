@@ -104,18 +104,7 @@ h2.t-type-heading1 {
   bottom: 0;
   width: 100%;
 }
-.m-pill-group-collapsible .read-more-wrapper > div {
-  width: 100px;
-  margin: 1em auto;
-}
-.m-pill-group-collapsible .read-more-wrapper button {
-  width: 100%;
-  text-align: center;
-  background-color: var(--color-background300); //
-  color: var(--color-text2);
-  border: 1px solid var(--color-text3);
-  border-radius: 12px;
-}
+/* Pill group toggle: layout in pill-group.component.html (Tailwind + t-focus) */
 .m-pill-group-collapsible.collapsed .read-more-wrapper {
   bottom: 0;
   background: linear-gradient(

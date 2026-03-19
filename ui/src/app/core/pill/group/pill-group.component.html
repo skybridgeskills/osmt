@@ -4,13 +4,17 @@
     'm-pill-group-collapsible': hasOverflow,
     collapsed: collapsed && hasOverflow,
   }"
-  aria-controls="pill-group-controls"
-  [attr.aria-expanded]="!collapsed && hasOverflow"
   (click)="onWrapperClick($event)"
 >
   <div class="read-more-wrapper" *ngIf="hasOverflow">
-    <div>
-      <button (click)="toggleCollapse($event)">
+    <div class="mx-auto w-full max-w-xs px-small pb-extraSmall">
+      <button
+        type="button"
+        class="t-focus w-full rounded-lg border border-text-3 bg-background-200 px-small py-extraSmall text-center text-button font-semibold text-text-2 shadow-sm transition-colors duration-150 ease-out hover:border-interactive-1 hover:bg-background-300 hover:text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus active:bg-background-500"
+        aria-controls="pill-group-controls"
+        [attr.aria-expanded]="!collapsed"
+        (click)="toggleCollapse($event)"
+      >
         <span *ngIf="collapsed">Show all {{ pillControls.length }}</span>
         <span *ngIf="!collapsed">Show fewer</span>
       </button>

@@ -18,6 +18,10 @@ Ensure categories in a collection are displayed in a container with limited heig
 - **Classes**: `m-pill-group-collapsible` and `collapsed` apply only when `hasOverflow` (and collapsed), so short lists are not clipped.
 - **Wrapper click**: `onWrapperClick` only expands when `hasOverflow && collapsed`, and ignores clicks on `button` elements (pills / toggle).
 
+## Follow-up (toggle control)
+
+- Show all / Show fewer: `type="button"`, `t-focus`, semantic `aria-controls` / `aria-expanded` on the button, Tailwind spacing and hover/focus/active styles aligned with app tokens (`background`, `text`, `interactive`, `focus`); removed narrow legacy SCSS for the control.
+
 ## Out of scope
 
 - Expanded state still grows the page (no `overflow-y: auto` box); collapse/expand remains the primary pattern.
