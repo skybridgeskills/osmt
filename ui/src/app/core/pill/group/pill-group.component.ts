@@ -12,6 +12,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import { SvgHelper, SvgIcon } from '../../SvgHelper';
 import { AbstractPillControl } from '../pill-control';
 
 /** Match `.m-pill-group-collapsible.collapsed` max-height in styles.scss */
@@ -24,6 +25,8 @@ const COLLAPSED_MAX_HEIGHT_PX = 100;
 export class PillGroupComponent<TValue extends AbstractPillControl>
   implements AfterViewInit, OnChanges, OnDestroy
 {
+  readonly caretIconHref = SvgHelper.path(SvgIcon.CHEVRON);
+
   @Input() pillControls: TValue[] = [];
   @Output() pillClicked: EventEmitter<TValue> = new EventEmitter();
 

@@ -20,7 +20,13 @@ Ensure categories in a collection are displayed in a container with limited heig
 
 ## Follow-up (toggle control)
 
-- Show all / Show fewer: `type="button"`, `t-focus`, semantic `aria-controls` / `aria-expanded` on the button, Tailwind spacing and hover/focus/active styles aligned with app tokens (`background`, `text`, `interactive`, `focus`); removed narrow legacy SCSS for the control.
+- Show all / Show fewer: `type="button"`, `t-focus`, semantic `aria-controls` /
+  `aria-expanded`; inline-flex layout with chevron from `SvgHelper` (`CHEVRON`)
+  and `l-iconTransition` / `l-iconTransition-is-flipped` when expanded.
+- Hover: stronger border, text, and `shadow-md` on `bg-background-200` (no
+  hover background fill that blended with the page).
+- Active: no `active:` background token — avoids a light flash on mousedown.
+- Removed narrow legacy SCSS for the control.
 
 ## Out of scope
 

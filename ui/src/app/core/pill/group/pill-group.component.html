@@ -10,13 +10,22 @@
     <div class="mx-auto w-full max-w-xs px-small pb-extraSmall">
       <button
         type="button"
-        class="t-focus w-full rounded-lg border border-text-3 bg-background-200 px-small py-extraSmall text-center text-button font-semibold text-text-2 shadow-sm transition-colors duration-150 ease-out hover:border-interactive-1 hover:bg-background-300 hover:text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus active:bg-background-500"
+        class="t-focus inline-flex w-full flex-nowrap items-center justify-center gap-extraSmall rounded-lg border border-text-3 bg-background-200 px-small py-extraSmall text-button font-semibold text-text-2 shadow-sm transition-[color,box-shadow,border-color] duration-150 ease-out hover:border-interactive-1 hover:text-text-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         aria-controls="pill-group-controls"
         [attr.aria-expanded]="!collapsed"
         (click)="toggleCollapse($event)"
       >
         <span *ngIf="collapsed">Show all {{ pillControls.length }}</span>
         <span *ngIf="!collapsed">Show fewer</span>
+        <span
+          class="l-iconTransition shrink-0"
+          [class.l-iconTransition-is-flipped]="!collapsed"
+          aria-hidden="true"
+        >
+          <svg class="l-iconTransition-x-icon t-icon">
+            <use [attr.xlink:href]="caretIconHref"></use>
+          </svg>
+        </span>
       </button>
     </div>
   </div>
