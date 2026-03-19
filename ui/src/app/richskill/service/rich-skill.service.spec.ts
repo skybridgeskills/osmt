@@ -174,7 +174,7 @@ describe('RichSkillService', () => {
       AppConfig.settings.baseApiUrl + path
     );
     expect(req.request.method).toEqual('GET');
-    expect(req.request.headers.get('Accept')).toEqual('application/json');
+    expect(req.request.headers.get('Accept')).toEqual('text/csv');
     req.flush(testData);
   });
   it('getSkillCsvByUUID should fail', () => {

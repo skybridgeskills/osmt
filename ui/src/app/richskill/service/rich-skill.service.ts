@@ -87,7 +87,7 @@ export class RichSkillService extends AbstractService {
       .get(this.buildUrl(`${this.serviceUrl}/${uuid}`), {
         headers: this.wrapHeaders(
           new HttpHeaders({
-            Accept: 'application/json',
+            Accept: 'text/csv',
           })
         ),
         responseType: 'text',

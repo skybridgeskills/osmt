@@ -2,8 +2,6 @@
 
 | Bug | Status | Notes |
 |-----|--------|-------|
-| [868h23198](868h23198-viewer-role-blank-screen.md) (viewer blank screen) | Partially addressed | `/skills` is public; possible edge cases remain |
-| [868h2319f](868h2319f-csv-download-rsd-json.md) (CSV downloads JSON) | Confirmed | `getSkillCsvByUuid` sends `Accept: application/json` and hits the JSON endpoint |
 | [868h23197](868h23197-typeahead-search-categories-dropdown.md) (type-ahead categories) | Confirmed | KeywordEsRepo limits type-ahead to 20 results when searchStr is not empty |
 | [868h2319e](868h2319e-categories-limited-height-container.md) (categories limited height) | Confirmed | Pill group container has no max-height or scroll |
 | [868h2319d](868h2319d-expand-collapse-show-all-fewer.md) (Show All/Fewer) | Needs check | Toggle exists; collapsed class may not be styling visibility correctly |
