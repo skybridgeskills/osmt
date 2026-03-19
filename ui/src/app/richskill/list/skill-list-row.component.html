@@ -1,12 +1,20 @@
 <ng-template [ngIf]="!!skill">
   <th scope="row" id="{{ id }}-header">
-    <div class="t-hidden-tabletMax">{{ getFormattedCategories() }}</div>
+    <div class="t-hidden-tabletMax">
+      <app-category-links
+        [categories]="skill?.categories ?? []"
+      ></app-category-links>
+    </div>
 
     <div class="t-hidden-tabletMin">
       <!--{{render '@m-inline-heading'}}-->
       <div class="m-inlineHeading">
         <h5 class="m-inlineHeading-x-heading">Categories:</h5>
-        <p class="m-inlineHeading-x-text">{{ getFormattedCategories() }}</p>
+        <p class="m-inlineHeading-x-text">
+          <app-category-links
+            [categories]="skill?.categories ?? []"
+          ></app-category-links>
+        </p>
       </div>
     </div>
   </th>

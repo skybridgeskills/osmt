@@ -307,6 +307,27 @@ class RichSkillController
                 "forward:/v2/skills/$uuid"
             } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
 
+        @GetMapping(
+            "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.SKILL_DETAIL}",
+            produces = ["text/csv"],
+        )
+        fun byUUIDCsvV3(
+            @PathVariable uuid: String,
+            @AuthenticationPrincipal user: Jwt?,
+        ): HttpEntity<String> = skillDetailCsvEntity(uuid, user, useV3CsvColumns = true)
+
+        @GetMapping(
+            path = [
+                "${RoutePaths.API}${RoutePaths.API_V2}${RoutePaths.SKILL_DETAIL}",
+                "${RoutePaths.API}${RoutePaths.UNVERSIONED}${RoutePaths.SKILL_DETAIL}",
+            ],
+            produces = ["text/csv"],
+        )
+        fun byUUIDCsvV2(
+            @PathVariable uuid: String,
+            @AuthenticationPrincipal user: Jwt?,
+        ): HttpEntity<String> = skillDetailCsvEntity(uuid, user, useV3CsvColumns = false)
+
         @RequestMapping(
             path = [
                 "${RoutePaths.API}/{apiVersion}${RoutePaths.COLLECTION_SKILLS_UPDATE}",
@@ -317,32 +338,42 @@ class RichSkillController
             @PathVariable(name = "apiVersion", required = false) apiVersion: String?,
             @PathVariable uuid: String,
             @AuthenticationPrincipal user: Jwt?,
-        ): HttpEntity<*> {
-            return richSkillRepository.findByUUID(uuid)?.let {
-                if (user == null && it.publishStatus() == PublishStatus.Unarchived) {
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND)
-                }
-                val skill = it.toModel()
-                val collections = it.collections.map { it.toModel() }.toSet()
-                val result =
-                    if (RoutePaths.API_V3 == "/$apiVersion") {
-                        RichSkillCsvExport(
-                            appConfig,
-                        ).toCsv(listOf(RichSkillAndCollections(skill, collections)))
-                    } else if (RoutePaths.API_V2 == "/$apiVersion" ||
-                        RoutePaths.UNVERSIONED == apiVersion
-                    ) {
-                        RichSkillCsvExportV2(
-                            appConfig,
-                        ).toCsv(listOf(RichSkillAndCollections(skill, collections)))
-                    } else {
-                        throw ResponseStatusException(HttpStatus.NOT_FOUND)
-                    }
-                val responseHeaders = HttpHeaders()
-                responseHeaders.add("Content-Type", "text/csv")
+        ): HttpEntity<String> {
+            val useV3 =
+                when {
+                    RoutePaths.API_V3 == "/$apiVersion" -> true
 
-                return ResponseEntity.ok().headers(responseHeaders).body(result)
-            } ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+                    RoutePaths.API_V2 == "/$apiVersion" ||
+                        RoutePaths.UNVERSIONED == apiVersion -> false
+
+                    else -> throw ResponseStatusException(HttpStatus.NOT_FOUND)
+                }
+            return skillDetailCsvEntity(uuid, user, useV3)
+        }
+
+        private fun skillDetailCsvEntity(
+            uuid: String,
+            user: Jwt?,
+            useV3CsvColumns: Boolean,
+        ): HttpEntity<String> {
+            val dao =
+                richSkillRepository.findByUUID(uuid)
+                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+            if (user == null && dao.publishStatus() == PublishStatus.Unarchived) {
+                throw ResponseStatusException(HttpStatus.NOT_FOUND)
+            }
+            val skill = dao.toModel()
+            val collections = dao.collections.map { it.toModel() }.toSet()
+            val row = listOf(RichSkillAndCollections(skill, collections))
+            val csv =
+                if (useV3CsvColumns) {
+                    RichSkillCsvExport(appConfig).toCsv(row)
+                } else {
+                    RichSkillCsvExportV2(appConfig).toCsv(row)
+                }
+            val responseHeaders = HttpHeaders()
+            responseHeaders.add("Content-Type", "text/csv")
+            return ResponseEntity.ok().headers(responseHeaders).body(csv)
         }
 
         @PostMapping(

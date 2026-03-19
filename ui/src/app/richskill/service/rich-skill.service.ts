@@ -87,7 +87,7 @@ export class RichSkillService extends AbstractService {
       .get(this.buildUrl(`${this.serviceUrl}/${uuid}`), {
         headers: this.wrapHeaders(
           new HttpHeaders({
-            Accept: 'application/json',
+            Accept: 'text/csv',
           })
         ),
         responseType: 'text',
@@ -348,7 +348,6 @@ export class RichSkillService extends AbstractService {
     url: string,
     pollIntervalMs = 1000
   ): Observable<any> {
-    console.log(`endpoint: ${url}`);
     return this.httpClient
       .get(this.buildUrl(url), {
         headers: this.wrapHeaders(

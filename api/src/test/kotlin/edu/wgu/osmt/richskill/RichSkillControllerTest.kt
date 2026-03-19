@@ -299,6 +299,33 @@ internal class RichSkillControllerTest
         }
 
         @Test
+        fun testByUUIDCsvV3OnSkillDetailPath() {
+            val numOfSkills = 3
+            val richSkillRows = mockData.getRichSkillRows()
+            val listOfRichSkillRows = mutableListOf<RichSkillRow>()
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("foo", "foo")
+                    .build()
+
+            for (i in 1..numOfSkills) {
+                listOfRichSkillRows.add(richSkillRows[i])
+            }
+
+            batchImportRichSkill.handleRows(listOfRichSkillRows)
+
+            val skillResult = richSkillEsRepo.byApiSearch(ApiSearch())
+            val skillId = skillResult.searchHits[0].id.toString()
+            val result = richSkillController.byUUIDCsvV3(skillId, jwt)
+
+            assertThat(result.body).isNotNull()
+            assertThat(result.body.toString()).contains(skillId)
+            assertThat(result.headers.contentType.toString()).contains("csv")
+        }
+
+        @Test
         fun testSkillAuditLog() {
             // Arrange
             val numOfSkills = 3

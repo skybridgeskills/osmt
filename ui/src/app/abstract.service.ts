@@ -222,9 +222,7 @@ export abstract class AbstractService {
     filterByStatuses?: Set<PublishStatus>,
     sort?: any
   ): any {
-    const params: any = {
-      sort,
-    };
+    const params: Record<string, string | number | string[]> = {};
     if (filterByStatuses !== undefined) {
       params.status = Array.from(filterByStatuses).map(s => s.toString());
     }
@@ -237,7 +235,6 @@ export abstract class AbstractService {
     if (sort !== undefined) {
       params.sort = sort.toString();
     }
-
     return params;
   }
 

@@ -7,6 +7,7 @@ import { ToastService } from '../../toast/toast.service';
 import { Title } from '@angular/platform-browser';
 import { ICollectionUpdate } from '../../collection/ApiCollection';
 import { WORKSPACE_COLLECTIONS_UUIDS } from '../my-workspace.component';
+import { AppConfig } from '../../app.config';
 
 @Component({
   selector: 'app-convert-to-collection',
@@ -28,11 +29,23 @@ export class ConvertToCollectionComponent
     super(collectionService, loc, router, route, toastService, titleService);
   }
 
+  ngOnInit(): void {
+    super.ngOnInit();
+    this.collectionService.getWorkspace().subscribe(workspace => {
+      this.collectionForm.patchValue({
+        collectionName: workspace.name,
+        description: workspace.description ?? '',
+        author: workspace.author ?? AppConfig.settings.defaultAuthorValue,
+      });
+    });
+  }
+
   updateObject(): ICollectionUpdate {
     const formValues = this.collectionForm.value;
     const collectionsUuids = localStorage.getItem(WORKSPACE_COLLECTIONS_UUIDS);
     return {
       name: formValues.collectionName,
+      description: formValues.description,
       author: formValues.author,
       skills: { add: JSON.parse(collectionsUuids ?? '') },
     };

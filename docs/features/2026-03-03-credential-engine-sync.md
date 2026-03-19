@@ -28,7 +28,7 @@ API returns `503 Service Unavailable`.
 | `CREDENTIAL_ENGINE_SYNC_RETRY_INITIAL_DELAY_MS` | `5000` | First retry delay in ms |
 | `CREDENTIAL_ENGINE_SYNC_RETRY_DELAY_MULTIPLIER` | `1.5` | Exponential backoff multiplier (delay capped at 60s) |
 | `CREDENTIAL_ENGINE_LABEL_PREFIX` | _(empty)_ | Prefix for CE labels (e.g. `(osmt-dev)`). Dev profile defaults to `(osmt-dev)` when unset. |
-| `CREDENTIAL_ENGINE_CANONICAL_URL_BASE` | _(empty)_ | Base URL for ExactAlignment links. When empty, uses `app.baseUrl`. Localhost works for local dev. |
+| `CREDENTIAL_ENGINE_CANONICAL_URL_BASE` | _(empty)_ | Base URL for ExactAlignment links. When empty, uses `app.baseUrl`. Dev profile defaults to `https://example.org` (CE accepts resolvable or example.org links). |
 | `CREDENTIAL_ENGINE_ALLOW_UNPUBLISH_ALL` | `false` | Enable Unpublish All. Dev profile defaults to `true` when unset. Not for production. |
 
 OSMT omits Author and CompetencyCategory (CE rejects them) and replaces `&` with `and` in ConceptKeyword.

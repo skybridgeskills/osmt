@@ -143,7 +143,7 @@ data class ExportSkillsToXlsxTask(
 ) : Task {
     override val contentType = "application/vnd.ms-excel"
     override val apiResultPath =
-        "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.TASK_DETAIL_BATCH}"
+        "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.TASK_DETAIL_MEDIA}"
 }
 
 data class CreateSkillsTask(

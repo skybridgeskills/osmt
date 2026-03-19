@@ -26,6 +26,10 @@ export class PillComponent<TValue extends AbstractPillControl> {
     return this.control ? this.control.primaryLabel : '';
   }
 
+  get linkUrl(): string | undefined {
+    return this.control?.linkUrl;
+  }
+
   get secondaryLabel(): string | undefined {
     return this.control ? this.control.secondaryLabel : undefined;
   }

@@ -95,11 +95,11 @@ open class RichSkillDescriptor(
                     .mapNotNull { it.value }
                     .sortedBy { it }
 
-            val categories =
+            val categoryKeywords =
                 skills
                     .flatMap { it.categories }
-                    .mapNotNull { it.value }
-                    .sortedBy { it }
+                    .distinctBy { it.id }
+                    .sortedBy { it.value }
 
             val certifications =
                 skills
@@ -133,8 +133,15 @@ open class RichSkillDescriptor(
                 KeywordTypeEnum.Author to
                     authors.distinct().map { k -> KeywordCount(k, authors.count { it == k }) },
                 KeywordTypeEnum.Category to
-                    categories.distinct().map { k ->
-                        KeywordCount(k, categories.count { it == k })
+                    categoryKeywords.map { k ->
+                        val count =
+                            skills.flatMap { it.categories }.count { it.id == k.id }
+                        val ref =
+                            ApiNamedReference(
+                                id = k.id?.toString(),
+                                name = k.value,
+                            )
+                        KeywordCount(ref, count)
                     },
                 KeywordTypeEnum.Certification to
                     certifications.distinct().map { k ->

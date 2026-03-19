@@ -105,7 +105,7 @@ describe('HeaderComponent', () => {
 
   it('my workspace is visible when user has role admin or curator', done => {
     component.canHaveWorkspace = true;
-    spyOn(component, 'showPublicNavbar').and.returnValue(false);
+    spyOn(component, 'isAuthenticated').and.returnValue(true);
     fixture.whenStable().then(() => {
       fixture.detectChanges();
       const myWorkspace = fixture.debugElement.query(

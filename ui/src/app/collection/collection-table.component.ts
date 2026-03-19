@@ -22,6 +22,7 @@ export class CollectionTableComponent
     | undefined = undefined;
 
   @Input() allowSorting = false;
+  @Input() isPublicView = false;
 
   ngAfterViewInit(): void {
     if (this.rowReferences && this.rowReferences.length > 0) {

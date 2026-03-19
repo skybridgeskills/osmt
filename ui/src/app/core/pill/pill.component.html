@@ -17,7 +17,13 @@
 </ng-template>
 <ng-template #divPill>
   <div class="m-pill" [class.selected]="isSelected">
-    <div class="m-pill-primary">{{ primaryLabel }}</div>
+    <a
+      *ngIf="linkUrl"
+      class="m-pill-primary t-type-bodyLink"
+      [routerLink]="linkUrl"
+      >{{ primaryLabel }}</a
+    >
+    <div *ngIf="!linkUrl" class="m-pill-primary">{{ primaryLabel }}</div>
     <div *ngIf="hasSecondaryLabel" class="m-pill-secondary">
       {{ secondaryLabel }}
     </div>

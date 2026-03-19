@@ -141,7 +141,7 @@ export class ManageCollectionComponent
   updateSkillCategories() {
     const categories = this.collection?.skillKeywords
       ?.get(KeywordType.Category)
-      ?.map(c => new KeywordCountPillControl(c));
+      ?.map(c => new KeywordCountPillControl(c, '/categories/'));
     this.skillCategories = categories ? categories : [];
   }
 

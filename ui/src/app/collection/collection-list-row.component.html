@@ -3,7 +3,11 @@
     <a
       id="{{ id }}-header-name"
       class="t-focus t-type-bodyLink"
-      routerLink="/collections/{{ collection.uuid }}/manage"
+      [routerLink]="
+        isPublicView
+          ? ['/collections', collection.uuid]
+          : ['/collections', collection.uuid, 'manage']
+      "
       >{{ collection.name }}</a
     >
   </th>

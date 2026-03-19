@@ -22,6 +22,9 @@ export class RichSkillPublicComponent extends AbstractRichSkillDetailComponent {
   @ViewChild('occupationsTemplate', { read: TemplateRef })
   occupationsTemplate!: TemplateRef<any>;
 
+  @ViewChild('categoriesTemplate', { read: TemplateRef })
+  categoriesTemplate!: TemplateRef<any>;
+
   constructor(
     richSkillService: RichSkillService,
     route: ActivatedRoute,
@@ -40,7 +43,7 @@ export class RichSkillPublicComponent extends AbstractRichSkillDetailComponent {
       },
       {
         label: 'Categories',
-        bodyString: this.richSkill?.categories?.join('; ') ?? '',
+        bodyTemplate: this.categoriesTemplate,
         showIfEmpty: false,
       },
       {

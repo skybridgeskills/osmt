@@ -33,27 +33,12 @@
 
       <div class="m-navBar-x-tagline">{{ whitelabel.toolNameLong }}</div>
 
-      <!-- Login button for public navbar -->
-      <ul
-        *ngIf="showPublicNavbar() && !isAuthenticated()"
-        class="m-navBar-x-desktopNav"
-      >
-        <li>
-          <a
-            class="m-navItem"
-            routerLink="/login"
-            [queryParams]="{ return: getCurrentUrl() }"
-            >Login</a
-          >
-        </li>
-      </ul>
-
-      <ul *ngIf="!showPublicNavbar()" class="m-navBar-x-desktopNav">
+      <ul class="m-navBar-x-desktopNav">
         <li>
           <a
             class="m-navItem"
             [class.m-navItem-is-active]="skillsActive"
-            aria-current="page"
+            [attr.aria-current]="skillsActive ? 'page' : null"
             routerLink="/skills"
             >RSD Library</a
           >
@@ -74,7 +59,15 @@
             >Categories</a
           >
         </li>
-        <li *ngIf="canHaveWorkspace" id="li-my-workspace">
+        <li *ngIf="!isAuthenticated()">
+          <a
+            class="m-navItem"
+            routerLink="/login"
+            [queryParams]="{ return: getCurrentUrl() }"
+            >Login</a
+          >
+        </li>
+        <li *ngIf="isAuthenticated() && canHaveWorkspace" id="li-my-workspace">
           <a
             class="m-navItem"
             [class.m-navItem-is-active]="myWorkspaceActive"
@@ -83,7 +76,7 @@
             My Workspace
           </a>
         </li>
-        <li *ngIf="canSyncManage" id="li-sync">
+        <li *ngIf="isAuthenticated() && canSyncManage" id="li-sync">
           <a
             class="m-navItem"
             [class.m-navItem-is-active]="syncActive"
@@ -92,7 +85,7 @@
             Sync
           </a>
         </li>
-        <li>
+        <li *ngIf="isAuthenticated()">
           <a
             class="m-iconInteractive m-iconInteractive-onDark"
             routerLink="/logout"
@@ -108,7 +101,6 @@
       </ul>
 
       <button
-        *ngIf="isAuthenticated()"
         (click)="handleClickMenu()"
         [attr.aria-expanded]="menuExpanded"
         class="m-navBar-x-toggle m-iconInteractive m-iconInteractive-onBrand"
@@ -134,7 +126,6 @@
     </div>
 
     <div
-      *ngIf="!showPublicNavbar()"
       class="m-navBar-x-collapse"
       id="navbarSupportedContent"
       app-commoncontrols-mobile

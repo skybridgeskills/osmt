@@ -69,6 +69,12 @@
     <ng-template #noData> No data to load. </ng-template>
   </ng-template>
 
+  <ng-template #categoriesTemplate>
+    <app-category-links
+      [categories]="richSkill?.categories ?? []"
+    ></app-category-links>
+  </ng-template>
+
   <!-- This is injected into the detail card occupations section -->
   <ng-template #occupationsTemplate>
     <div>

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { ConvertToCollectionComponent } from './convert-to-collection.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -15,6 +16,9 @@ import {
 import { CollectionService } from '../../collection/service/collection.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActivatedRouteStubSpec } from '../../../../test/util/activated-route-stub.spec';
+import { ApiCollection } from '../../collection/ApiCollection';
+import { PublishStatus } from '../../PublishStatus';
+import { createMockCollection } from '../../../../test/resource/mock-data';
 
 describe('ConvertToCollectionComponent', () => {
   let component: ConvertToCollectionComponent;
@@ -22,8 +26,7 @@ describe('ConvertToCollectionComponent', () => {
   let activatedRoute: ActivatedRouteStubSpec;
 
   // eslint-disable-next-line prefer-const -- legacy
-  activatedRoute = new ActivatedRouteStubSpec();
-  activatedRoute.setParams({ uuid: 'uuid1' });
+  activatedRoute = new ActivatedRouteStubSpec({});
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -49,6 +52,23 @@ describe('ConvertToCollectionComponent', () => {
   });
 
   beforeEach(() => {
+    const date = new Date();
+    const workspaceBase = createMockCollection(
+      date,
+      date,
+      undefined,
+      undefined,
+      PublishStatus.Workspace
+    );
+    const workspace = new ApiCollection({
+      ...workspaceBase,
+      name: 'Workspace title',
+      description: 'Workspace description text',
+      author: 'workspace-author',
+    });
+    const svc = TestBed.inject(CollectionService);
+    spyOn(svc, 'getWorkspace').and.returnValue(of(workspace));
+
     fixture = TestBed.createComponent(ConvertToCollectionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -77,5 +97,27 @@ describe('ConvertToCollectionComponent', () => {
     const updateObject = component.updateObject();
     expect(spyLocalStorage).toHaveBeenCalled();
     expect(updateObject.skills).toBeTruthy();
+  });
+
+  it('updateObject includes description from form', () => {
+    spyOn(localStorage, 'getItem').and.returnValue('[]');
+    component.collectionForm.patchValue({
+      collectionName: 'n',
+      description: 'saved description',
+      author: 'a',
+    });
+    expect(component.updateObject().description).toBe('saved description');
+  });
+
+  it('ngOnInit patches form from getWorkspace', () => {
+    expect(component.collectionForm.get('collectionName')?.value).toBe(
+      'Workspace title'
+    );
+    expect(component.collectionForm.get('description')?.value).toBe(
+      'Workspace description text'
+    );
+    expect(component.collectionForm.get('author')?.value).toBe(
+      'workspace-author'
+    );
   });
 });
