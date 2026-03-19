@@ -449,7 +449,14 @@ class RichSkillRepositoryImpl
                         Pageable.unpaged(),
                         publishTask.collectionUuid,
                     )
-                totalCount = searchHits.totalHits.toInt()
+                totalCount =
+                    richSkillEsRepo
+                        .countByApiSearch(
+                            publishTask.search,
+                            publishTask.filterByStatus,
+                            Pageable.unpaged(),
+                            publishTask.collectionUuid,
+                        ).toInt()
                 searchHits.forEach { hit ->
                     handleSkillDao(this.findById(hit.content.id))
                 }

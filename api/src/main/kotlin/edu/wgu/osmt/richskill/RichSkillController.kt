@@ -169,9 +169,15 @@ class RichSkillController
                     pageable,
                     StringUtils.EMPTY,
                 )
-            val countAllFiltered: Long = searchHits.totalHits
+            val countByApiSearch =
+                richSkillEsRepo.countByApiSearch(
+                    apiSearch,
+                    publishStatuses,
+                    pageable,
+                    StringUtils.EMPTY,
+                )
             val responseHeaders = HttpHeaders()
-            responseHeaders.add("X-Total-Count", countAllFiltered.toString())
+            responseHeaders.add("X-Total-Count", countByApiSearch.toString())
 
             uriComponentsBuilder
                 .path("${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.SKILLS_FILTER}")
@@ -182,7 +188,7 @@ class RichSkillController
 
             PaginatedLinks(
                 pageable,
-                searchHits.totalHits.toInt(),
+                countByApiSearch.toInt(),
                 uriComponentsBuilder,
             ).addToHeaders(responseHeaders)
 

@@ -84,7 +84,7 @@ interface HasAllPaginated<T> {
 
         PaginatedLinks(
             pageable,
-            searchHits.totalHits.toInt(),
+            countAllFilteredByPublishStatus.toInt(),
             uriComponentsBuilder,
         ).addToHeaders(responseHeaders)
 

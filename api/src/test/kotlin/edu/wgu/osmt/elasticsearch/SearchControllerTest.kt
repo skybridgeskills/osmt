@@ -11,6 +11,8 @@ import edu.wgu.osmt.api.model.ApiNamedReference
 import edu.wgu.osmt.api.model.ApiSearch
 import edu.wgu.osmt.api.model.ApiSimilaritySearch
 import edu.wgu.osmt.api.model.ApiSkillUpdate
+import edu.wgu.osmt.api.model.CollectionSortEnum
+import edu.wgu.osmt.api.model.SkillSortEnum
 import edu.wgu.osmt.collection.CollectionEsRepo
 import edu.wgu.osmt.config.AppConfig
 import edu.wgu.osmt.db.PublishStatus
@@ -19,7 +21,6 @@ import edu.wgu.osmt.jobcode.JobCodeEsRepo
 import edu.wgu.osmt.keyword.KeywordEsRepo
 import edu.wgu.osmt.keyword.KeywordTypeEnum
 import edu.wgu.osmt.mockdata.MockData
-import edu.wgu.osmt.richskill.RichSkillDoc
 import edu.wgu.osmt.richskill.RichSkillEsRepo
 import edu.wgu.osmt.richskill.RichSkillRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -80,6 +81,21 @@ internal class SearchControllerTest
 
             // Assert
             assertThat(result.body?.first()?.uuid).isEqualTo(collectionDoc?.uuid)
+            val apiSearch =
+                ApiSearch(advanced = ApiAdvancedSearch(collectionName = collectionDoc?.name))
+            val collectionPageable =
+                OffsetPageable(0, 50, CollectionSortEnum.forValueOrDefault("").sort)
+            val collectionStatuses =
+                setOf(PublishStatus.Published, PublishStatus.Workspace)
+            assertThat(
+                result.headers.getFirst("X-Total-Count")?.toLong(),
+            ).isEqualTo(
+                collectionEsRepo.countByApiSearch(
+                    apiSearch,
+                    collectionStatuses,
+                    collectionPageable,
+                ),
+            )
         }
 
         @Test
@@ -109,8 +125,26 @@ internal class SearchControllerTest
 
             // Assert
             assertThat(
-                result.body?.map { (it as RichSkillDoc).uuid },
+                result.body?.map { it.uuid },
             ).contains(listOfSkills[0].uuid)
+            val skillSearch = ApiSearch(query = listOfSkills[0].name)
+            val skillPageable =
+                OffsetPageable(
+                    offset = 0,
+                    limit = 50,
+                    sort = SkillSortEnum.forApiValue("").sort,
+                )
+            val skillStatuses = setOf(PublishStatus.Published)
+            assertThat(
+                result.headers.getFirst("X-Total-Count")?.toLong(),
+            ).isEqualTo(
+                richSkillEsRepo.countByApiSearch(
+                    skillSearch,
+                    skillStatuses,
+                    skillPageable,
+                    collectionDoc?.uuid,
+                ),
+            )
         }
 
         @Test

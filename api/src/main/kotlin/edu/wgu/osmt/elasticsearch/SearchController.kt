@@ -97,8 +97,11 @@ class SearchController
             val searchHits =
                 collectionEsRepo.byApiSearch(apiSearch, publishStatuses, pageable)
 
+            val countByApiSearch =
+                collectionEsRepo.countByApiSearch(apiSearch, publishStatuses, pageable)
+
             val responseHeaders = HttpHeaders()
-            responseHeaders.add("X-Total-Count", searchHits.totalHits.toString())
+            responseHeaders.add("X-Total-Count", countByApiSearch.toString())
 
             // build up current uri with path and params
             uriComponentsBuilder
@@ -110,7 +113,7 @@ class SearchController
 
             PaginatedLinks(
                 pageable,
-                searchHits.totalHits.toInt(),
+                countByApiSearch.toInt(),
                 uriComponentsBuilder,
             ).addToHeaders(responseHeaders)
 
@@ -231,7 +234,7 @@ class SearchController
 
             PaginatedLinks(
                 pageable,
-                searchHits.totalHits.toInt(),
+                countByApiSearch.toInt(),
                 uriComponentsBuilder,
             ).addToHeaders(responseHeaders)
 
