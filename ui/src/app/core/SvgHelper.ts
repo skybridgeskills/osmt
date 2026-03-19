@@ -12,11 +12,13 @@ export enum SvgIcon {
   DOWNLOAD = 'icon-download',
   DUPLICATE = 'icon-duplicate',
   EDIT = 'icon-edit',
+  EXTERNAL_LINK = 'icon-external-link',
   ICON_UP = 'icon-up',
   MORE = 'icon-more',
   PUBLISH = 'icon-publish',
   SEARCH = 'icon-search',
   DELETE = 'icon-remove',
+  UPLOAD = 'icon-upload',
 }
 
 export class SvgHelper {
@@ -24,5 +26,10 @@ export class SvgHelper {
   //  [attr.xlink:href]="iconPathProperty"
   public static path(icon: SvgIcon): string {
     return `assets/images/svg-defs.svg#${icon}`;
+  }
+
+  /** Symbols in assets/images/svg-extra-defs.svg. */
+  public static extraPath(symbolId: string): string {
+    return `assets/images/svg-extra-defs.svg#${symbolId}`;
   }
 }

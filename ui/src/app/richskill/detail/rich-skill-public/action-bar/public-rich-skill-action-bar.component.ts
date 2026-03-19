@@ -31,6 +31,7 @@ export class PublicRichSkillActionBarComponent implements OnInit {
   );
 
   duplicateIcon = SvgHelper.path(SvgIcon.DUPLICATE);
+  externalLinkIcon = SvgHelper.path(SvgIcon.EXTERNAL_LINK);
   downloadIcon = SvgHelper.path(SvgIcon.DOWNLOAD);
   dismissIcon = SvgHelper.path(SvgIcon.DISMISS);
 

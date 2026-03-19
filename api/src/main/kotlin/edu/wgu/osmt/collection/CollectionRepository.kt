@@ -413,7 +413,13 @@ class CollectionRepositoryImpl
                 searchHits.forEach { hit ->
                     addSkillDao(richSkillRepository.findById(hit.content.id))
                 }
-                totalCount += searchHits.totalHits.toInt()
+                totalCount +=
+                    richSkillEsRepo
+                        .countByApiSearch(
+                            task.skillListUpdate.add,
+                            task.publishStatuses,
+                            Pageable.unpaged(),
+                        ).toInt()
             }
 
             // process removals
@@ -436,7 +442,13 @@ class CollectionRepositoryImpl
                 searchHits.forEach { hit ->
                     removeSkillDao(richSkillRepository.findById(hit.content.id))
                 }
-                totalCount += searchHits.totalHits.toInt()
+                totalCount +=
+                    richSkillEsRepo
+                        .countByApiSearch(
+                            task.skillListUpdate.remove,
+                            task.publishStatuses,
+                            Pageable.unpaged(),
+                        ).toInt()
             }
 
             modifiedSkillDaos.map { skillDao ->
@@ -555,7 +567,13 @@ class CollectionRepositoryImpl
                         publishTask.filterByStatus,
                         Pageable.unpaged(),
                     )
-                totalCount = searchHits.totalHits.toInt()
+                totalCount =
+                    collectionEsRepo
+                        .countByApiSearch(
+                            publishTask.search,
+                            publishTask.filterByStatus,
+                            Pageable.unpaged(),
+                        ).toInt()
                 searchHits.forEach { hit ->
                     handleCollectionDao(this.findById(hit.content.id))
                 }

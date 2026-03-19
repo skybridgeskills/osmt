@@ -12,6 +12,7 @@ import edu.wgu.osmt.config.VALUE_SORT_INSENSITIVE
 import edu.wgu.osmt.elasticsearch.OffsetPageable
 import edu.wgu.osmt.elasticsearch.OsmtQueryHelper.createNativeQuery
 import edu.wgu.osmt.elasticsearch.OsmtQueryHelper.createSort
+import edu.wgu.osmt.elasticsearch.TYPEAHEAD_NON_EMPTY_QUERY_MAX_RESULTS
 import edu.wgu.osmt.jobcode.CustomJobCodeRepositoryImpl
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -54,7 +55,8 @@ class CustomKeywordRepositoryImpl
                 pageable = OffsetPageable(0, 10000, null)
                 criteria = searchAll(type)
             } else {
-                pageable = OffsetPageable(0, 20, null)
+                pageable =
+                    OffsetPageable(0, TYPEAHEAD_NON_EMPTY_QUERY_MAX_RESULTS, null)
                 criteria = searchSpecific(searchStr, type)
             }
 

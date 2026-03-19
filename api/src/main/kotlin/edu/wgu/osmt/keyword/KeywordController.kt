@@ -331,7 +331,7 @@ class KeywordController
 
             PaginatedLinks(
                 pageable,
-                searchHits.totalHits.toInt(),
+                countByApiSearch.toInt(),
                 uriComponentsBuilder,
             ).addToHeaders(responseHeaders)
 

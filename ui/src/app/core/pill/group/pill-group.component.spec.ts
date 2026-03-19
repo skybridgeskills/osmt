@@ -1,6 +1,12 @@
 // noinspection LocalVariableNamingConventionJS
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Component, Type } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  NgZone,
+  Type,
+} from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,8 +24,12 @@ import { PillGroupComponent } from './pill-group.component';
   template: '',
 })
 export abstract class TestHostComponent extends PillGroupComponent<TestPillControl> {
-  constructor() {
-    super();
+  constructor(
+    host: ElementRef<HTMLElement>,
+    zone: NgZone,
+    cdr: ChangeDetectorRef
+  ) {
+    super(host, zone, cdr);
 
     this.pillControls = [
       new TestPillControl(),

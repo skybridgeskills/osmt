@@ -20,6 +20,7 @@ export class CollectionPublicActionBarComponent implements OnInit {
   @Input() credentialEngineUrl?: string;
 
   duplicateIcon = SvgHelper.path(SvgIcon.DUPLICATE);
+  externalLinkIcon = SvgHelper.path(SvgIcon.EXTERNAL_LINK);
   downloadIcon = SvgHelper.path(SvgIcon.DOWNLOAD);
 
   collectionJsonObservable = new Observable<string>();

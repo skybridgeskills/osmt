@@ -6,6 +6,7 @@ import edu.wgu.osmt.config.INDEX_COLLECTION_DOC
 import edu.wgu.osmt.db.PublishStatus
 import edu.wgu.osmt.elasticsearch.FindsAllByPublishStatus
 import edu.wgu.osmt.elasticsearch.OsmtQueryHelper.convertToNativeQuery
+import edu.wgu.osmt.elasticsearch.OsmtQueryHelper.createNativeQuery
 import edu.wgu.osmt.elasticsearch.OsmtQueryHelper.createTermsDslQuery
 import edu.wgu.osmt.richskill.RichSkillDoc
 import edu.wgu.osmt.richskill.RichSkillEsRepo
@@ -51,6 +52,17 @@ interface CustomCollectionQueries : FindsAllByPublishStatus<CollectionDoc> {
                 Sort.by("name.keyword").descending(),
             ),
     ): SearchHits<CollectionDoc>
+
+    fun countByApiSearch(
+        apiSearch: ApiSearch,
+        publishStatus: Set<PublishStatus> = PublishStatus.publishStatusSet,
+        pageable: Pageable =
+            PageRequest.of(
+                0,
+                PaginationDefaults.size,
+                Sort.by("name.keyword").descending(),
+            ),
+    ): Long
 
     fun deleteIndex() {
         elasticSearchTemplate.indexOps(IndexCoordinates.of(INDEX_COLLECTION_DOC)).delete()
@@ -109,15 +121,53 @@ class CustomCollectionQueriesImpl
             publishStatus: Set<PublishStatus>,
             pageable: Pageable,
         ): SearchHits<CollectionDoc> {
+            val filterDslQuery = publishStatusFilterDslQuery(publishStatus)
+            return getCollectionFromUuids(
+                pageable,
+                filterDslQuery,
+                matchingCollectionUuids(apiSearch, publishStatus, pageable),
+                "CustomCollectionQueriesImpl.byApiSearch()2",
+                log,
+            )
+        }
+
+        override fun countByApiSearch(
+            apiSearch: ApiSearch,
+            publishStatus: Set<PublishStatus>,
+            pageable: Pageable,
+        ): Long {
+            val filterDslQuery = publishStatusFilterDslQuery(publishStatus)
+            val uuids = matchingCollectionUuids(apiSearch, publishStatus, pageable)
+            if (uuids.isEmpty()) {
+                return 0L
+            }
+            val nativeQuery =
+                createNativeQuery(
+                    Pageable.unpaged(),
+                    filterDslQuery,
+                    createTermsDslQuery("_id", uuids),
+                    "CustomCollectionQueriesImpl.countByApiSearch()",
+                    log,
+                )
+            return elasticSearchTemplate.count(nativeQuery, CollectionDoc::class.java)
+        }
+
+        private fun publishStatusFilterDslQuery(
+            publishStatus: Set<PublishStatus>,
+        ): co.elastic.clients.elasticsearch._types.query_dsl.Query =
+            createTermsDslQuery(
+                RichSkillDoc::publishStatus.name,
+                publishStatus.map { ps -> ps.toString() },
+            )
+
+        private fun matchingCollectionUuids(
+            apiSearch: ApiSearch,
+            publishStatus: Set<PublishStatus>,
+            pageable: Pageable,
+        ): List<String> {
             val nsqb1 = NativeSearchQueryBuilder().withPageable(Pageable.unpaged())
             val bq = QueryBuilders.boolQuery()
-            val filterDslQuery =
-                createTermsDslQuery(
-                    RichSkillDoc::publishStatus.name,
-                    publishStatus.map { ps ->
-                        ps.toString()
-                    },
-                )
+            val filterDslQuery = publishStatusFilterDslQuery(publishStatus)
             val filter =
                 BoolQueryBuilder().must(
                     QueryBuilders.termsQuery(
@@ -130,9 +180,7 @@ class CustomCollectionQueriesImpl
 
             var collectionMultiPropertyResults: List<String> = listOf()
 
-            // treat the presence of query property to mean multi field search with that term
             if (!apiSearch.query.isNullOrBlank()) {
-                // Search against rich skill properties
                 bq.should(
                     BoolQueryBuilder()
                         .must(richSkillEsRepo.richSkillPropertiesMultiMatch(apiSearch.query))
@@ -145,7 +193,6 @@ class CustomCollectionQueriesImpl
                         .withQuery(collectionPropertiesMultiMatch(apiSearch.query))
                         .withPageable(Pageable.unpaged())
                         .withFilter(filter)
-                // search on collection specific properties
                 val query =
                     convertToNativeQuery(
                         Pageable.unpaged(),
@@ -172,11 +219,11 @@ class CustomCollectionQueriesImpl
                 } else {
                     bq.must(createNestedQueryBuilder())
                 }
-            } else { // query nor advanced search was provided, return all collections
+            } else {
                 bq.must(createNestedQueryBuilder())
             }
 
-            var query =
+            val query =
                 convertToNativeQuery(
                     Pageable.unpaged(),
                     filterDslQuery,
@@ -193,20 +240,14 @@ class CustomCollectionQueriesImpl
                             .getInnerHits(
                                 "collections",
                             )?.searchHits
-                            ?.mapNotNull { it.content as CollectionDoc }
+                            ?.mapNotNull { inner -> inner.content as CollectionDoc }
                     }.flatten()
                     .map { it.uuid }
                     .distinct()
-            return getCollectionFromUuids(
-                pageable,
-                filterDslQuery,
-                (
-                    innerHitCollectionUuids +
-                        collectionMultiPropertyResults
-                ).distinct(),
-                "CustomCollectionQueriesImpl.byApiSearch()2",
-                log,
-            )
+            return (
+                innerHitCollectionUuids +
+                    collectionMultiPropertyResults
+            ).distinct()
         }
 
         @Deprecated(

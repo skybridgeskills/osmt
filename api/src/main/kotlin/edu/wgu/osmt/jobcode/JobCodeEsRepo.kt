@@ -8,6 +8,7 @@ import edu.wgu.osmt.config.INDEX_JOBCODE_DOC
 import edu.wgu.osmt.config.NAME_SORT_KEYWORD
 import edu.wgu.osmt.elasticsearch.OffsetPageable
 import edu.wgu.osmt.elasticsearch.OsmtQueryHelper
+import edu.wgu.osmt.elasticsearch.TYPEAHEAD_NON_EMPTY_QUERY_MAX_RESULTS
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders.boolQuery
@@ -44,7 +45,12 @@ class CustomJobCodeRepositoryImpl
         val log: Logger = LoggerFactory.getLogger(CustomJobCodeRepositoryImpl::class.java)
 
         override fun typeAheadSearch(searchStr: String): SearchHits<JobCode> {
-            var limit = if (searchStr.isEmpty()) 10000 else 20
+            var limit =
+                if (searchStr.isEmpty()) {
+                    10000
+                } else {
+                    TYPEAHEAD_NON_EMPTY_QUERY_MAX_RESULTS
+                }
             var nativeQuery =
                 OsmtQueryHelper.createNativeQuery(
                     OffsetPageable(0, limit, null),

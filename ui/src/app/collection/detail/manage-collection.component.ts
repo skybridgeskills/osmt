@@ -51,6 +51,8 @@ export class ManageCollectionComponent
 
   editIcon = SvgHelper.path(SvgIcon.EDIT);
   publishIcon = SvgHelper.path(SvgIcon.PUBLISH);
+  credentialEngineSyncIcon = SvgHelper.path(SvgIcon.UPLOAD);
+  externalLinkIcon = SvgHelper.path(SvgIcon.EXTERNAL_LINK);
   downloadIcon = SvgHelper.path(SvgIcon.DOWNLOAD);
   deleteIcon = SvgHelper.path(SvgIcon.DELETE);
   archiveIcon = SvgHelper.path(SvgIcon.ARCHIVE);
@@ -331,7 +333,7 @@ export class ManageCollectionComponent
       actions.push(
         new TableActionDefinition({
           label: 'Sync to Credential Engine',
-          icon: this.publishIcon,
+          icon: this.credentialEngineSyncIcon,
           callback: () => this.syncCollectionToCredentialEngine(),
           visible: () =>
             this.authService.isEnabledByRoles(ButtonAction.SyncRecord) &&
@@ -344,7 +346,7 @@ export class ManageCollectionComponent
       actions.push(
         new TableActionDefinition({
           label: 'View on Credential Engine',
-          icon: this.publishIcon,
+          icon: this.externalLinkIcon,
           callback: () =>
             window.open(this.collection!.credentialEngineUrl!, '_blank'),
           visible: () => !!this.collection?.credentialEngineUrl,
