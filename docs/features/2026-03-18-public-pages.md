@@ -4,9 +4,10 @@ Unauthenticated users can now access the primary search interface for RSDs,
 categories, and collections. This previously required authentication.
 
 Visitors can browse published and archived content, search and filter by
-keyword / category / job code, view detail pages, and export collections as
-CSV or XLSX — all without logging in. Drafts and deleted items are never
-shown. Creating, editing, publishing, or deleting content still requires
+keyword / category / job code, view detail pages, and export data as CSV or
+XLSX — including collection exports, library/search exports, and single-skill
+downloads from a skill detail page — all without logging in. Drafts and deleted
+items are never shown. Creating, editing, publishing, or deleting content still requires
 authentication, as do My Workspace, Sync, and admin features.
 
 ## Navigation
@@ -72,6 +73,11 @@ The public UI is backed by these unauthenticated API routes.
 
 **Search metadata** — `GET /api/{v2,v3}/search/keywords`,
 `GET /api/{v2,v3}/search/jobcodes`
+
+**Export (custom skill lists, v3)** — `POST /api/v3/export/skills/csv`,
+`POST /api/v3/export/skills/xlsx` (body: `ApiSearch`, e.g. UUID list for one
+skill). Still gated by `app.allowPublicSearching`; anonymous callers only see
+published/archived skills in the export.
 
 **Task results** — `GET /api/{v2,v3}/results/text/{uuid}`,
 `GET /api/{v2,v3}/results/media/{uuid}`

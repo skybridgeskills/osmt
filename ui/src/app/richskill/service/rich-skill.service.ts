@@ -348,7 +348,6 @@ export class RichSkillService extends AbstractService {
     url: string,
     pollIntervalMs = 1000
   ): Observable<any> {
-    console.log(`endpoint: ${url}`);
     return this.httpClient
       .get(this.buildUrl(url), {
         headers: this.wrapHeaders(

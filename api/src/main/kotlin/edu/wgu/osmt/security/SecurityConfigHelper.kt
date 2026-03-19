@@ -38,6 +38,8 @@ object SecurityConfigHelper {
      * /api/{version}/collections/{uuid})
      * - Collection skills endpoint (POST /api/{version}/collections/{uuid}/skills)
      * - Collection export endpoints (CSV, XLSX)
+     * - Custom list export (POST /api/v3/export/skills/csv and .../xlsx) when
+     *   controller allows anonymous via allowPublicSearching
      * - Task detail endpoints (text, media)
      *
      * @param http HttpSecurity builder to configure
@@ -92,6 +94,14 @@ object SecurityConfigHelper {
                 .permitAll()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_XLSX))
                 .permitAll()
+                .requestMatchers(
+                    POST,
+                    RoutePaths.API + RoutePaths.API_V3 + RoutePaths.EXPORT_SKILLS_CSV,
+                ).permitAll()
+                .requestMatchers(
+                    POST,
+                    RoutePaths.API + RoutePaths.API_V3 + RoutePaths.EXPORT_SKILLS_XLSX,
+                ).permitAll()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_TEXT))
                 .permitAll()
                 .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_MEDIA))
