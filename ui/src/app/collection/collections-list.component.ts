@@ -49,6 +49,8 @@ export class CollectionsListComponent extends Whitelabelled {
   showSearchEmptyMessage = false;
   showLibraryEmptyMessage = false;
 
+  isPublicView = false;
+
   clearSelectedItemsFromTable = new Subject<void>();
 
   constructor(

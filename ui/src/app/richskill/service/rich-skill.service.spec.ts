@@ -90,7 +90,7 @@ describe('RichSkillService', () => {
     RouterData.commands = [];
     AuthServiceData.isDown = false;
     const path =
-      getBaseApi() + '/skills/filter?sort=skill.asc&status=draft&size=3&from=0';
+      getBaseApi() + '/skills/filter?status=draft&size=3&from=0&sort=skill.asc';
     const testData: PaginatedSkills = createMockPaginatedSkills(3, 10);
     const statuses = new Set<PublishStatus>([PublishStatus.Draft]);
 
@@ -350,7 +350,7 @@ describe('RichSkillService', () => {
     const req = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
         path +
-        '?sort=skill.asc&status=published&status=draft&size=5&from=1'
+        '?status=published&status=draft&size=5&from=1&sort=skill.asc'
     );
     expect(req.request.method).toEqual('POST');
     req.flush(testData.skills, {
@@ -398,9 +398,7 @@ describe('RichSkillService', () => {
       expect(AuthServiceData.isDown).toEqual(false);
     });
     const req = httpTestingController.expectOne(
-      AppConfig.settings.baseApiUrl +
-        getBaseApi() +
-        '/export/skills/csv?sort=undefined'
+      AppConfig.settings.baseApiUrl + getBaseApi() + '/export/skills/csv'
     );
     expect(req.request.method).toEqual('POST');
     expect(req.request.headers.get('Accept')).toEqual('application/json');

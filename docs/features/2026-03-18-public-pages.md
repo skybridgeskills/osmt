@@ -61,19 +61,39 @@ when `allowPublicLists` is true; they are configured separately from the above.
 When `allowPublicLists` and `allowPublicSearching` are enabled, unauthenticated
 users can reach these Angular routes without being redirected to login:
 
-| Route              | Page                         |
-|--------------------|------------------------------|
-| `/`                | Redirects to `/skills`       |
-| `/skills`          | RSD library (published only) |
-| `/skills/search`   | Search results               |
-| `/skills/{uuid}`   | Public skill detail          |
-| `/collections/{uuid}` | Public collection detail  |
-| `/categories`      | Category library             |
-| `/categories/{id}`| Category detail (skills list)|
+| Route                 | Page                         |
+|-----------------------|------------------------------|
+| `/`                   | Redirects to `/skills`       |
+| `/skills`             | RSD library (published only) |
+| `/skills/search`      | Search results               |
+| `/skills/{uuid}`      | Public skill detail          |
+| `/collections`        | Collections library (published and archived only) |
+| `/collections/{uuid}` | Public collection detail     |
+| `/categories`         | Category library             |
+| `/categories/{id}`    | Category detail (skills list)|
+
+## Top Navigation
+
+The top navbar shows Skills, Collections, and Categories to all users (authenticated
+and unauthenticated). Unauthenticated users also see a Login link; authenticated
+users see My Workspace (when authorized), Sync (when authorized), and Logout.
+
+## Navigation and Linking
+
+- **Category links**: Category names on skill detail pages and in skill lists link
+  to `/categories/{id}`. Unauthenticated users can follow these to browse by
+  category.
+- **Skill links on category page**: On `/categories/{id}`, skill links go to the
+  public skill detail `/skills/{uuid}` (not the manage page). This keeps the
+  flow consistent for public users.
+- **Collection links on collections library**: On `/collections`, collection links
+  go to the public collection detail `/collections/{uuid}` when viewing as an
+  unauthenticated user (not the manage page).
 
 ## What Unauthenticated Users Can Do
 
 - Browse the skills library (published and archived RSDs only; draft/deleted are hidden)
+- Browse the collections library (published and archived only; drafts are hidden)
 - Search and filter skills
 - View individual skill and collection detail pages
 - Browse the category library and view skills by category

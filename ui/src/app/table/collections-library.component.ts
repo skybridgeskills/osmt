@@ -4,7 +4,7 @@ import { ToastService } from '../toast/toast.service';
 import { PaginatedCollections } from '../richskill/service/rich-skill-search.service';
 import { CollectionService } from '../collection/service/collection.service';
 import { CollectionsListComponent } from '../collection/collections-list.component';
-import { determineFilters } from '../PublishStatus';
+import { determineFilters, PublishStatus } from '../PublishStatus';
 import { Title } from '@angular/platform-browser';
 import { AuthService } from '../auth/auth-service';
 
@@ -30,6 +30,15 @@ export class CollectionsLibraryComponent
 
   ngOnInit(): void {
     this.titleService.setTitle(`Collections | ${this.whitelabel.toolName}`);
+
+    if (!this.authService.isAuthenticated()) {
+      this.isPublicView = true;
+      this.selectedFilters = new Set([
+        PublishStatus.Published,
+        PublishStatus.Archived,
+      ]);
+    }
+
     this.loadNextPage();
   }
 

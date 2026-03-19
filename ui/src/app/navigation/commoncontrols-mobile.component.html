@@ -67,7 +67,7 @@
   </form>
 </div>
 
-<ul class="m-navBar-x-nav">
+<ul *ngIf="isAuthenticated()" class="m-navBar-x-nav">
   <li>
     <button
       class="m-buttonText m-buttonText-onDark"
@@ -120,7 +120,15 @@
 </ul>
 
 <ul class="m-navBar-x-nav">
-  <li>
+  <li *ngIf="!isAuthenticated()">
+    <a
+      class="m-buttonText m-buttonText-onDark"
+      routerLink="/login"
+      [queryParams]="{ return: getCurrentUrl() }"
+      >Login</a
+    >
+  </li>
+  <li *ngIf="isAuthenticated()">
     <button class="m-buttonText m-buttonText-onDark" routerLink="/logout">
       <span class="m-buttonText-x-text">Logout</span>
     </button>

@@ -61,6 +61,7 @@
           *ngIf="showSkillsTable"
           [items]="skillTableControl.skills"
           [showRowActions]="false"
+          [isPublicView]="true"
           [currentSort]="skillTableControl.sort"
           [mobileSortOptions]="getMobileSkillSortOptions()"
           (columnSorted)="handleHeaderColumnSort($event)"

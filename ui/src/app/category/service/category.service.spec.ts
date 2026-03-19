@@ -76,7 +76,7 @@ describe('CategoryService', () => {
     const sort = KeywordSortOrder.SkillCountDesc;
     const size = 10;
     const from = 20;
-    const path = `${getBaseApi()}/categories?sort=${sort}&size=${size}&from=${from}`;
+    const path = `${getBaseApi()}/categories?size=${size}&from=${from}&sort=${sort}`;
 
     // Act
     const result = testService.getAllPaginated(size, from, sort);

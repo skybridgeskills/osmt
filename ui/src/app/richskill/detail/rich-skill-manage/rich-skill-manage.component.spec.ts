@@ -76,7 +76,7 @@ describe('RichSkillManageComponent', () => {
       },
       {
         label: 'Categories',
-        bodyString: skill.categories.join('; '),
+        bodyTemplate: component.categoriesTemplate,
         showIfEmpty: true,
       },
       {

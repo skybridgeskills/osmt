@@ -87,6 +87,7 @@
       app-collection-list-row
       [collection]="collection"
       [isSelected]="isSelected(collection)"
+      [isPublicView]="isPublicView"
       [rowActions]="rowActions"
       (rowSelected)="onRowToggle($event)"
       (focusActionBar)="focusActionBar.emit()"

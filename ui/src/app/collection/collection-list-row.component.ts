@@ -16,6 +16,7 @@ export class CollectionListRowComponent implements OnInit {
   @Input() collection?: ApiCollectionSummary;
   @Input() id = 'collection-list-row';
   @Input() isSelected = false;
+  @Input() isPublicView = false;
   @Input() rowActions: TableActionDefinition[] = [];
 
   @Output() rowSelected = new EventEmitter<ICollectionSummary>();

@@ -97,7 +97,7 @@ describe('CollectionService', () => {
     RouterData.commands = [];
     AuthServiceData.isDown = false;
     const path =
-      getBaseApi() + '/collections?sort=name.asc&status=draft&size=3&from=0';
+      getBaseApi() + '/collections?status=draft&size=3&from=0&sort=name.asc';
     const testData: PaginatedCollections = createMockPaginatedCollections(
       3,
       10
@@ -328,8 +328,7 @@ describe('CollectionService', () => {
     RouterData.commands = [];
     AuthServiceData.isDown = false;
     const uuid = 'f6aacc9e-bfc6-4cc9-924d-c7ef83afef07';
-    const path =
-      getBaseApi() + '/collections/' + uuid + '/skills?sort=undefined';
+    const path = getBaseApi() + '/collections/' + uuid + '/skills';
     const testData = createMockPaginatedSkills();
     const expected = testData;
 
@@ -479,7 +478,7 @@ describe('CollectionService', () => {
     const req = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
         path +
-        `?sort=${sort}&status=${PublishStatus.Published}&status=${PublishStatus.Draft}&size=${size}&from=${from}`
+        `?status=${PublishStatus.Published}&status=${PublishStatus.Draft}&size=${size}&from=${from}&sort=${sort}`
     );
     expect(req.request.method).toEqual('POST');
     req.flush(testData.collections, {
@@ -519,7 +518,7 @@ describe('CollectionService', () => {
     const req = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
         path +
-        `?sort=${sort}&status=${PublishStatus.Published}&status=${PublishStatus.Draft}`
+        `?status=${PublishStatus.Published}&status=${PublishStatus.Draft}`
     );
     expect(req.request.method).toEqual('POST');
     req.flush(testData);
@@ -578,7 +577,7 @@ describe('CollectionService', () => {
     const req1 = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
         path1 +
-        `?sort=${sort}&status=${PublishStatus.Published}&status=${PublishStatus.Draft}`
+        `?status=${PublishStatus.Published}&status=${PublishStatus.Draft}`
     );
     expect(req1.request.method).toEqual('POST');
     req1.flush(taskResult);
@@ -667,7 +666,7 @@ describe('CollectionService', () => {
     const req = httpTestingController.expectOne(
       AppConfig.settings.baseApiUrl +
         path +
-        `?sort=${sort}&status=${PublishStatus.Archived}&status=${PublishStatus.Draft}&size=${size}&from=${from}`
+        `?status=${PublishStatus.Archived}&status=${PublishStatus.Draft}&size=${size}&from=${from}`
     );
     expect(req.request.method).toEqual('POST');
     req.flush(testData.skills, {

@@ -170,11 +170,10 @@ const routes: Routes = [
       roles: ActionByRoles.get(ButtonAction.CollectionSkillsUpdate),
     },
   },
-  // collections library
+  // collections library (public)
   {
     path: 'collections',
     component: CollectionsLibraryComponent,
-    canActivate: [AuthGuard],
   },
 
   // advanced search

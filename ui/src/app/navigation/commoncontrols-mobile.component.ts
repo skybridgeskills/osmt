@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Location } from '@angular/common';
 import { AbstractSearchComponent } from './abstract-search.component';
 import { SearchService } from '../search/search.service';
 import { ActivatedRoute } from '@angular/router';
@@ -17,10 +18,19 @@ export class CommoncontrolsMobileComponent
   constructor(
     protected searchService: SearchService,
     protected route: ActivatedRoute,
-    protected authService: AuthService
+    protected authService: AuthService,
+    private location: Location
   ) {
     super(searchService, route, authService);
   }
 
   ngOnInit(): void {}
+
+  isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  getCurrentUrl(): string {
+    return this.location.path();
+  }
 }
