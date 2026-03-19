@@ -1,11 +1,14 @@
 <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 <div
-  [ngClass]="{ 'm-pill-group-collapsible': true, collapsed: collapsed }"
+  [ngClass]="{
+    'm-pill-group-collapsible': hasOverflow,
+    collapsed: collapsed && hasOverflow,
+  }"
   aria-controls="pill-group-controls"
-  [attr.aria-expanded]="!collapsed && pillControls.length > 20"
-  (click)="expand()"
+  [attr.aria-expanded]="!collapsed && hasOverflow"
+  (click)="onWrapperClick($event)"
 >
-  <div class="read-more-wrapper" *ngIf="pillControls.length > 20">
+  <div class="read-more-wrapper" *ngIf="hasOverflow">
     <div>
       <button (click)="toggleCollapse($event)">
         <span *ngIf="collapsed">Show all {{ pillControls.length }}</span>
@@ -13,7 +16,7 @@
       </button>
     </div>
   </div>
-  <ul id="pill-group-controls" class="m-pill-group">
+  <ul #pillList id="pill-group-controls" class="m-pill-group">
     <li *ngFor="let c of pillControls">
       <ng-container
         *ngIf="
@@ -25,12 +28,15 @@
       <ng-template #withClickedObserver>
         <app-pill
           [control]="c"
-          [tabSelectEnabled]="!collapsed"
+          [tabSelectEnabled]="!collapsed || !hasOverflow"
           (clicked)="onPillClicked($event)"
         ></app-pill>
       </ng-template>
       <ng-template #withoutClickedObserver>
-        <app-pill [control]="c"></app-pill>
+        <app-pill
+          [control]="c"
+          [tabSelectEnabled]="!collapsed || !hasOverflow"
+        ></app-pill>
       </ng-template>
     </li>
   </ul>
