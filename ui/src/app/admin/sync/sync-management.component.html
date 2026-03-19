@@ -134,7 +134,12 @@
           [disabled]="syncing || resyncing || unpublishing"
           (click)="onSyncNow()"
         >
-          {{ syncing ? 'Syncing...' : 'Sync New Changes' }}
+          <svg class="m-button-x-icon t-icon" aria-hidden="true">
+            <use [attr.xlink:href]="syncNewChangesIcon"></use>
+          </svg>
+          <span class="m-button-x-text">{{
+            syncing ? 'Syncing...' : 'Sync New Changes'
+          }}</span>
         </button>
       </div>
     </section>
@@ -161,7 +166,12 @@
           [disabled]="syncing || resyncing || unpublishing"
           (click)="onResync()"
         >
-          {{ resyncing ? 'Resyncing...' : 'Resync All' }}
+          <svg class="m-button-x-icon t-icon" aria-hidden="true">
+            <use [attr.xlink:href]="resyncAllIcon"></use>
+          </svg>
+          <span class="m-button-x-text">{{
+            resyncing ? 'Resyncing...' : 'Resync All'
+          }}</span>
         </button>
       </div>
     </section>

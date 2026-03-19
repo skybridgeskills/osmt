@@ -36,6 +36,8 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
   editIcon: string = SvgHelper.path(SvgIcon.EDIT);
   duplicateIcon: string = SvgHelper.path(SvgIcon.DUPLICATE);
   publishIcon: string = SvgHelper.path(SvgIcon.PUBLISH);
+  externalLinkIcon: string = SvgHelper.path(SvgIcon.EXTERNAL_LINK);
+  credentialEngineSyncIcon: string = SvgHelper.path(SvgIcon.UPLOAD);
   archiveIcon: string = SvgHelper.path(SvgIcon.ARCHIVE);
   dismissIcon: string = SvgHelper.path(SvgIcon.DISMISS);
 

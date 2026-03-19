@@ -5,6 +5,7 @@ import {
   SyncStateResponse,
 } from './sync.service';
 import { ToastService } from '../../toast/toast.service';
+import { SvgIcon } from '../../core/SvgHelper';
 
 interface SyncStatusDisplay {
   label: string;
@@ -27,6 +28,10 @@ export class SyncManagementComponent implements OnInit, OnDestroy {
   private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly refreshIntervalMs = 5000;
   private readonly maxRefreshDurationMs = 60 * 60 * 1000; // 1 hour
+
+  readonly syncNewChangesIcon = `/assets/images/svg-defs.svg#${SvgIcon.UPLOAD}`;
+  readonly resyncAllIcon =
+    '/assets/images/svg-extra-defs.svg#icon-refresh-sync';
 
   constructor(
     private syncService: SyncService,
