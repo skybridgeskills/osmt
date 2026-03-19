@@ -4,7 +4,7 @@ import { SvgHelper, SvgIcon } from '../../core/SvgHelper';
 @Component({
   selector: 'app-filter-choice',
   template: `
-    <div class="m-choice">
+    <div class="m-choice flex items-center">
       <div class="m-choice-x-body">
         <label [for]="inputId">{{ label }}</label>
       </div>

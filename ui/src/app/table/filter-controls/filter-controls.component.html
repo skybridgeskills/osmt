@@ -3,8 +3,10 @@
 >
   <h3 class="t-visuallyHidden">Filters</h3>
   <!--  {{render '@l-filtercontrols'}}-->
-  <div class="filter-section">
-    <div class="l-filterControls">
+  <div
+    class="filter-section flex-wrap items-center gap-x-small gap-y-extraSmall"
+  >
+    <div class="l-filterControls flex flex-wrap gap-x-extraSmall">
       <app-filter-choice
         label="Draft"
         [isChecked]="isDraftChecked"
