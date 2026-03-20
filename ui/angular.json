@@ -45,12 +45,12 @@
               "src/config",
               {
                 "glob": "**/*",
-                "input": "./node_modules/@concentricsky/wgu-design-system-patternlibrary/dist",
+                "input": "src/pattern-library",
                 "output": "./assets"
               }
             ],
             "styles": [
-              "node_modules/@concentricsky/wgu-design-system-patternlibrary/dist/css/screen.css",
+              "src/pattern-library/css/screen.css",
               "src/styles.scss"
             ],
             "scripts": []
