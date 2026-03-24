@@ -1,8 +1,10 @@
 # Tailwind CSS Integration
 
-Tailwind CSS has been added to the OSMT UI with design tokens ported from the WGU pattern
-library (`@concentricsky/wgu-design-system-patternlibrary`). This enables incremental
-migration from the defunct pattern library while preserving consistent styling.
+Tailwind CSS has been added to the OSMT UI with design tokens ported from the
+vendored WGU pattern library CSS (`ui/src/pattern-library/`; see
+`docs/features/2026-03-19-pattern-library-css-in-repo.md`). This enables
+incremental migration from that legacy stylesheet while preserving consistent
+styling.
 
 ## Setup
 
@@ -22,7 +24,7 @@ migration from the defunct pattern library while preserving consistent styling.
 
 Styles are loaded in this order:
 
-1. Pattern library CSS (`screen.css`)
+1. Pattern library CSS — `ui/src/pattern-library/css/screen.css`
 2. `styles.scss` (Tailwind + app overrides)
 
 ## Design Tokens (from WGU Pattern Library)
@@ -90,8 +92,10 @@ Semantic colors use CSS variables (`var(--color-*)`) so whitelabel and dark mode
 ## Migration Strategy
 
 1. **Incremental** – New components and refactors use Tailwind.
-2. **Pattern library remains** – Existing `m-*` components still rely on the pattern library; `t-*` and `l-*` classes can be replaced gradually.
-3. **`@tailwind base`** – Intentionally omitted to avoid preflight conflicts. Re-enable when the pattern library is fully removed.
+2. **Pattern library CSS remains** – Vendored in-repo; existing `m-*` components
+   still rely on it; `t-*` and `l-*` classes can be replaced gradually.
+3. **`@tailwind base`** – Intentionally omitted to avoid preflight conflicts.
+   Re-enable when pattern-library CSS is fully removed from the bundle.
 
 ## Example: Pattern Lib → Tailwind
 
