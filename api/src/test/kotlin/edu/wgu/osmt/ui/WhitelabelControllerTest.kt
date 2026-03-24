@@ -1,5 +1,6 @@
 package edu.wgu.osmt.ui
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import edu.wgu.osmt.BaseDockerizedTest
@@ -60,6 +61,7 @@ internal class WhitelabelControllerTest
                 .isTrue()
         }
 
+        @JsonIgnoreProperties(ignoreUnknown = true)
         data class WhitelabelResponse(
             val authProviders: List<AuthProvider> = emptyList(),
             val singleAuthEnabled: Boolean = false,

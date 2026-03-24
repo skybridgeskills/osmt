@@ -1,100 +1,25 @@
-# Whitelabel and theming (deployment)
+# White-label theming
 
-OSMT serves branding and theme values from the API at
-`/whitelabel/whitelabel.json`. The Angular app loads this when
-`dynamicWhitelabel` is true (default in production).
+OSMT supports white-label theming. Out of the box it ships with a generic OSMT
+logo, a neutral blue brand color, and default footer text. Every visible
+branding element — app name, logo, brand color, and footer copy — can be
+overridden for your organization.
 
-You can customize the UI by setting environment variables on the **API**
-container. The API merges them into the whitelabel JSON response.
+## What can be themed
 
-## Merge order
+| Element | Where it appears | Default |
+|---------|-----------------|---------|
+| App name | Browser tab, header tagline | OSMT / Open Skills Management Tool |
+| Brand color | Navigation bar, buttons, links | `#1e40af` (medium blue) |
+| Logo | Top-left of the navigation bar | Generic "OSMT" text mark |
+| Footer copyright | Bottom of every page | Copyright © OSMT Contributors |
+| Footer secondary | Below the copyright line | All rights reserved. |
+| "Powered by" | Footer, optional | *(hidden by default)* |
 
-Later layers override earlier ones:
+## Quick start
 
-1. Built-in defaults from `docker/whitelabel/whitelabel.json` in the API JAR
-2. `OSMT_WHITELABEL_JSON` (JSON object as a string)
-3. Individual `OSMT_*` environment variables
-4. Dynamic auth fields (`loginUrl`, `authMode`, `authProviders`,
-   `singleAuthEnabled`) from Spring configuration
-
-## Environment variables
-
-| Variable | JSON field | Default (built-in) | Description |
-|----------|------------|--------------------|-------------|
-| `OSMT_TOOL_NAME` | `toolName` | `OSMT` | Short name (tab title, header) |
-| `OSMT_TOOL_NAME_LONG` | `toolNameLong` | `Open Skills Management Tool` | Tagline next to the logo |
-| `OSMT_BRAND_COLOR` | `colorBrandAccent1` | `#1e40af` | Primary brand color (hex) |
-| `OSMT_LOGO_URL` | `logoUrl` | `/assets/images/logo-dark.svg` | Logo `src` value |
-| `OSMT_LICENSE_PRIMARY` | `licensePrimary` | `Copyright © OSMT Contributors` | Footer line 1 |
-| `OSMT_LICENSE_SECONDARY` | `licenseSecondary` | `All rights reserved.` | Footer line 2 |
-| `OSMT_WHITELABEL_JSON` | *(many)* | *(none)* | Full JSON overlay |
-
-## Logo options
-
-`OSMT_LOGO_URL` (or `logoUrl` inside `OSMT_WHITELABEL_JSON`) can be:
-
-### Relative path (volume mount)
-
-Mount a file where the browser can load it. With `WHITELABEL_PATH`, static
-files under that directory are served at `/whitelabel/...`.
-
-```yaml
-services:
-  api:
-    volumes:
-      - ./branding/my-logo.svg:/opt/osmt/whitelabel/my-logo.svg
-    environment:
-      WHITELABEL_PATH: /opt/osmt/whitelabel
-      OSMT_LOGO_URL: /whitelabel/my-logo.svg
-```
-
-### Absolute URL
-
-```yaml
-environment:
-  OSMT_LOGO_URL: "https://cdn.example.com/osmt-logo.svg"
-```
-
-### Data URI
-
-Suitable for small SVGs; watch env size limits on your platform.
-
-```yaml
-environment:
-  OSMT_LOGO_URL: "data:image/svg+xml;base64,PHN2Zy..."
-```
-
-## Full JSON override
-
-Use `OSMT_WHITELABEL_JSON` when you need every field (including optional ones
-like `poweredBy`):
-
-```yaml
-environment:
-  OSMT_WHITELABEL_JSON: >
-    {
-      "toolName": "SkillsHub",
-      "toolNameLong": "SkillsHub Skills Management",
-      "colorBrandAccent1": "#059669",
-      "logoUrl": "https://example.com/logo.svg",
-      "licensePrimary": "© 2026 Example Org",
-      "licenseSecondary": "All rights reserved.",
-      "poweredBy": "Powered by",
-      "poweredByUrl": "https://github.com/example/osmt",
-      "poweredByLabel": "OSMT"
-    }
-```
-
-Individual `OSMT_*` variables still override keys present in
-`OSMT_WHITELABEL_JSON` if both are set.
-
-## Brand color and accessibility
-
-The UI adjusts text on brand-colored surfaces for contrast. If white text on
-your `colorBrandAccent1` is below roughly 4.5:1 contrast, the app switches to
-dark text on that surface.
-
-## Minimal example
+Set environment variables on the **API** container. The UI reads its theme from
+the API at runtime — no rebuild required.
 
 ```yaml
 services:
@@ -107,4 +32,116 @@ services:
       OSMT_LICENSE_PRIMARY: "© 2026 SkillsHub Inc."
 ```
 
-The UI container does not need these variables; it reads branding from the API.
+Only set the variables you want to change; everything else keeps its default.
+
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OSMT_TOOL_NAME` | `OSMT` | Short app name (tab title, header) |
+| `OSMT_TOOL_NAME_LONG` | `Open Skills Management Tool` | Full name shown as tagline |
+| `OSMT_BRAND_COLOR` | `#1e40af` | Primary brand color (hex) |
+| `OSMT_LOGO_URL` | `/assets/images/logo-dark.svg` | Logo image (see below) |
+| `OSMT_LICENSE_PRIMARY` | `Copyright © OSMT Contributors` | Footer line 1 |
+| `OSMT_LICENSE_SECONDARY` | `All rights reserved.` | Footer line 2 |
+| `OSMT_WHITELABEL_JSON` | *(none)* | Full JSON override (advanced) |
+
+These are set on the API container only. The UI container does not need them.
+
+## Providing a custom logo
+
+`OSMT_LOGO_URL` accepts three kinds of value:
+
+### External URL
+
+Point to a logo hosted on your CDN or asset server.
+
+```yaml
+environment:
+  OSMT_LOGO_URL: "https://cdn.example.com/logo.svg"
+```
+
+### Volume mount
+
+Mount a file into the API container and reference its served path. The
+`WHITELABEL_PATH` directory makes files available under `/whitelabel/`.
+
+```yaml
+services:
+  api:
+    volumes:
+      - ./branding/my-logo.svg:/opt/osmt/whitelabel/my-logo.svg
+    environment:
+      WHITELABEL_PATH: /opt/osmt/whitelabel
+      OSMT_LOGO_URL: /whitelabel/my-logo.svg
+```
+
+### Data URI
+
+For small SVGs you can inline the image. Watch platform-specific env var size
+limits.
+
+```yaml
+environment:
+  OSMT_LOGO_URL: "data:image/svg+xml;base64,PHN2Zy..."
+```
+
+The logo renders at 110 × 24 px in the navigation bar. SVG is recommended.
+
+## Full JSON override (advanced)
+
+For complete control — including optional fields like `poweredBy` — pass a
+full JSON object as `OSMT_WHITELABEL_JSON`:
+
+```yaml
+environment:
+  OSMT_WHITELABEL_JSON: >
+    {
+      "toolName": "SkillsHub",
+      "toolNameLong": "SkillsHub Skills Management",
+      "colorBrandAccent1": "#059669",
+      "logoUrl": "https://example.com/logo.svg",
+      "licensePrimary": "© 2026 Example Org",
+      "licenseSecondary": "All rights reserved.",
+      "poweredBy": "Powered by",
+      "poweredByUrl": "https://example.com",
+      "poweredByLabel": "OSMT"
+    }
+```
+
+Individual `OSMT_*` variables override keys in `OSMT_WHITELABEL_JSON` when
+both are set.
+
+## How it works
+
+The API serves branding at `/whitelabel/whitelabel.json`. The Angular UI
+fetches this on startup (when `dynamicWhitelabel` is `true`, the default in
+production) and applies the values to the page.
+
+Configuration is merged in layers — later layers win:
+
+1. **Built-in defaults** — `docker/whitelabel/whitelabel.json` packaged in the
+   API JAR
+2. **`OSMT_WHITELABEL_JSON`** — full JSON overlay from the env var
+3. **Individual `OSMT_*` env vars** — override specific fields
+4. **Auth fields** — `loginUrl`, `authMode`, `authProviders`,
+   `singleAuthEnabled` from Spring configuration (not theme-related, but
+   included in the same response)
+
+### Brand color accessibility
+
+The UI checks the contrast ratio between white text and your brand color. If
+the ratio is below 4.5 : 1 (WCAG AA), it automatically switches to dark text
+on brand-colored surfaces.
+
+### Relevant source files
+
+| File | Role |
+|------|------|
+| `api/.../config/WhitelabelConfig.kt` | Reads `OSMT_*` env vars |
+| `api/.../config/WhitelabelMerge.kt` | Layer-merge logic |
+| `api/.../ui/UiController.kt` | Serves `/whitelabel/whitelabel.json` |
+| `ui/src/app/models/app-config.model.ts` | `IAppConfig` interface / defaults |
+| `ui/src/app/app.component.ts` | Applies brand color + page title |
+| `ui/src/app/navigation/header.component.html` | Logo binding |
+| `ui/src/app/navigation/footer.component.html` | Footer text + powered-by |
