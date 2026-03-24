@@ -69,21 +69,26 @@ export class AppComponent extends Whitelabelled implements OnInit {
       newBrandAccent1
     );
 
-    // Check other colors
+    // Check other colors (fallbacks: tests may run before CSS vars resolve)
     const rootStyles = window.getComputedStyle(document.documentElement);
-    const black = rootStyles.getPropertyValue('--color-onBrandBlack');
-    const defaultA11yOnBrand = rootStyles.getPropertyValue(
-      '--color-onBrandWhite'
-    );
-    const contrast = chroma.contrast(defaultA11yOnBrand, newBrandAccent1);
+    const black = rootStyles.getPropertyValue('--color-onBrandBlack').trim();
+    const defaultA11yOnBrand = rootStyles
+      .getPropertyValue('--color-onBrandWhite')
+      .trim();
+    const onBrandWhite = defaultA11yOnBrand || '#ffffff';
+    const onBrandBlack = black || '#000000';
+    const contrast = chroma.contrast(onBrandWhite, newBrandAccent1);
 
     if (contrast < 4.5) {
       // If white and brand have a contrast of less than 4.5, switch, else set default
-      document.documentElement.style.setProperty('--color-a11yOnBrand', black);
+      document.documentElement.style.setProperty(
+        '--color-a11yOnBrand',
+        onBrandBlack
+      );
     } else {
       document.documentElement.style.setProperty(
         '--color-a11yOnBrand',
-        defaultA11yOnBrand
+        onBrandWhite
       );
     }
   }

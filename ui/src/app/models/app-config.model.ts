@@ -23,6 +23,7 @@ export interface IAppConfig {
   poweredByLabel: string;
   idleTimeoutInSeconds: number;
   colorBrandAccent1?: string;
+  logoUrl?: string;
 }
 
 // Default configuration
@@ -35,13 +36,14 @@ export class DefaultAppConfig implements IAppConfig {
   toolNameLong = 'Open Skills Management Tool';
   publicSkillTitle = 'Rich Skill Descriptor';
   publicCollectionTitle = 'Rich Skill Descriptor Collection';
-  licensePrimary = 'Copyright © Open Skills Network';
+  licensePrimary = 'Copyright © OSMT Contributors';
   licenseSecondary = 'All rights reserved.';
-  poweredBy = 'Powered by the';
-  poweredByUrl = 'https://rsd.osmt.dev';
-  poweredByLabel = 'Open Skills Network';
+  poweredBy = '';
+  poweredByUrl = '';
+  poweredByLabel = '';
   idleTimeoutInSeconds = 24 * 60 * 60;
   colorBrandAccent1 = undefined;
+  logoUrl = '/assets/images/logo-dark.svg';
   dynamicWhitelabel = false;
   authProviders: AuthProvider[] = [];
   singleAuthEnabled = false;

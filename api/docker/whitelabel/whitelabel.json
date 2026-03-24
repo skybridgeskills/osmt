@@ -5,9 +5,11 @@
   "toolNameLong": "Open Skills Management Tool",
   "publicSkillTitle": "Rich Skill Descriptor",
   "publicCollectionTitle": "Rich Skill Descriptor Collection",
-  "licensePrimary": "Copyright © Open Skills Network",
+  "licensePrimary": "Copyright © OSMT Contributors",
   "licenseSecondary": "All rights reserved.",
-  "poweredBy": "Powered by the",
-  "poweredByUrl": "https://rsd.osmt.dev",
-  "poweredByLabel": "Open Skills Network"
+  "poweredBy": "",
+  "poweredByUrl": "",
+  "poweredByLabel": "",
+  "colorBrandAccent1": "#1e40af",
+  "logoUrl": "/assets/images/logo-dark.svg"
 }

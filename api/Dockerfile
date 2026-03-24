@@ -68,7 +68,7 @@ RUN --mount=type=cache,id=mvncache,target=${BASE_DIR}/.m2 \
 
 FROM base AS deploy
 
-LABEL Maintainer="WGU / OSN"
+LABEL Maintainer="OSMT Contributors"
 
 ENV USER=osmt
 ENV BASE_DIR=/opt/${USER}

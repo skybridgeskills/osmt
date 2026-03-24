@@ -2,6 +2,8 @@ package edu.wgu.osmt.ui
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.wgu.osmt.config.AppConfig
+import edu.wgu.osmt.config.WhitelabelConfig
+import edu.wgu.osmt.config.WhitelabelMerge
 import edu.wgu.osmt.security.AuthConfigProvider
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -22,6 +24,9 @@ class UiController {
     @Autowired(required = false)
     var authConfigProvider: AuthConfigProvider? = null
 
+    @Autowired
+    lateinit var osmtWhitelabelConfig: WhitelabelConfig
+
     @RequestMapping()
     fun index(): String = javaClass.getResource("/ui/index.html")?.readText(Charsets.UTF_8) ?: "UI not configured"
 
@@ -31,20 +36,37 @@ class UiController {
     )
     @ResponseBody
     fun whitelabelConfig(): Map<String, Any> {
-        // Start with static whitelabel config if it exists
-        val staticConfig =
-            try {
-                val staticJson = javaClass.getResource("/docker/whitelabel/whitelabel.json")?.readText(Charsets.UTF_8)
-                if (staticJson != null) {
-                    objectMapper.readValue(staticJson, Map::class.java) as Map<String, Any>
-                } else {
-                    mutableMapOf<String, Any>()
-                }
-            } catch (e: Exception) {
-                mutableMapOf<String, Any>()
-            }
+        val staticConfig = loadStaticWhitelabel()
+        val mergedBranding =
+            WhitelabelMerge.mergeBrandingLayers(
+                staticConfig,
+                osmtWhitelabelConfig.jsonOverlayFromEnv(),
+                osmtWhitelabelConfig.envVarOverrides(),
+            )
+        val dynamicConfig = buildDynamicAuthConfig()
+        return mergedBranding + dynamicConfig
+    }
 
-        // Create dynamic config with loginUrl, authMode, authProviders, singleAuthEnabled
+    private fun loadStaticWhitelabel(): Map<String, Any> =
+        try {
+            val staticJson =
+                javaClass
+                    .getResource("/docker/whitelabel/whitelabel.json")
+                    ?.readText(Charsets.UTF_8)
+            if (staticJson != null) {
+                @Suppress("UNCHECKED_CAST")
+                (
+                    objectMapper.readValue(staticJson, Map::class.java)
+                        as Map<String, Any>
+                )
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+
+    private fun buildDynamicAuthConfig(): Map<String, Any> {
         val dynamicConfig = mutableMapOf<String, Any>()
         if (appConfig.loginUrl.isNotBlank()) {
             dynamicConfig["loginUrl"] = appConfig.loginUrl
@@ -53,9 +75,13 @@ class UiController {
         dynamicConfig["singleAuthEnabled"] = appConfig.singleAuthEnabled
         val providers = authConfigProvider?.getOAuthProviders() ?: emptyList()
         dynamicConfig["authProviders"] =
-            providers.map { mapOf("id" to it.id, "name" to it.name, "authorizationUrl" to it.authorizationUrl) }
-
-        // Merge static and dynamic config (dynamic takes precedence)
-        return staticConfig + dynamicConfig
+            providers.map {
+                mapOf(
+                    "id" to it.id,
+                    "name" to it.name,
+                    "authorizationUrl" to it.authorizationUrl,
+                )
+            }
+        return dynamicConfig
     }
 }

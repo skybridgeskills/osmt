@@ -1,6 +1,6 @@
 FROM node:20.18-alpine AS build
 
-LABEL Maintainer="WGU / OSN"
+LABEL Maintainer="OSMT Contributors"
 ENV BASE_DIR=/opt/osmt
 
 # Install Node Build Dependenices

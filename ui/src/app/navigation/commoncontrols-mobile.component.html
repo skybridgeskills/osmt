@@ -117,6 +117,16 @@
       >
     </button>
   </li>
+
+  <li *ngIf="canSyncManage">
+    <button
+      class="m-buttonText m-buttonText-onDark"
+      routerLink="/admin/sync"
+      type="button"
+    >
+      <span class="m-buttonText-x-text">Sync</span>
+    </button>
+  </li>
 </ul>
 
 <ul class="m-navBar-x-nav">

@@ -11,7 +11,7 @@
         <p>{{ whitelabel.licenseSecondary }}</p>
       </div>
 
-      <div class="m-footer-x-tagline">
+      <div class="m-footer-x-tagline" *ngIf="whitelabel.poweredBy">
         <p>
           {{ whitelabel.poweredBy }}
           <a [href]="whitelabel.poweredByUrl">{{ whitelabel.poweredByLabel }}</a

@@ -15,7 +15,6 @@ import { HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MyWorkspaceComponent } from '../my-workspace/my-workspace.component';
 import { RichSkillsLibraryComponent } from '../richskill/library/rich-skills-library.component';
-import { ButtonAction } from '../auth/auth-roles';
 import { By } from '@angular/platform-browser';
 import { Idle, IdleExpiry } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
@@ -76,9 +75,7 @@ describe('HeaderComponent', () => {
   it("my workspace is not visible when user doesn't have role admin or curator", () => {
     const authService = TestBed.inject(AuthService);
     spyOn(authService, 'isEnabledByRoles').and.returnValue(false);
-    component.canHaveWorkspace = component['authService'].isEnabledByRoles(
-      ButtonAction.MyWorkspace
-    );
+    spyOn(component, 'isAuthenticated').and.returnValue(true);
     fixture.detectChanges();
     const myWorkspace = fixture.debugElement.query(By.css('#li-my-workspace'));
     expect(myWorkspace).toBeFalsy();
@@ -88,23 +85,18 @@ describe('HeaderComponent', () => {
   it('canHaveWorkspace should be false', () => {
     const authService = TestBed.inject(AuthService);
     spyOn(authService, 'getRole').and.returnValue('ROLE_Osmt_Viewer');
-    component.canHaveWorkspace = component['authService'].isEnabledByRoles(
-      ButtonAction.MyWorkspace
-    );
     expect(component.canHaveWorkspace).toBeFalse();
   });
 
   it('canHaveWorkspace should be true', () => {
     const authService = TestBed.inject(AuthService);
     spyOn(authService, 'getRole').and.returnValue('ROLE_Osmt_Admin');
-    component.canHaveWorkspace = component['authService'].isEnabledByRoles(
-      ButtonAction.MyWorkspace
-    );
     expect(component.canHaveWorkspace).toBeTrue();
   });
 
   it('my workspace is visible when user has role admin or curator', done => {
-    component.canHaveWorkspace = true;
+    const authService = TestBed.inject(AuthService);
+    spyOn(authService, 'getRole').and.returnValue('ROLE_Osmt_Admin');
     spyOn(component, 'isAuthenticated').and.returnValue(true);
     fixture.whenStable().then(() => {
       fixture.detectChanges();
@@ -117,9 +109,45 @@ describe('HeaderComponent', () => {
     });
   });
 
+  it('shows Sync nav item for admin when authenticated', () => {
+    const authService = TestBed.inject(AuthService);
+    spyOn(authService, 'getRole').and.returnValue('ROLE_Osmt_Admin');
+    spyOn(component, 'isAuthenticated').and.returnValue(true);
+    fixture.detectChanges();
+    const syncLi = fixture.debugElement.query(By.css('#li-sync'));
+    expect(syncLi).toBeTruthy();
+  });
+
+  it('hides Sync nav item when user is curator only', () => {
+    const authService = TestBed.inject(AuthService);
+    spyOn(authService, 'getRole').and.returnValue('ROLE_Osmt_Curator');
+    spyOn(component, 'isAuthenticated').and.returnValue(true);
+    fixture.detectChanges();
+    const syncLi = fixture.debugElement.query(By.css('#li-sync'));
+    expect(syncLi).toBeFalsy();
+  });
+
   it('skills is active', fakeAsync(() => {
     router.navigate(['/skills']);
     tick();
     expect(router).toBeTruthy();
   }));
+
+  it('uses default logo when logoUrl is unset', () => {
+    AppConfig.settings.logoUrl = undefined;
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector(
+      '.m-navBar-x-brand img'
+    ) as HTMLImageElement;
+    expect(img.src).toContain('/assets/images/logo-dark.svg');
+  });
+
+  it('uses whitelabel logoUrl when set', () => {
+    AppConfig.settings.logoUrl = 'https://example.com/logo.svg';
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector(
+      '.m-navBar-x-brand img'
+    ) as HTMLImageElement;
+    expect(img.src).toBe('https://example.com/logo.svg');
+  });
 });

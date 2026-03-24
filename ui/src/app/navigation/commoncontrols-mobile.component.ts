@@ -4,6 +4,7 @@ import { AbstractSearchComponent } from './abstract-search.component';
 import { SearchService } from '../search/search.service';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth/auth-service';
+import { ButtonAction } from '../auth/auth-roles';
 
 @Component({
   // tslint:disable-next-line:component-selector
@@ -28,6 +29,10 @@ export class CommoncontrolsMobileComponent
 
   isAuthenticated(): boolean {
     return this.authService.isAuthenticated();
+  }
+
+  get canSyncManage(): boolean {
+    return this.authService.isEnabledByRoles(ButtonAction.SyncManage);
   }
 
   getCurrentUrl(): string {
