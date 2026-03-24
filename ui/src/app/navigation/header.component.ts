@@ -12,11 +12,14 @@ import { ButtonAction } from '../auth/auth-roles';
 })
 export class HeaderComponent extends Whitelabelled implements OnInit {
   menuExpanded = false;
-  canHaveWorkspace = this.authService.isEnabledByRoles(
-    ButtonAction.MyWorkspace
-  );
 
-  canSyncManage = this.authService.isEnabledByRoles(ButtonAction.SyncManage);
+  get canHaveWorkspace(): boolean {
+    return this.authService.isEnabledByRoles(ButtonAction.MyWorkspace);
+  }
+
+  get canSyncManage(): boolean {
+    return this.authService.isEnabledByRoles(ButtonAction.SyncManage);
+  }
 
   constructor(
     private authService: AuthService,
