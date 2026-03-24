@@ -23,9 +23,8 @@
       <a class="m-navBar-x-brand" href="#">
         <span class="t-visuallyHidden">Homepage</span>
         <img
-          src="/assets/images/logo-dark.svg"
-          alt="Site logo"
-          aria-hidden="true"
+          [src]="whitelabel.logoUrl || '/assets/images/logo-dark.svg'"
+          [alt]="whitelabel.toolName + ' logo'"
           width="110"
           height="24"
         />

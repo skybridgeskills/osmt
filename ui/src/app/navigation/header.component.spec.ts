@@ -122,4 +122,22 @@ describe('HeaderComponent', () => {
     tick();
     expect(router).toBeTruthy();
   }));
+
+  it('uses default logo when logoUrl is unset', () => {
+    AppConfig.settings.logoUrl = undefined;
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector(
+      '.m-navBar-x-brand img'
+    ) as HTMLImageElement;
+    expect(img.src).toContain('/assets/images/logo-dark.svg');
+  });
+
+  it('uses whitelabel logoUrl when set', () => {
+    AppConfig.settings.logoUrl = 'https://example.com/logo.svg';
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector(
+      '.m-navBar-x-brand img'
+    ) as HTMLImageElement;
+    expect(img.src).toBe('https://example.com/logo.svg');
+  });
 });
