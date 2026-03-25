@@ -11,7 +11,7 @@ overridden for your organization.
 |---------|-----------------|---------|
 | App name | Browser tab, header tagline | OSMT / Open Skills Management Tool |
 | Brand color | Navigation bar, buttons, links | `#1e40af` (medium blue) |
-| Logo | Top-left of the navigation bar | Generic "OSMT" text mark |
+| Logo | Top-left of the navigation bar | Generic white "OSMT" mark (on brand bar) |
 | Footer copyright | Bottom of every page | Copyright © OSMT Contributors |
 | Footer secondary | Below the copyright line | All rights reserved. |
 | "Powered by" | Footer, optional | *(hidden by default)* |
@@ -41,12 +41,28 @@ Only set the variables you want to change; everything else keeps its default.
 | `OSMT_TOOL_NAME` | `OSMT` | Short app name (tab title, header) |
 | `OSMT_TOOL_NAME_LONG` | `Open Skills Management Tool` | Full name shown as tagline |
 | `OSMT_BRAND_COLOR` | `#1e40af` | Primary brand color (hex) |
-| `OSMT_LOGO_URL` | `/assets/images/logo-dark.svg` | Logo image (see below) |
+| `OSMT_LOGO_URL` | `/assets/images/logo-light.svg` | Logo image (see below) |
 | `OSMT_LICENSE_PRIMARY` | `Copyright © OSMT Contributors` | Footer line 1 |
 | `OSMT_LICENSE_SECONDARY` | `All rights reserved.` | Footer line 2 |
 | `OSMT_WHITELABEL_JSON` | *(none)* | Full JSON override (advanced) |
 
 These are set on the API container only. The UI container does not need them.
+
+## Built-in logo files (`logo-light` vs `logo-dark`)
+
+There is **no automatic switching** between files. The header uses one URL:
+`logoUrl` from whitelabel config (or your `OSMT_LOGO_URL` override).
+
+The top navigation bar uses your **brand color** as its background. The
+default logo must be a **light-colored** mark on that bar:
+
+| File | Mark color | Typical use |
+|------|------------|-------------|
+| `logo-light.svg` | White / light fill | **Default** — visible on the brand-colored navbar |
+| `logo-dark.svg` | Brand blue (`#1e40af`) | Light backgrounds (e.g. if you reuse the asset in email or docs) |
+
+If you replace the logo with your own art, use a version that contrasts with
+your `OSMT_BRAND_COLOR` wherever the header shows it.
 
 ## Providing a custom logo
 
@@ -86,7 +102,7 @@ environment:
   OSMT_LOGO_URL: "data:image/svg+xml;base64,PHN2Zy..."
 ```
 
-The logo renders at 110 × 24 px in the navigation bar. SVG is recommended.
+The logo is sized about 110 × 28 px in the navigation bar. SVG is recommended.
 
 ## Full JSON override (advanced)
 

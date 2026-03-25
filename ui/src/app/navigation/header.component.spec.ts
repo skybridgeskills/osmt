@@ -139,7 +139,7 @@ describe('HeaderComponent', () => {
     const img = fixture.nativeElement.querySelector(
       '.m-navBar-x-brand img'
     ) as HTMLImageElement;
-    expect(img.src).toContain('/assets/images/logo-dark.svg');
+    expect(img.src).toContain('/assets/images/logo-light.svg');
   });
 
   it('uses whitelabel logoUrl when set', () => {

@@ -43,7 +43,8 @@ export class DefaultAppConfig implements IAppConfig {
   poweredByLabel = '';
   idleTimeoutInSeconds = 24 * 60 * 60;
   colorBrandAccent1 = undefined;
-  logoUrl = '/assets/images/logo-dark.svg';
+  /** Light-colored mark for the brand-colored navbar (see header). */
+  logoUrl = '/assets/images/logo-light.svg';
   dynamicWhitelabel = false;
   authProviders: AuthProvider[] = [];
   singleAuthEnabled = false;
