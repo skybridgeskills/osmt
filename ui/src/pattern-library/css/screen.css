@@ -3993,9 +3993,6 @@ strong {
   }
 }
 @media screen and (min-width: 1024px) {
-  .m-navBar:before {
-    opacity: 1;
-  }
   .m-navBar .m-navBar-x-tagline {
     color: var(--color-text4);
   }
