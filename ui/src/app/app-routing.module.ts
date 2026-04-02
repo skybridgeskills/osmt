@@ -125,7 +125,6 @@ const routes: Routes = [
   {
     path: 'collections/search',
     component: CollectionSearchResultsComponent,
-    canActivate: [AuthGuard],
   },
   // edit collection
   {
