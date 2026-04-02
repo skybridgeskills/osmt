@@ -1,7 +1,7 @@
 <div class="l-container">
   <h1 class="t-type-heading1 t-margin-small t-margin-bottom">External Sync</h1>
   <p class="t-type-body t-margin-small t-margin-bottom">
-    Publish RSDs and Collections to the Credential Engine Registry. Sync runs
+    Publish RSDs and Collections to the Credential Registry. Sync runs
     asynchronously; check logs for progress.
   </p>
 
@@ -18,7 +18,7 @@
   <app-system-message
     *ngIf="!configured"
     title="Sync not configured"
-    body="Credential Engine sync is not configured. Set CREDENTIAL_ENGINE_* environment variables to enable."
+    body="Credential Registry sync is not configured. Set CREDENTIAL_ENGINE_* environment variables to enable."
   >
   </app-system-message>
 
@@ -188,7 +188,7 @@
         Unpublish All
       </h2>
       <p class="t-type-body t-margin-small t-margin-bottom">
-        Remove all published skills and collections from the Credential Engine
+        Remove all published skills and collections from the Credential
         Registry. Use to clean up dev/test data. This cannot be undone.
       </p>
       <div class="l-syncActions">
@@ -260,7 +260,7 @@
           <dt><strong>Integration Key</strong></dt>
           <dd>
             Identifies the sync target configuration (e.g. default). Used when
-            multiple Credential Engine destinations exist.
+            multiple Credential Registry destinations exist.
           </dd>
           <dt><strong>Record Type</strong></dt>
           <dd>

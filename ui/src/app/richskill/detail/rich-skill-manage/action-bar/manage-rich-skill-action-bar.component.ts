@@ -191,7 +191,7 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
         this.toastService.hideBlockingLoader();
         this.toastService.showToast(
           'Success',
-          'Skill synced to Credential Engine'
+          'Skill synced to the Credential Registry'
         );
         this.reloadSkill.emit();
       },
@@ -199,7 +199,7 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
         this.toastService.hideBlockingLoader();
         const msg =
           err?.status === 503
-            ? 'Credential Engine sync is not configured'
+            ? 'Credential Registry sync is not configured'
             : (err?.error?.message ?? err?.message ?? 'Sync failed');
         this.toastService.showToast('Error', msg);
       },

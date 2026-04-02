@@ -332,7 +332,7 @@ export class ManageCollectionComponent
     ) {
       actions.push(
         new TableActionDefinition({
-          label: 'Sync to Credential Engine',
+          label: 'Sync to the Credential Registry',
           icon: this.credentialEngineSyncIcon,
           callback: () => this.syncCollectionToCredentialEngine(),
           visible: () =>
@@ -345,7 +345,7 @@ export class ManageCollectionComponent
     if (this.collection?.credentialEngineUrl) {
       actions.push(
         new TableActionDefinition({
-          label: 'View on Credential Engine',
+          label: 'View on the Credential Registry',
           icon: this.externalLinkIcon,
           callback: () =>
             window.open(this.collection!.credentialEngineUrl!, '_blank'),
@@ -416,7 +416,7 @@ export class ManageCollectionComponent
         this.toastService.hideBlockingLoader();
         this.toastService.showToast(
           'Success',
-          'Collection synced to Credential Engine'
+          'Collection synced to the Credential Registry'
         );
         this.reloadCollection();
       },
@@ -424,7 +424,7 @@ export class ManageCollectionComponent
         this.toastService.hideBlockingLoader();
         const msg =
           err?.status === 503
-            ? 'Credential Engine sync is not configured'
+            ? 'Credential Registry sync is not configured'
             : (err?.error?.message ?? err?.message ?? 'Sync failed');
         this.toastService.showToast('Error', msg);
       },
