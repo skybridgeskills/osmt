@@ -13,8 +13,10 @@ import { RichSkillService } from 'src/app/richskill/service/rich-skill.service';
 import { ToastService } from 'src/app/toast/toast.service';
 import {
   AuthServiceStub,
+  CollectionServiceStub,
   RichSkillServiceStub,
 } from 'test/resource/mock-stubs';
+import { CollectionService } from 'src/app/collection/service/collection.service';
 import { ManageSkillActionBarVerticalComponent } from './manage-skill-action-bar-vertical.component';
 import any = jasmine.any;
 
@@ -75,6 +77,7 @@ describe('ManageSkillActionBarVerticalComponent', () => {
         ToastService,
         { provide: RichSkillService, useClass: RichSkillServiceStub },
         { provide: AuthService, useClass: AuthServiceStub },
+        { provide: CollectionService, useClass: CollectionServiceStub },
       ],
     }).compileComponents();
 
@@ -194,6 +197,27 @@ describe('ManageSkillActionBarVerticalComponent', () => {
     expect(showToastSpy).toHaveBeenCalledWith(
       'Success!',
       'URL copied to clipboard'
+    );
+  });
+
+  it('handleAddToWorkspace adds skill uuid and shows toast', () => {
+    const collectionService = TestBed.inject(CollectionService);
+    const updateSpy = spyOn(
+      collectionService,
+      'updateSkillsWithResult'
+    ).and.callThrough();
+    spyOn(toastService, 'showBlockingLoader');
+    spyOn(toastService, 'hideBlockingLoader');
+    const showToastSpy = spyOn(toastService, 'showToast');
+
+    childComponent.handleAddToWorkspace();
+
+    expect(updateSpy).toHaveBeenCalled();
+    const [, skillUpdate] = updateSpy.calls.mostRecent().args;
+    expect(skillUpdate.add?.uuids).toEqual(['1234']);
+    expect(showToastSpy).toHaveBeenCalledWith(
+      'Success!',
+      'You added 7 RSDs to the workspace.'
     );
   });
 });

@@ -11,8 +11,10 @@ import { RichSkillService } from 'src/app/richskill/service/rich-skill.service';
 import { ToastService } from 'src/app/toast/toast.service';
 import {
   AuthServiceStub,
+  CollectionServiceStub,
   RichSkillServiceStub,
 } from 'test/resource/mock-stubs';
+import { CollectionService } from 'src/app/collection/service/collection.service';
 import { ManageSkillActionBarHorizontalComponent } from './manage-skill-action-bar-horizontal.component';
 
 @Component({
@@ -73,6 +75,7 @@ describe('ManageSkillActionBarHorizontalComponent', () => {
         ToastService,
         { provide: RichSkillService, useClass: RichSkillServiceStub },
         { provide: AuthService, useClass: AuthServiceStub },
+        { provide: CollectionService, useClass: CollectionServiceStub },
       ],
     }).compileComponents();
 

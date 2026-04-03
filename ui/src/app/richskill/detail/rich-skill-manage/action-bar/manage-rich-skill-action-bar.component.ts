@@ -16,6 +16,11 @@ import { ApiSkillSummary } from '../../../ApiSkillSummary';
 import { AuthService } from '../../../../auth/auth-service';
 import { ButtonAction } from '../../../../auth/auth-roles';
 import { SyncService } from '../../../../admin/sync/sync.service';
+import { CollectionService } from '../../../../collection/service/collection.service';
+import {
+  ApiSearch,
+  ApiSkillListUpdate,
+} from '../../../service/rich-skill-search.service';
 
 @Component({ template: '' })
 export abstract class ManageRichSkillActionBarComponent implements OnInit {
@@ -40,6 +45,7 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
   credentialEngineSyncIcon: string = SvgHelper.path(SvgIcon.UPLOAD);
   archiveIcon: string = SvgHelper.path(SvgIcon.ARCHIVE);
   dismissIcon: string = SvgHelper.path(SvgIcon.DISMISS);
+  addToWorkspaceIcon: string = SvgHelper.path(SvgIcon.ADD);
 
   canSkillUpdate = false;
   canSkillCreate = false;
@@ -50,6 +56,7 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
   canCollectionSkillsUpdate = false;
   isDraftAndDisabled = false;
   canSyncRecord = false;
+  canAddToWorkspace = false;
 
   constructor(
     protected router: Router,
@@ -57,7 +64,8 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
     protected toastService: ToastService,
     @Inject(LOCALE_ID) protected locale: string,
     private authService: AuthService,
-    protected syncService: SyncService
+    protected syncService: SyncService,
+    protected collectionService: CollectionService
   ) {}
 
   ngOnInit(): void {
@@ -155,6 +163,30 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
       );
   }
 
+  handleAddToWorkspace(): void {
+    this.toastService.showBlockingLoader();
+    this.collectionService.getWorkspace().subscribe({
+      next: workspace => {
+        const skillListUpdate = new ApiSkillListUpdate({
+          add: new ApiSearch({ uuids: [this.skillUuid] }),
+        });
+        this.collectionService
+          .updateSkillsWithResult(workspace.uuid, skillListUpdate)
+          .subscribe({
+            next: result => {
+              if (result) {
+                const message = `You added ${result.modifiedCount} RSDs to the workspace.`;
+                this.toastService.showToast('Success!', message);
+              }
+              this.toastService.hideBlockingLoader();
+            },
+            error: () => this.toastService.hideBlockingLoader(),
+          });
+      },
+      error: () => this.toastService.hideBlockingLoader(),
+    });
+  }
+
   setEnableFlags(): void {
     this.canSkillUpdate = this.authService.isEnabledByRoles(
       ButtonAction.SkillUpdate
@@ -179,6 +211,9 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
     );
     this.canSyncRecord = this.authService.isEnabledByRoles(
       ButtonAction.SyncRecord
+    );
+    this.canAddToWorkspace = this.authService.isEnabledByRoles(
+      ButtonAction.MyWorkspace
     );
 
     this.isDraftAndDisabled = !this.isPublished() && !this.canSkillPublish;
