@@ -64,6 +64,9 @@ class AppConfig(
     val roleView: String,
     @Value("\${osmt.security.scope.read:SCOPE_osmt.read}")
     val scopeRead: String,
+    // Session configuration (unified via SESSION_EXPIRE_HOURS env var)
+    @Value("\${app.sessionExpireHours:24}")
+    val sessionExpireHours: Double,
     // Session token (OAuth2 backend-issued JWT)
     @Value("\${app.sessionTokenSecret:}")
     val sessionTokenSecret: String,
