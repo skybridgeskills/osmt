@@ -51,7 +51,6 @@ class CredentialEngineSyncTargetTest {
             roleCurator = "Osmt_Curator",
             roleView = "Osmt_View",
             scopeRead = "SCOPE_osmt.read",
-            sessionExpireHours = 24.0,
             sessionTokenSecret = "",
             sessionTokenExpirySeconds = 86400,
             sessionTokenIssuer = "",
