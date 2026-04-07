@@ -4,17 +4,15 @@ import {
   Inject,
   Input,
   LOCALE_ID,
-  OnInit,
   Output,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { AppConfig } from '../../../../../app.config';
 import { RichSkillService } from '../../../../service/rich-skill.service';
 import { ToastService } from '../../../../../toast/toast.service';
 import { ManageRichSkillActionBarComponent } from '../manage-rich-skill-action-bar.component';
-import { SvgHelper } from '../../../../../core/SvgHelper';
 import { AuthService } from '../../../../../auth/auth-service';
 import { SyncService } from '../../../../../admin/sync/sync.service';
+import { CollectionService } from '../../../../../collection/service/collection.service';
 
 @Component({
   selector: 'app-manage-skill-action-bar-vertical',
@@ -39,7 +37,8 @@ export class ManageSkillActionBarVerticalComponent extends ManageRichSkillAction
     toastService: ToastService,
     @Inject(LOCALE_ID) locale: string,
     authService: AuthService,
-    syncService: SyncService
+    syncService: SyncService,
+    collectionService: CollectionService
   ) {
     super(
       router,
@@ -47,7 +46,8 @@ export class ManageSkillActionBarVerticalComponent extends ManageRichSkillAction
       toastService,
       locale,
       authService,
-      syncService
+      syncService,
+      collectionService
     );
   }
 }
