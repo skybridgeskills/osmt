@@ -73,6 +73,19 @@ class UiController {
         }
         dynamicConfig["authMode"] = appConfig.authMode
         dynamicConfig["singleAuthEnabled"] = appConfig.singleAuthEnabled
+        dynamicConfig["instanceType"] = appConfig.instanceType
+        if (appConfig.writableInstanceUrl.isNotBlank()) {
+            dynamicConfig["writableInstanceUrl"] = appConfig.writableInstanceUrl
+        }
+        if (appConfig.writableInstanceName.isNotBlank()) {
+            dynamicConfig["writableInstanceName"] = appConfig.writableInstanceName
+        }
+        if (appConfig.readOnlyMessage.isNotBlank()) {
+            dynamicConfig["readOnlyMessage"] = appConfig.readOnlyMessage
+        }
+        if (appConfig.authoringWelcomeMessage.isNotBlank()) {
+            dynamicConfig["authoringWelcomeMessage"] = appConfig.authoringWelcomeMessage
+        }
         val providers = authConfigProvider?.getOAuthProviders() ?: emptyList()
         dynamicConfig["authProviders"] =
             providers.map {

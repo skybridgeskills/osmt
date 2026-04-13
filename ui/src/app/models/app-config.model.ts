@@ -24,6 +24,11 @@ export interface IAppConfig {
   idleTimeoutInSeconds: number;
   colorBrandAccent1?: string;
   logoUrl?: string;
+  instanceType?: 'read-only' | 'writable';
+  writableInstanceUrl?: string;
+  writableInstanceName?: string;
+  readOnlyMessage?: string;
+  authoringWelcomeMessage?: string;
 }
 
 // Default configuration
@@ -48,4 +53,9 @@ export class DefaultAppConfig implements IAppConfig {
   dynamicWhitelabel = false;
   authProviders: AuthProvider[] = [];
   singleAuthEnabled = false;
+  instanceType: 'read-only' | 'writable' = 'writable';
+  writableInstanceUrl = '';
+  writableInstanceName = 'Author portal';
+  readOnlyMessage = '';
+  authoringWelcomeMessage = '';
 }

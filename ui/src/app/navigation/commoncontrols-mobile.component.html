@@ -130,7 +130,7 @@
 </ul>
 
 <ul class="m-navBar-x-nav">
-  <li *ngIf="!isAuthenticated()">
+  <li *ngIf="!isReadOnlyPublicInstance && !isAuthenticated()">
     <a
       class="m-buttonText m-buttonText-onDark"
       routerLink="/login"

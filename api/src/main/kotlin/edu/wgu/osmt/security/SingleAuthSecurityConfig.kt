@@ -42,7 +42,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
  */
 @Configuration
 @EnableWebSecurity
-@Profile("single-auth & !oauth2")
+@Profile("single-auth & !oauth2 & !readonly")
 class SingleAuthSecurityConfig {
     @Autowired
     lateinit var appConfig: AppConfig

@@ -1,6 +1,7 @@
 package edu.wgu.osmt.security
 
 import edu.wgu.osmt.RoutePaths
+import edu.wgu.osmt.config.AppConfig
 import org.springframework.http.HttpMethod.DELETE
 import org.springframework.http.HttpMethod.GET
 import org.springframework.http.HttpMethod.POST
@@ -286,4 +287,72 @@ object SecurityConfigHelper {
                 .requestMatchers("/**")
                 .permitAll()
         }
+
+    /**
+     * Read-only public instance: same public routes as [configurePublicEndpoints], deny
+     * authenticated-only reads, allow public list GETs when
+     * [AppConfig.allowPublicLists] is true, and deny all mutating or authenticated
+     * workspace/sync/API access not already permitted.
+     */
+    fun configureReadOnlyEndpoints(
+        http: HttpSecurity,
+        appConfig: AppConfig,
+    ): HttpSecurity {
+        configurePublicEndpoints(http)
+        http.authorizeHttpRequests { auth ->
+            auth
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILL_AUDIT_LOG))
+                .denyAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTION_AUDIT_LOG))
+                .denyAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_SKILLS))
+                .denyAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.TASK_DETAIL_BATCH))
+                .denyAll()
+        }
+        http.authorizeHttpRequests { auth ->
+            if (appConfig.allowPublicLists) {
+                auth
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
+                    .permitAll()
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
+                    .permitAll()
+            } else {
+                auth
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.SKILLS_LIST))
+                    .denyAll()
+                    .requestMatchers(GET, *buildAllVersions(RoutePaths.COLLECTIONS_LIST))
+                    .denyAll()
+            }
+        }
+        return http.authorizeHttpRequests { auth ->
+            auth
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_UPDATE))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILLS_CREATE))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.SKILL_PUBLISH))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_CREATE))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_PUBLISH))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_UPDATE))
+                .denyAll()
+                .requestMatchers(POST, *buildAllVersions(RoutePaths.COLLECTION_SKILLS_UPDATE))
+                .denyAll()
+                .requestMatchers(DELETE, *buildAllVersions(RoutePaths.COLLECTION_REMOVE))
+                .denyAll()
+                .requestMatchers(GET, *buildAllVersions(RoutePaths.WORKSPACE_PATH))
+                .denyAll()
+                .requestMatchers(POST, "/api/sync/skill/**", "/api/sync/collection/**")
+                .denyAll()
+                .requestMatchers("/api/sync/**")
+                .denyAll()
+                .requestMatchers("/api/**")
+                .denyAll()
+                .requestMatchers("/**")
+                .permitAll()
+        }
+    }
 }
