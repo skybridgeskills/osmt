@@ -43,10 +43,7 @@ class WhitelabelConfig(
                 "OSMT_LOGO_URL" to "logoUrl",
                 "OSMT_LICENSE_PRIMARY" to "licensePrimary",
                 "OSMT_LICENSE_SECONDARY" to "licenseSecondary",
-                "OSMT_INSTANCE_TYPE" to "instanceType",
-                "OSMT_WRITABLE_INSTANCE_URL" to "writableInstanceUrl",
-                "OSMT_WRITABLE_INSTANCE_NAME" to "writableInstanceName",
-                "OSMT_READ_ONLY_MESSAGE" to "readOnlyMessage",
+                "OSMT_PUBLIC_INSTANCE_URL" to "publicInstanceUrl",
                 "OSMT_AUTHORING_WELCOME_MESSAGE" to "authoringWelcomeMessage",
             )
     }

@@ -55,10 +55,7 @@ class CredentialEngineSyncTargetTest {
             sessionTokenExpirySeconds = 86400,
             sessionTokenIssuer = "",
             readOnlyMode = false,
-            instanceType = "writable",
-            writableInstanceUrl = "",
-            writableInstanceName = "Author portal",
-            readOnlyMessage = "",
+            publicInstanceUrl = "",
             authoringWelcomeMessage = "",
         )
     private val objectMapper =

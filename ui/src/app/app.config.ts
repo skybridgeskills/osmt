@@ -43,14 +43,10 @@ export class AppConfig {
             (value as IAppConfig).authProviders ?? [];
           AppConfig.settings.singleAuthEnabled =
             (value as IAppConfig).singleAuthEnabled ?? false;
-          AppConfig.settings.instanceType =
-            (value as IAppConfig).instanceType ?? 'writable';
-          AppConfig.settings.writableInstanceUrl =
-            (value as IAppConfig).writableInstanceUrl ?? '';
-          AppConfig.settings.writableInstanceName =
-            (value as IAppConfig).writableInstanceName ?? 'Author portal';
-          AppConfig.settings.readOnlyMessage =
-            (value as IAppConfig).readOnlyMessage ?? '';
+          AppConfig.settings.readOnlyMode =
+            (value as IAppConfig).readOnlyMode ?? false;
+          AppConfig.settings.publicInstanceUrl =
+            (value as IAppConfig).publicInstanceUrl ?? '';
           AppConfig.settings.authoringWelcomeMessage =
             (value as IAppConfig).authoringWelcomeMessage ?? '';
           return value;

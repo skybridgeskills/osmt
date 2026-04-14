@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 
 /**
  * Read-only profile: public routes work; mutating API calls receive 403;
- * whitelabel exposes instanceType.
+ * whitelabel exposes readOnlyMode.
  */
 @Transactional
 @AutoConfigureMockMvc
@@ -48,7 +48,7 @@ internal class ReadOnlySecurityIntegrationTest
         private val objectMapper = jacksonObjectMapper()
 
         @Test
-        fun `whitelabel returns read-only instanceType`() {
+        fun `whitelabel returns readOnlyMode true`() {
             val result =
                 mockMvc
                     .perform(get("/whitelabel/whitelabel.json"))
@@ -58,7 +58,7 @@ internal class ReadOnlySecurityIntegrationTest
                 objectMapper.readValue<WhitelabelSplitBody>(
                     result.response.contentAsString,
                 )
-            assertThat(body.instanceType).isEqualTo("read-only")
+            assertThat(body.readOnlyMode).isTrue()
         }
 
         @Test
@@ -73,6 +73,6 @@ internal class ReadOnlySecurityIntegrationTest
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         data class WhitelabelSplitBody(
-            val instanceType: String? = null,
+            val readOnlyMode: Boolean? = null,
         )
     }

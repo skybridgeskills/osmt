@@ -41,6 +41,6 @@ export class CommoncontrolsMobileComponent
   }
 
   get isReadOnlyPublicInstance(): boolean {
-    return AppConfig.settings.instanceType === 'read-only';
+    return AppConfig.settings.readOnlyMode === true;
   }
 }

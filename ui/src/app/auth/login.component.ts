@@ -16,7 +16,7 @@ const PROVIDER_ICONS: Record<string, { path: string; hex: string }> = {
 const ID_ALIASES: Record<string, string> = {};
 
 const DEFAULT_READ_ONLY_MESSAGE =
-  'This is the public skill browser. To edit content, use the authoring instance.';
+  "This is the public skill browser. Use your organization's authoring URL to edit.";
 
 @Component({
   selector: 'app-login',
@@ -57,24 +57,11 @@ export class LoginComponent implements OnInit {
   }
 
   get isReadOnly(): boolean {
-    return AppConfig.settings.instanceType === 'read-only';
+    return AppConfig.settings.readOnlyMode === true;
   }
 
   get readOnlyMessageText(): string {
-    const fromApi = AppConfig.settings.readOnlyMessage?.trim();
-    return fromApi || DEFAULT_READ_ONLY_MESSAGE;
-  }
-
-  get writableLoginHref(): string {
-    const base = AppConfig.settings.writableInstanceUrl?.trim();
-    if (!base) {
-      return '';
-    }
-    return `${base.replace(/\/$/, '')}/login`;
-  }
-
-  get writableInstanceLabel(): string {
-    return AppConfig.settings.writableInstanceName?.trim() || 'Author portal';
+    return DEFAULT_READ_ONLY_MESSAGE;
   }
 
   get authoringWelcomeText(): string {

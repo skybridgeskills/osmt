@@ -8,6 +8,6 @@ export class Whitelabelled {
 
   /** True when this is the public read-only instance (split deployment). */
   get isReadOnlyPublicInstance(): boolean {
-    return AppConfig.settings.instanceType === 'read-only';
+    return AppConfig.settings.readOnlyMode === true;
   }
 }

@@ -7,15 +7,16 @@ write access. This is optional; single-instance installs are unchanged.
 ## Profiles and meta-configuration
 
 - **`readonly`**: Public instance. Disables Flyway, disables server sessions
-  (`spring.session.store-type=none`), sets `app.instanceType=read-only`, and
-  uses `ReadOnlySecurityConfig` so only safe, public routes are allowed; other
-  API calls return **403** with a
-  JSON error when blocked.
+  (`spring.session.store-type=none`), sets `app.readOnlyMode=true`, and uses
+  `ReadOnlySecurityConfig` so only safe, public routes are allowed; other API
+  calls return **403** with a JSON error when blocked.
 
 - **Authoring instance**: Use your normal stack (e.g. `oauth2` or
-  `oauth2,single-auth`). Set `app.instanceType=writable` (default) and use
-  different branding (color, logo) plus optional login copy so authors can see
-  they are on the editing instance.
+  `oauth2,single-auth`). Keep `app.readOnlyMode=false` (default). Set
+  `app.publicInstanceUrl` to the public instance’s base URL so published links
+  and integrations can point at the read-only site. Use different branding
+  (color, logo) plus optional login copy so authors can see they are on the
+  editing instance.
 
 Do **not** combine `readonly` with `oauth2` or `single-auth` on the same
 process; the `oauth2` and `single-auth` security configs are disabled when
@@ -25,11 +26,8 @@ process; the `oauth2` and `single-auth` security configs are disabled when
 
 | Variable | Purpose |
 |----------|--------|
-| `OSMT_READ_ONLY_MODE` | `true`/`false`; read-only profile also sets this via properties |
-| `OSMT_INSTANCE_TYPE` | `read-only` or `writable` (exposed in whitelabel JSON) |
-| `OSMT_WRITABLE_INSTANCE_URL` | Base URL of the authoring instance (403 message and login link) |
-| `OSMT_WRITABLE_INSTANCE_NAME` | Label for the link to the authoring login page |
-| `OSMT_READ_ONLY_MESSAGE` | Custom copy on the read-only `/login` page |
+| `OSMT_READ_ONLY_MODE` | `true`/`false`; single source of truth (also set by `readonly` profile) |
+| `OSMT_PUBLIC_INSTANCE_URL` | Base URL of the **public** instance (set on the authoring instance only) |
 | `OSMT_AUTHORING_WELCOME_MESSAGE` | Extra copy on the authoring login page (writable only) |
 
 Whitelabel env vars (`OSMT_BRAND_COLOR`, `OSMT_LOGO_URL`, etc.) can differ per
@@ -38,9 +36,10 @@ instance so the authoring UI is visually distinct.
 ## Frontend behavior
 
 - **Read-only**: No Login entry in the desktop or mobile nav. The `/login` page
-  shows an explanation and an optional link to `{writableInstanceUrl}/login`.
+  shows a short public-browser message (no link to the authoring instance).
 - **Writable**: Standard OAuth/single-auth login; optional
-  `authoringWelcomeMessage` below the title.
+  `authoringWelcomeMessage` below the title. Whitelabel JSON may include
+  `publicInstanceUrl` for future UI or link generation.
 
 ## Database
 

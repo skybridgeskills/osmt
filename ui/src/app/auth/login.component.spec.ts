@@ -43,8 +43,7 @@ describe('LoginComponent', () => {
   });
 
   it('should treat read-only instance without login form', () => {
-    AppConfig.settings.instanceType = 'read-only';
-    AppConfig.settings.writableInstanceUrl = 'https://author.example.com';
+    AppConfig.settings.readOnlyMode = true;
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('Public skill browser');
@@ -54,7 +53,7 @@ describe('LoginComponent', () => {
   });
 
   it('should show normal sign-in when writable', () => {
-    AppConfig.settings.instanceType = 'writable';
+    AppConfig.settings.readOnlyMode = false;
     AppConfig.settings.authProviders = [
       {
         id: 'google',

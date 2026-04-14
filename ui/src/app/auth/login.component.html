@@ -16,16 +16,6 @@
         <ng-container *ngIf="isReadOnly">
           <div class="t-margin-medium t-margin-bottom">
             <p class="t-type-body">{{ readOnlyMessageText }}</p>
-            <div class="t-margin-medium t-margin-top" *ngIf="writableLoginHref">
-              <a class="m-button" [href]="writableLoginHref" role="button">
-                <span class="m-button-x-text"
-                  >Go to {{ writableInstanceLabel }}</span
-                >
-              </a>
-            </div>
-            <p *ngIf="!writableLoginHref" class="t-type-body t-margin-top">
-              Ask your administrator for the authoring instance URL.
-            </p>
           </div>
         </ng-container>
 

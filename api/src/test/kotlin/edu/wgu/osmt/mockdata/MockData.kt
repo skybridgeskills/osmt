@@ -321,10 +321,7 @@ class MockData {
             86400L, // sessionTokenExpirySeconds
             "https://osmt.wgu.edu", // sessionTokenIssuer
             false, // readOnlyMode
-            "writable",
-            "",
-            "Author portal",
-            "",
+            "https://osmt.wgu.edu", // publicInstanceUrl
             "",
         )
 
