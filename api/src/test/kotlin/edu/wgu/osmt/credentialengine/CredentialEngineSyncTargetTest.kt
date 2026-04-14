@@ -54,6 +54,9 @@ class CredentialEngineSyncTargetTest {
             sessionTokenSecret = "",
             sessionTokenExpirySeconds = 86400,
             sessionTokenIssuer = "",
+            readOnlyMode = false,
+            publicInstanceUrl = "",
+            authoringWelcomeMessage = "",
         )
     private val objectMapper =
         ObjectMapper()

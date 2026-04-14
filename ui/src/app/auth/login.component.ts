@@ -15,6 +15,9 @@ const PROVIDER_ICONS: Record<string, { path: string; hex: string }> = {
 
 const ID_ALIASES: Record<string, string> = {};
 
+const DEFAULT_READ_ONLY_MESSAGE =
+  "This is the public skill browser. Use your organization's authoring URL to edit.";
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -53,7 +56,22 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  get isReadOnly(): boolean {
+    return AppConfig.settings.readOnlyMode === true;
+  }
+
+  get readOnlyMessageText(): string {
+    return DEFAULT_READ_ONLY_MESSAGE;
+  }
+
+  get authoringWelcomeText(): string {
+    return AppConfig.settings.authoringWelcomeMessage?.trim() ?? '';
+  }
+
   get showLoginPage(): boolean {
+    if (this.isReadOnly) {
+      return false;
+    }
     return this.oauthProviders.length >= 1 || this.singleAuthEnabled;
   }
 

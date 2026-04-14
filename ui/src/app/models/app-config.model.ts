@@ -24,6 +24,9 @@ export interface IAppConfig {
   idleTimeoutInSeconds: number;
   colorBrandAccent1?: string;
   logoUrl?: string;
+  readOnlyMode?: boolean;
+  publicInstanceUrl?: string;
+  authoringWelcomeMessage?: string;
 }
 
 // Default configuration
@@ -48,4 +51,7 @@ export class DefaultAppConfig implements IAppConfig {
   dynamicWhitelabel = false;
   authProviders: AuthProvider[] = [];
   singleAuthEnabled = false;
+  readOnlyMode = false;
+  publicInstanceUrl = '';
+  authoringWelcomeMessage = '';
 }

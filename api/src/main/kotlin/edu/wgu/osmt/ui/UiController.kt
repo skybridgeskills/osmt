@@ -73,6 +73,13 @@ class UiController {
         }
         dynamicConfig["authMode"] = appConfig.authMode
         dynamicConfig["singleAuthEnabled"] = appConfig.singleAuthEnabled
+        dynamicConfig["readOnlyMode"] = appConfig.readOnlyMode
+        if (appConfig.publicInstanceUrl.isNotBlank()) {
+            dynamicConfig["publicInstanceUrl"] = appConfig.publicInstanceUrl
+        }
+        if (appConfig.authoringWelcomeMessage.isNotBlank()) {
+            dynamicConfig["authoringWelcomeMessage"] = appConfig.authoringWelcomeMessage
+        }
         val providers = authConfigProvider?.getOAuthProviders() ?: emptyList()
         dynamicConfig["authProviders"] =
             providers.map {

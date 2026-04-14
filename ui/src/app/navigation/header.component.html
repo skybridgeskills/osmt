@@ -58,7 +58,7 @@
             >Categories</a
           >
         </li>
-        <li *ngIf="!isAuthenticated()">
+        <li *ngIf="!isReadOnlyPublicInstance && !isAuthenticated()">
           <a
             class="m-navItem"
             routerLink="/login"

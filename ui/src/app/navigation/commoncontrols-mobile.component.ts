@@ -5,6 +5,7 @@ import { SearchService } from '../search/search.service';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth/auth-service';
 import { ButtonAction } from '../auth/auth-roles';
+import { AppConfig } from '../app.config';
 
 @Component({
   // tslint:disable-next-line:component-selector
@@ -37,5 +38,9 @@ export class CommoncontrolsMobileComponent
 
   getCurrentUrl(): string {
     return this.location.path();
+  }
+
+  get isReadOnlyPublicInstance(): boolean {
+    return AppConfig.settings.readOnlyMode === true;
   }
 }

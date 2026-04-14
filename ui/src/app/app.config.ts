@@ -43,6 +43,12 @@ export class AppConfig {
             (value as IAppConfig).authProviders ?? [];
           AppConfig.settings.singleAuthEnabled =
             (value as IAppConfig).singleAuthEnabled ?? false;
+          AppConfig.settings.readOnlyMode =
+            (value as IAppConfig).readOnlyMode ?? false;
+          AppConfig.settings.publicInstanceUrl =
+            (value as IAppConfig).publicInstanceUrl ?? '';
+          AppConfig.settings.authoringWelcomeMessage =
+            (value as IAppConfig).authoringWelcomeMessage ?? '';
           return value;
         })
         .catch(reason => {

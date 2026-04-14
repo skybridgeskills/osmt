@@ -71,6 +71,12 @@ class AppConfig(
     val sessionTokenExpirySeconds: Long,
     @Value("\${app.sessionTokenIssuer:}")
     val sessionTokenIssuer: String,
+    @Value("\${app.readOnlyMode:false}")
+    val readOnlyMode: Boolean = false,
+    @Value("\${app.publicInstanceUrl:}")
+    val publicInstanceUrl: String,
+    @Value("\${app.authoringWelcomeMessage:}")
+    val authoringWelcomeMessage: String,
 ) {
     @Autowired
     lateinit var environment: Environment
