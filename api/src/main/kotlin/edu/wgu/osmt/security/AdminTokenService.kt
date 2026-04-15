@@ -17,7 +17,7 @@ import java.time.Instant
  * Used by AdminAuthController after credential validation.
  */
 @Service
-@Profile("single-auth")
+@Profile("single-auth & !readonly")
 class AdminTokenService(
     @Qualifier("adminTokenJwtEncoder") private val jwtEncoder: JwtEncoder,
 ) {

@@ -59,7 +59,7 @@ object AdminAuthConstants {
  * @see AdminAuthController for the login endpoint that issues JWT tokens
  */
 @Component
-@Profile("single-auth")
+@Profile("single-auth & !readonly")
 @Order(1)
 class AdminUserAuthenticationFilter
     @Autowired
