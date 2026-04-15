@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component
  * **Security Warning**: This component is only active when the `single-auth` profile is enabled.
  */
 @Component
-@Profile("single-auth")
+@Profile("single-auth & !readonly")
 class SingleAuthEntryPoint
     @Autowired
     constructor(

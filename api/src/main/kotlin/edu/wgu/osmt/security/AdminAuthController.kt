@@ -37,7 +37,7 @@ data class LoginResponse(
  */
 @RestController
 @RequestMapping("/api/auth")
-@Profile("single-auth")
+@Profile("single-auth & !readonly")
 class AdminAuthController
     @Autowired
     constructor(

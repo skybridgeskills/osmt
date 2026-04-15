@@ -45,3 +45,4 @@ osmt*.env
 
 .m2-cache
 .m2
+task-logs-*

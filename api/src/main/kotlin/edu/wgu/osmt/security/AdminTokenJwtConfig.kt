@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec
  * @see AdminUserAuthenticationFilter for Bearer token validation
  */
 @Configuration
-@Profile("single-auth")
+@Profile("single-auth & !readonly")
 class AdminTokenJwtConfig(
     private val appConfig: AppConfig,
 ) {
