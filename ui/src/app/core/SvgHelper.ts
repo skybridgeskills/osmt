@@ -16,6 +16,7 @@ export enum SvgIcon {
   ICON_UP = 'icon-up',
   MORE = 'icon-more',
   PUBLISH = 'icon-publish',
+  UNPUBLISH = 'icon-unarchive',
   SEARCH = 'icon-search',
   DELETE = 'icon-remove',
   UPLOAD = 'icon-upload',

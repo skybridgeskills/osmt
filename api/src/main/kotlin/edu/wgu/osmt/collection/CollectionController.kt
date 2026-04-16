@@ -186,6 +186,40 @@ class CollectionController
             }
 
         @PostMapping(
+            "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.COLLECTION_DUPLICATE}",
+            produces = [MediaType.APPLICATION_JSON_VALUE],
+        )
+        @ResponseBody
+        fun duplicateCollection(
+            @PathVariable uuid: String,
+            @RequestBody apiUpdate: ApiCollectionUpdate,
+            @AuthenticationPrincipal user: Jwt?,
+        ): ApiCollection {
+            val duplicate =
+                collectionRepository.duplicateCollection(
+                    uuid,
+                    apiUpdate,
+                    richSkillRepository,
+                    oAuthHelper.readableUserName(user),
+                    oAuthHelper.readableUserIdentifier(user),
+                ) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+
+            return ApiCollection.fromDao(duplicate, appConfig).also { coll ->
+                if (duplicate.status in
+                    listOf(
+                        PublishStatus.Published,
+                        PublishStatus.Archived,
+                    )
+                ) {
+                    coll.credentialEngineUrl =
+                        credentialEngineUrlProvider.collectionFinderUrl(
+                            duplicate.uuid.toString(),
+                        )
+                }
+            }
+        }
+
+        @PostMapping(
             "${RoutePaths.API}${RoutePaths.API_V3}${RoutePaths.COLLECTION_UPDATE}",
             produces = [MediaType.APPLICATION_JSON_VALUE],
         )

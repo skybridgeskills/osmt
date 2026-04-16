@@ -230,6 +230,19 @@ export class CollectionService extends AbstractService {
       .pipe(map(({ body }) => this.collectionFromApiResponse(body, errorMsg)));
   }
 
+  duplicateCollection(
+    uuid: string,
+    updateObject: ICollectionUpdate
+  ): Observable<ApiCollection> {
+    const errorMsg = `Could not duplicate collection [${uuid}]`;
+    return this.post<ICollection>({
+      path: `${this.baseServiceUrl}/${uuid}/duplicate`,
+      body: updateObject,
+    })
+      .pipe(share())
+      .pipe(map(({ body }) => this.collectionFromApiResponse(body, errorMsg)));
+  }
+
   searchCollections(
     apiSearch: ApiSearch,
     size: number | undefined,

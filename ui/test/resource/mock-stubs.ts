@@ -320,6 +320,18 @@ export class CollectionServiceStub {
     )
   }
 
+  duplicateCollection(uuid: string, updateObject: ICollectionUpdate): Observable<ApiCollection> {
+    return of(
+      new ApiCollection(createMockCollection(
+        new Date("2020-06-25T14:58:46.313Z"),
+        new Date("2020-06-25T14:58:46.313Z"),
+        new Date("2020-06-25T14:58:46.313Z"),
+        new Date("2020-06-25T14:58:46.313Z"),
+        PublishStatus.Draft
+      ))
+    )
+  }
+
   // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
   updateSkillsWithResult(collectionUuid: string,
                          skillListUpdate: ApiSkillListUpdate,

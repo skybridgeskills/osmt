@@ -16,7 +16,9 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContext
@@ -25,6 +27,7 @@ import org.springframework.security.oauth2.core.user.OAuth2UserAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 
 @Transactional
@@ -151,5 +154,56 @@ internal class CollectionControllerTest
             Assertions.assertThat(result).isNotNull
             Assertions.assertThat(result.status).isEqualTo(PublishStatus.Draft)
             Assertions.assertThat(result.archiveDate).isNull()
+        }
+
+        @Test
+        fun `duplicateCollection should create a copy with metadata from the request`() {
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("email", userEmail)
+                    .build()
+            val collection =
+                collectionRepository.create(
+                    name = "Source Collection",
+                    user = userString,
+                    email = userEmail,
+                    description = "desc",
+                )!!
+            val update =
+                ApiCollectionUpdate(
+                    name = "My Duplicate",
+                    description = "desc2",
+                    author = "author1",
+                )
+            val result =
+                collectionController.duplicateCollection(collection.uuid, update, jwt)
+
+            Assertions.assertThat(result.uuid).isNotEqualTo(collection.uuid)
+            Assertions.assertThat(result.name).isEqualTo("My Duplicate")
+            Assertions.assertThat(result.status).isEqualTo(PublishStatus.Draft)
+        }
+
+        @Test
+        fun `duplicateCollection should return not found for unknown uuid`() {
+            val jwt =
+                Jwt
+                    .withTokenValue("foo")
+                    .header("foo", "foo")
+                    .claim("email", userEmail)
+                    .build()
+            val ex =
+                assertThrows<ResponseStatusException> {
+                    collectionController.duplicateCollection(
+                        "00000000-0000-0000-0000-000000000099",
+                        ApiCollectionUpdate(
+                            name = "n",
+                            author = "a",
+                        ),
+                        jwt,
+                    )
+                }
+            Assertions.assertThat(ex.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
         }
     }

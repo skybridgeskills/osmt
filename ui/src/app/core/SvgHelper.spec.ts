@@ -5,6 +5,9 @@ describe('SvgHelper', () => {
     expect(SvgHelper.path(SvgIcon.EXTERNAL_LINK)).toBe(
       'assets/images/svg-defs.svg#icon-external-link'
     );
+    expect(SvgHelper.path(SvgIcon.UNPUBLISH)).toBe(
+      'assets/images/svg-defs.svg#icon-unarchive'
+    );
   });
 
   it('extraPath points at svg-extra-defs with symbol id', () => {

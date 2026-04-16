@@ -104,11 +104,7 @@ export class CollectionPublicComponent extends Whitelabelled implements OnInit {
       this.collectionUuid,
       this.size,
       this.from,
-      new Set<PublishStatus>([
-        PublishStatus.Archived,
-        PublishStatus.Draft,
-        PublishStatus.Published,
-      ]),
+      new Set<PublishStatus>([PublishStatus.Published]),
       this.columnSort
     );
     this.resultsLoaded.subscribe(skills => this.setResults(skills));

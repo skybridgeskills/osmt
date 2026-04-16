@@ -54,6 +54,7 @@ object RoutePaths {
     const val COLLECTION_CSV = "$COLLECTION_DETAIL/csv"
     const val COLLECTION_XLSX = "$COLLECTION_DETAIL/xlsx"
     const val COLLECTION_REMOVE = "$COLLECTION_DETAIL/remove"
+    const val COLLECTION_DUPLICATE = "$COLLECTION_DETAIL/duplicate"
 
     const val WORKSPACE_PATH = "/workspace"
     const val WORKSPACE_LIST = WORKSPACE_PATH
