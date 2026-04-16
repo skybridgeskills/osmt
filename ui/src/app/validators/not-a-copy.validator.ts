@@ -1,4 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { isCopyName } from '../core/duplicate-name.utils';
 
 export function notACopyValidator(
   control: AbstractControl
@@ -7,7 +8,7 @@ export function notACopyValidator(
     return null;
   }
 
-  if (control.value.startsWith('Copy of')) {
+  if (isCopyName(control.value)) {
     return { notACopy: { value: control.value } };
   }
 

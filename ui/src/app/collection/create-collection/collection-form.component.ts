@@ -18,6 +18,7 @@ import { ApiNamedReference } from '../../richskill/ApiSkill';
 import { HasFormGroup } from '../../core/abstract-form.component';
 import { Whitelabelled } from '../../../whitelabel';
 import { notACopyValidator } from '../../validators/not-a-copy.validator';
+import { generateDuplicateName } from '../../core/duplicate-name.utils';
 
 @Component({
   selector: 'app-create-collection',
@@ -92,7 +93,7 @@ export class CollectionFormComponent
   get collectionNameErrorMessage(): string {
     const ctrl = this.collectionForm.controls.collectionName;
     return ctrl?.hasError('notACopy')
-      ? 'Change the name so it does not start with “Copy of”'
+      ? 'Change the name to remove the "(Copy ...)" suffix'
       : 'Name required';
   }
 
@@ -130,7 +131,7 @@ export class CollectionFormComponent
     this.existingCollection = collection;
     const fields = {
       collectionName: this.isDuplicating
-        ? `Copy of ${collection.name}`
+        ? generateDuplicateName(collection.name)
         : collection.name,
       description: collection.description ?? '',
       author: collection.author ?? AppConfig.settings.defaultAuthorValue,

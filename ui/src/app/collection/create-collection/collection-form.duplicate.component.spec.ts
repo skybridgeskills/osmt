@@ -67,14 +67,13 @@ describe('CollectionFormComponent duplicate mode', () => {
     expect(component.isDuplicating).toBeTrue();
   });
 
-  it('should prefill Copy of prefix on the name', () => {
-    expect(component.collectionForm.get('collectionName')?.value).toEqual(
-      'Copy of my collection name'
-    );
+  it('should prefill name with Copy suffix including timestamp', () => {
+    const nameValue = component.collectionForm.get('collectionName')?.value;
+    expect(nameValue).toMatch(/my collection name \(Copy \d{4}-\d{2}-\d{2} \d{2}:\d{2}\)/);
   });
 
   it('collectionNameErrorMessage should describe not-a-copy validation', () => {
-    component.collectionForm.patchValue({ collectionName: 'Copy of x' });
-    expect(component.collectionNameErrorMessage).toContain('Copy of');
+    component.collectionForm.patchValue({ collectionName: 'Collection (Copy 2024-01-01 10:00)' });
+    expect(component.collectionNameErrorMessage).toContain('(Copy ...)');
   });
 });

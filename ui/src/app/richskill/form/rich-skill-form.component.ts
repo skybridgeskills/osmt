@@ -32,6 +32,7 @@ import { ToastService } from '../../toast/toast.service';
 import { Title } from '@angular/platform-browser';
 import { HasFormGroup } from '../../core/abstract-form.component';
 import { notACopyValidator } from '../../validators/not-a-copy.validator';
+import { generateDuplicateName } from '../../core/duplicate-name.utils';
 import { ApiSkillSummary } from '../ApiSkillSummary';
 import { Whitelabelled } from '../../../whitelabel';
 
@@ -402,7 +403,7 @@ export class RichSkillFormComponent
     );
 
     const fields = {
-      skillName: (this.isDuplicating ? 'Copy of ' : '') + skill.skillName,
+      skillName: this.isDuplicating ? generateDuplicateName(skill.skillName) : skill.skillName,
       skillStatement: skill.skillStatement,
       categories: skill.categories?.map(it => it) ?? null,
       keywords: skill.keywords?.map(it => it) ?? null,
