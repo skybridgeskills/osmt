@@ -57,6 +57,7 @@ export class ManageCollectionComponent
   deleteIcon = SvgHelper.path(SvgIcon.DELETE);
   archiveIcon = SvgHelper.path(SvgIcon.ARCHIVE);
   unarchiveIcon = SvgHelper.path(SvgIcon.UNARCHIVE);
+  unpublishIcon = SvgHelper.path(SvgIcon.UNPUBLISH);
   addIcon = SvgHelper.path(SvgIcon.ADD);
   searchIcon = SvgHelper.path(SvgIcon.SEARCH);
   showAdvancedFilteredSearch = true;
@@ -236,6 +237,15 @@ export class ManageCollectionComponent
           callback: () => this.viewPublishedAction(),
         })
       );
+      actions.push(
+        new TableActionDefinition({
+          label: 'Unpublish Collection',
+          icon: this.unpublishIcon,
+          callback: () => this.unpublishAction(),
+          visible: () =>
+            this.authService.isEnabledByRoles(ButtonAction.CollectionPublish),
+        })
+      );
     } else {
       actions.push(
         new TableActionDefinition({
@@ -394,7 +404,8 @@ export class ManageCollectionComponent
         if (ready) {
           if (
             confirm(
-              "Confirm that you want to publish the selected collection. Once published, a collection can't be unpublished."
+              'Confirm that you want to publish the selected collection. ' +
+                'Once published, the collection will be publicly visible.'
             )
           ) {
             this.submitCollectionStatusChange(
@@ -406,6 +417,87 @@ export class ManageCollectionComponent
           this.router.navigate([`/collections/${this.uuidParam}/publish`]);
         }
       });
+  }
+
+  unpublishAction(): void {
+    if (!this.uuidParam) {
+      return;
+    }
+    const syncAfterUnpublish = !!this.collection?.credentialEngineUrl;
+    if (
+      !confirm(
+        'Confirm that you want to unpublish this collection. ' +
+          'The collection will return to draft status and will no longer be ' +
+          'publicly visible.'
+      )
+    ) {
+      return;
+    }
+    this.toastService.showBlockingLoader();
+    const updateObject = new ApiCollectionUpdate({
+      status: PublishStatus.Draft,
+    });
+    this.collectionSaved = this.collectionService.updateCollection(
+      this.uuidParam,
+      updateObject
+    );
+    this.collectionSaved.subscribe({
+      next: collection =>
+        this.finishUnpublishAfterUpdate(collection, syncAfterUnpublish),
+      error: err => this.handleUnpublishError(err),
+    });
+  }
+
+  private finishUnpublishAfterUpdate(
+    collection: ApiCollection,
+    syncAfterUnpublish: boolean
+  ): void {
+    this.collection = collection;
+    if (syncAfterUnpublish && this.uuidParam) {
+      this.syncCredentialEngineAfterUnpublish(collection.name);
+      return;
+    }
+    this.toastService.hideBlockingLoader();
+    this.toastService.showToast(
+      'Success!',
+      `You unpublished the collection ${collection.name}.`
+    );
+    this.loadNextPage();
+  }
+
+  private syncCredentialEngineAfterUnpublish(collectionName: string): void {
+    this.syncService.syncCollection(this.uuidParam!).subscribe({
+      next: () => {
+        this.toastService.hideBlockingLoader();
+        this.toastService.showToast(
+          'Success!',
+          `You unpublished ${collectionName} and synced to Credential ` +
+            `Registry.`
+        );
+        this.reloadCollection();
+      },
+      error: err => {
+        this.toastService.hideBlockingLoader();
+        const msg =
+          err?.status === 503
+            ? 'Collection unpublished but Credential Registry sync is not ' +
+              'configured'
+            : (err?.error?.message ??
+              err?.message ??
+              'Sync failed after unpublish');
+        this.toastService.showToast('Warning', msg);
+        this.reloadCollection();
+      },
+    });
+  }
+
+  private handleUnpublishError(err: unknown): void {
+    this.toastService.hideBlockingLoader();
+    const e = err as { error?: { message?: string } };
+    this.toastService.showToast(
+      'Error',
+      e?.error?.message ?? 'Failed to unpublish collection'
+    );
   }
 
   syncCollectionToCredentialEngine(): void {

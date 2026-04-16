@@ -6,7 +6,7 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   createMockCollection,
   createMockPaginatedSkills,
@@ -295,11 +295,13 @@ describe('ManageCollectionComponent', () => {
         publishDate: new Date('2020-06-25T14:58:46.313Z'),
         status: PublishStatus.Published,
         action2Label: 'View Published Collection',
+        expectedLength: 8,
       },
       {
         publishDate: undefined,
         status: PublishStatus.Draft,
         action2Label: 'Publish Collection',
+        expectedLength: 7,
       },
     ].forEach(params => {
       // Arrange
@@ -320,7 +322,7 @@ describe('ManageCollectionComponent', () => {
 
       // Assert
       expect(actions).toBeTruthy();
-      expect(actions.length).toEqual(7);
+      expect(actions.length).toEqual(params.expectedLength);
 
       let action = actions[0];
       expect(action.label).toEqual('Add RSDs to This Collection');
@@ -344,7 +346,14 @@ describe('ManageCollectionComponent', () => {
       expect(action.label).toEqual(params.action2Label);
       expect(action && action.callback).toBeTruthy();
 
-      action = actions[3];
+      if (params.publishDate) {
+        action = actions[3];
+        expect(action.label).toEqual('Unpublish Collection');
+        expect(action && action.callback).toBeTruthy();
+        action = actions[4];
+      } else {
+        action = actions[3];
+      }
       expect(action.label).toEqual('Archive Collection ');
       expect(action.primary).toBeFalsy();
       expect(action && action.callback).toBeTruthy();
@@ -437,6 +446,98 @@ describe('ManageCollectionComponent', () => {
     // Assert
     expect(component.submitCollectionStatusChange).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('unpublishAction updates to draft and does not sync without credentialEngineUrl', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    const collectionService = TestBed.inject(CollectionService);
+    const syncService = TestBed.inject(SyncService);
+    const spyUpdate = spyOn(
+      collectionService,
+      'updateCollection'
+    ).and.callThrough();
+    const spySync = spyOn(syncService, 'syncCollection').and.returnValue(
+      of(undefined)
+    );
+    const spyLoadNext = spyOn(component, 'loadNextPage').and.stub();
+    component.uuidParam = 'uuid1';
+    const coll = new ApiCollection(
+      createMockCollection(
+        new Date('2020-06-25T14:58:46.313Z'),
+        new Date('2020-06-25T14:58:46.313Z'),
+        new Date('2020-06-25T14:58:46.313Z'),
+        new Date('2020-06-25T14:58:46.313Z'),
+        PublishStatus.Published
+      )
+    );
+    component.collection = coll;
+
+    component.unpublishAction();
+
+    expect(spyUpdate).toHaveBeenCalled();
+    const updateArg = spyUpdate.calls.mostRecent().args[1] as {
+      status: PublishStatus;
+    };
+    expect(updateArg.status).toEqual(PublishStatus.Draft);
+    expect(spySync).not.toHaveBeenCalled();
+    expect(spyLoadNext).toHaveBeenCalled();
+  });
+
+  it('unpublishAction re-syncs Credential Registry when credentialEngineUrl is set', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    const collectionService = TestBed.inject(CollectionService);
+    const syncService = TestBed.inject(SyncService);
+    spyOn(collectionService, 'updateCollection').and.callThrough();
+    const spySync = spyOn(syncService, 'syncCollection').and.returnValue(
+      of(undefined)
+    );
+    const spyReload = spyOn(component, 'reloadCollection').and.stub();
+    component.uuidParam = 'uuid1';
+    const base = createMockCollection(
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      PublishStatus.Published
+    );
+    component.collection = new ApiCollection({
+      ...base,
+      credentialEngineUrl: 'https://credential.example/ctdl/foo',
+    });
+
+    component.unpublishAction();
+
+    expect(spySync).toHaveBeenCalledWith('uuid1');
+    expect(spyReload).toHaveBeenCalled();
+  });
+
+  it('unpublishAction surfaces sync failure after successful draft update', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    const collectionService = TestBed.inject(CollectionService);
+    const syncService = TestBed.inject(SyncService);
+    spyOn(collectionService, 'updateCollection').and.callThrough();
+    spyOn(syncService, 'syncCollection').and.returnValue(
+      throwError(() => ({ status: 500, error: { message: 'sync down' } }))
+    );
+    const spyReload = spyOn(component, 'reloadCollection').and.stub();
+    const spyToast = spyOn(component['toastService'], 'showToast');
+    component.uuidParam = 'uuid1';
+    const base = createMockCollection(
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      new Date('2020-06-25T14:58:46.313Z'),
+      PublishStatus.Published
+    );
+    component.collection = new ApiCollection({
+      ...base,
+      credentialEngineUrl: 'https://credential.example/ctdl/foo',
+    });
+
+    component.unpublishAction();
+
+    expect(spyToast).toHaveBeenCalledWith('Warning', 'sync down');
+    expect(spyReload).toHaveBeenCalled();
   });
 
   it('submitCollectionStatusChange should be correct', () => {
