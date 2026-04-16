@@ -4,20 +4,18 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate
 import org.springframework.data.elasticsearch.core.IndexOperations
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 
 /**
- * Overrides [ElasticsearchTemplate] in readonly mode to skip
- * automatic index creation on startup. The writable (staff)
+ * Overrides the [ElasticsearchTemplate] bean in readonly mode to
+ * skip automatic index creation on startup. The writable (staff)
  * instance owns index lifecycle; the readonly instance only reads.
  *
- * This prevents the race condition where two containers sharing
- * the same Elasticsearch sidecar both try to create indices
- * simultaneously, causing [resource_already_exists_exception].
+ * The bean must be named "elasticsearchTemplate" because
+ * [EnableElasticsearchRepositories] resolves by bean name.
  */
 @Configuration
 @Profile("readonly")
@@ -26,8 +24,7 @@ class ReadOnlyElasticsearchConfig {
         LoggerFactory.getLogger(ReadOnlyElasticsearchConfig::class.java)
 
     @Bean
-    @Primary
-    fun readOnlyElasticsearchTemplate(client: ElasticsearchClient): ElasticsearchTemplate {
+    fun elasticsearchTemplate(client: ElasticsearchClient): ElasticsearchTemplate {
         log.info(
             "Readonly mode: ES index auto-creation disabled",
         )
