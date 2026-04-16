@@ -69,11 +69,15 @@ describe('CollectionFormComponent duplicate mode', () => {
 
   it('should prefill name with Copy suffix including timestamp', () => {
     const nameValue = component.collectionForm.get('collectionName')?.value;
-    expect(nameValue).toMatch(/my collection name \(Copy \d{4}-\d{2}-\d{2} \d{2}:\d{2}\)/);
+    expect(nameValue).toMatch(
+      /my collection name \(Copy \d{4}-\d{2}-\d{2} \d{2}:\d{2}\)/
+    );
   });
 
   it('collectionNameErrorMessage should describe not-a-copy validation', () => {
-    component.collectionForm.patchValue({ collectionName: 'Collection (Copy 2024-01-01 10:00)' });
+    component.collectionForm.patchValue({
+      collectionName: 'Collection (Copy 2024-01-01 10:00)',
+    });
     expect(component.collectionNameErrorMessage).toContain('(Copy ...)');
   });
 });

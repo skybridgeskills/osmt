@@ -403,7 +403,9 @@ export class RichSkillFormComponent
     );
 
     const fields = {
-      skillName: this.isDuplicating ? generateDuplicateName(skill.skillName) : skill.skillName,
+      skillName: this.isDuplicating
+        ? generateDuplicateName(skill.skillName)
+        : skill.skillName,
       skillStatement: skill.skillStatement,
       categories: skill.categories?.map(it => it) ?? null,
       keywords: skill.keywords?.map(it => it) ?? null,

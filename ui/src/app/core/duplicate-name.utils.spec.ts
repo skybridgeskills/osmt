@@ -16,7 +16,10 @@ describe('duplicate-name utils', () => {
 
     it('should remove existing (Copy ...) suffix to avoid double parens', () => {
       const date = new Date(2024, 5, 10, 14, 0); // Jun 10, 2024 14:00
-      const result = generateDuplicateName('My Collection (Copy 2024-01-01 10:00)', date);
+      const result = generateDuplicateName(
+        'My Collection (Copy 2024-01-01 10:00)',
+        date
+      );
       expect(result).toBe('My Collection (Copy 2024-06-10 14:00)');
     });
 
