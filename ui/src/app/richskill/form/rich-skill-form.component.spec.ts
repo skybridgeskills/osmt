@@ -119,7 +119,9 @@ describe('RichSkillFormComponent', () => {
 
   it('nameErrorMessage should return error ', () => {
     // Arrange
-    component.skillForm.get('skillName')?.setValue('Copy of unique name');
+    component.skillForm
+      .get('skillName')
+      ?.setValue('unique name (Copy 2024-01-01 10:00)');
     // Act
     const result1 = component.nameErrorMessage;
     // Assert

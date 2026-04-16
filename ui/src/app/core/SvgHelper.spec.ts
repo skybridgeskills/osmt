@@ -6,7 +6,7 @@ describe('SvgHelper', () => {
       'assets/images/svg-defs.svg#icon-external-link'
     );
     expect(SvgHelper.path(SvgIcon.UNPUBLISH)).toBe(
-      'assets/images/svg-defs.svg#icon-unarchive'
+      'assets/images/svg-defs.svg#icon-unpublish'
     );
   });
 
