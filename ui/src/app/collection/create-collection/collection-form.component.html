@@ -21,7 +21,7 @@
                 name="collectionName"
                 label="Collection Name"
                 placeholder="Health Open Skills"
-                errorMessage="Name required"
+                [errorMessage]="collectionNameErrorMessage"
                 [required]="true"
               ></app-formfield-textarea>
             </div>
@@ -48,7 +48,10 @@
             </div>
           </div>
 
-          <div class="t-margin-medium t-margin-top" *ngIf="this.collectionUuid">
+          <div
+            class="t-margin-medium t-margin-top"
+            *ngIf="this.collectionUuid && !isDuplicating"
+          >
             <app-audit-log
               [collectionUuid]="this.collectionUuid"
               closedLabel="View Audit Log"

@@ -4,6 +4,7 @@ import edu.wgu.osmt.PaginationDefaults
 import edu.wgu.osmt.api.FormValidationException
 import edu.wgu.osmt.api.model.ApiBatchResult
 import edu.wgu.osmt.api.model.ApiCollectionUpdate
+import edu.wgu.osmt.api.model.ApiStringListUpdate
 import edu.wgu.osmt.auditlog.AuditLog
 import edu.wgu.osmt.auditlog.AuditLogRepository
 import edu.wgu.osmt.auditlog.AuditOperationType
@@ -87,6 +88,14 @@ interface CollectionRepository {
         collectionUpdate: ApiCollectionUpdate,
         richSkillRepository: RichSkillRepository,
         user: String,
+    ): CollectionDao?
+
+    fun duplicateCollection(
+        sourceUuid: String,
+        apiUpdate: ApiCollectionUpdate,
+        richSkillRepository: RichSkillRepository,
+        user: String,
+        email: String,
     ): CollectionDao?
 
     fun updateSkillsForTask(
@@ -351,6 +360,44 @@ class CollectionRepositoryImpl
                 )
 
             return update(updateObjectWithId, user)
+        }
+
+        override fun duplicateCollection(
+            sourceUuid: String,
+            apiUpdate: ApiCollectionUpdate,
+            richSkillRepository: RichSkillRepository,
+            user: String,
+            email: String,
+        ): CollectionDao? {
+            val validationErrors =
+                apiUpdate.validateForCreation(0)?.toMutableList() ?: mutableListOf()
+            if (validationErrors.isNotEmpty()) {
+                throw FormValidationException(
+                    "Invalid ApiCollectionUpdate",
+                    validationErrors,
+                )
+            }
+            val existing = findByUUID(sourceUuid) ?: return null
+            val skillUuids = existing.skills.map { it.uuid }
+            val merged =
+                ApiCollectionUpdate(
+                    name = apiUpdate.name,
+                    description = apiUpdate.description,
+                    author = apiUpdate.author,
+                    publishStatus = PublishStatus.Draft,
+                    skills =
+                        if (skillUuids.isNotEmpty()) {
+                            ApiStringListUpdate(add = skillUuids)
+                        } else {
+                            null
+                        },
+                )
+            return createFromApi(
+                listOf(merged),
+                richSkillRepository,
+                user,
+                email,
+            ).firstOrNull()
         }
 
         override fun updateSkillsForTask(

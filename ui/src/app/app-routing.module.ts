@@ -136,6 +136,15 @@ const routes: Routes = [
     },
     canDeactivate: [FormDirtyGuard],
   },
+  {
+    path: 'collections/:uuid/duplicate',
+    component: CollectionFormComponent,
+    canActivate: [AuthGuard],
+    canDeactivate: [FormDirtyGuard],
+    data: {
+      roles: ActionByRoles.get(ButtonAction.CollectionCreate),
+    },
+  },
   // manage collection
   {
     path: 'collections/:uuid/manage',

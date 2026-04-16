@@ -59,6 +59,7 @@ export class ManageCollectionComponent
   unarchiveIcon = SvgHelper.path(SvgIcon.UNARCHIVE);
   unpublishIcon = SvgHelper.path(SvgIcon.UNPUBLISH);
   addIcon = SvgHelper.path(SvgIcon.ADD);
+  duplicateIcon = SvgHelper.path(SvgIcon.DUPLICATE);
   searchIcon = SvgHelper.path(SvgIcon.SEARCH);
   showAdvancedFilteredSearch = true;
 
@@ -227,6 +228,13 @@ export class ManageCollectionComponent
         visible: () =>
           this.authService.isEnabledByRoles(ButtonAction.CollectionUpdate),
       }),
+      new TableActionDefinition({
+        label: 'Duplicate Collection',
+        icon: this.duplicateIcon,
+        callback: () => this.duplicateAction(),
+        visible: () =>
+          this.authService.isEnabledByRoles(ButtonAction.CollectionCreate),
+      }),
     ];
 
     if (this.collection?.publishDate) {
@@ -384,6 +392,10 @@ export class ManageCollectionComponent
 
   editAction(): void {
     this.router.navigate([`/collections/${this.uuidParam}/edit`]);
+  }
+
+  duplicateAction(): void {
+    this.router.navigate([`/collections/${this.uuidParam}/duplicate`]);
   }
 
   viewPublishedAction(): void {

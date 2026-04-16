@@ -442,6 +442,38 @@ describe('CollectionService', () => {
     req.flush(testData);
   });
 
+  it('duplicateCollection should return', () => {
+    RouterData.commands = [];
+    AuthServiceData.isDown = false;
+    const now = new Date();
+    const testData = new ApiCollection(
+      createMockCollection(now, now, now, now, PublishStatus.Draft)
+    );
+    const uuid = testData.uuid;
+    const path = getBaseApi() + '/collections/' + uuid + '/duplicate';
+    const input = new ApiCollectionUpdate({
+      name: 'Duplicated Name',
+      description: testData.description,
+      status: testData.status,
+      author: testData.author,
+    });
+
+    const result$ = testService.duplicateCollection(uuid, input);
+
+    result$.subscribe((data: ApiCollection) => {
+      expect(data).toEqual(testData);
+      expect(RouterData.commands).toEqual([]);
+      expect(AuthServiceData.isDown).toEqual(false);
+    });
+
+    const req = httpTestingController.expectOne(
+      AppConfig.settings.baseApiUrl + path
+    );
+    expect(req.request.method).toEqual('POST');
+    expect(req.request.body.name).toEqual('Duplicated Name');
+    req.flush(testData);
+  });
+
   it('searchCollections should return', () => {
     // Arrange
     RouterData.commands = [];

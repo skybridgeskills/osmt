@@ -145,6 +145,39 @@ class CollectionRepositoryTest :
     }
 
     @Test
+    fun `duplicateCollection should create draft copy with same skills`() {
+        val originalUpdate = random_collection_update()
+        val originalDao =
+            collectionRepository
+                .createFromApi(
+                    listOf(originalUpdate),
+                    richSkillRepository,
+                    userString,
+                    userEmail,
+                ).first()
+
+        val duplicate =
+            collectionRepository.duplicateCollection(
+                originalDao.uuid,
+                ApiCollectionUpdate(
+                    name = "Renamed Copy",
+                    description = originalUpdate.description,
+                    author = originalUpdate.author,
+                ),
+                richSkillRepository,
+                userString,
+                userEmail,
+            )
+
+        assertThat(duplicate).isNotNull
+        assertThat(duplicate!!.uuid).isNotEqualTo(originalDao.uuid)
+        assertThat(duplicate.name).isEqualTo("Renamed Copy")
+        assertThat(duplicate.skills.map { it.uuid }.toSet())
+            .isEqualTo(originalDao.skills.map { it.uuid }.toSet())
+        assertThat(duplicate.status).isEqualTo(PublishStatus.Draft)
+    }
+
+    @Test
     fun `should add all skills from all pages of a search result to a collection`() {
         val totalSkillCount = 10
         val toAddCount = 7
