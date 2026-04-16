@@ -75,9 +75,27 @@ interface HasElasticsearchReset {
 
     @BeforeEach
     fun resetElasticsearch() {
-        richSkillEsRepo.deleteAll()
-        collectionEsRepo.deleteAll()
-        keywordEsRepo.deleteAll()
-        jobCodeEsRepo.deleteAll()
+        // In readonly mode, indices may not exist (creation is skipped).
+        // Silently ignore NoSuchIndexException to allow tests to proceed.
+        try {
+            richSkillEsRepo.deleteAll()
+        } catch (_: org.springframework.data.elasticsearch.NoSuchIndexException) {
+            // Index doesn't exist, nothing to delete
+        }
+        try {
+            collectionEsRepo.deleteAll()
+        } catch (_: org.springframework.data.elasticsearch.NoSuchIndexException) {
+            // Index doesn't exist, nothing to delete
+        }
+        try {
+            keywordEsRepo.deleteAll()
+        } catch (_: org.springframework.data.elasticsearch.NoSuchIndexException) {
+            // Index doesn't exist, nothing to delete
+        }
+        try {
+            jobCodeEsRepo.deleteAll()
+        } catch (_: org.springframework.data.elasticsearch.NoSuchIndexException) {
+            // Index doesn't exist, nothing to delete
+        }
     }
 }
