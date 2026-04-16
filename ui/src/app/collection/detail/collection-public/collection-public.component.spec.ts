@@ -12,6 +12,7 @@ import {
 } from '../../../../../test/resource/mock-stubs';
 import { AppConfig } from '../../../app.config';
 import { EnvironmentService } from '../../../core/environment.service';
+import { PublishStatus } from '../../../PublishStatus';
 import { ApiSortOrder } from '../../../richskill/ApiSkill';
 import { RichSkillService } from '../../../richskill/service/rich-skill.service';
 import { ToastService } from '../../../toast/toast.service';
@@ -129,6 +130,21 @@ describe('CollectionPublicComponent', () => {
 
     // Assert
     expect(component.results).toEqual(expected);
+  });
+
+  it('loadSkillsInCollection requests only published skills', () => {
+    const collectionService = TestBed.inject(CollectionService);
+    spyOn(collectionService, 'getCollectionSkills').and.callThrough();
+
+    component.loadSkillsInCollection();
+
+    expect(collectionService.getCollectionSkills).toHaveBeenCalledWith(
+      component.collectionUuid,
+      component.size,
+      component.from,
+      new Set([PublishStatus.Published]),
+      component.columnSort
+    );
   });
 
   it('updateSkillCategories should be correct', () => {
