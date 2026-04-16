@@ -86,6 +86,10 @@ describe('ManageCollectionComponent', () => {
             component: ManageCollectionComponent,
           },
           {
+            path: 'collections/UUID1/duplicate',
+            component: ManageCollectionComponent,
+          },
+          {
             path: 'collections/uuid1/publish',
             component: ManageCollectionComponent,
           },
@@ -294,14 +298,14 @@ describe('ManageCollectionComponent', () => {
       {
         publishDate: new Date('2020-06-25T14:58:46.313Z'),
         status: PublishStatus.Published,
-        action2Label: 'View Published Collection',
-        expectedLength: 8,
+        action3Label: 'View Published Collection',
+        expectedLength: 9,
       },
       {
         publishDate: undefined,
         status: PublishStatus.Draft,
-        action2Label: 'Publish Collection',
-        expectedLength: 7,
+        action3Label: 'Publish Collection',
+        expectedLength: 8,
       },
     ].forEach(params => {
       // Arrange
@@ -343,16 +347,25 @@ describe('ManageCollectionComponent', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/collections/UUID1/edit']);
 
       action = actions[2];
-      expect(action.label).toEqual(params.action2Label);
+      expect(action.label).toEqual('Duplicate Collection');
+      expect(action && action.callback).toBeTruthy();
+      spyNavigate.calls.reset();
+      action.callback?.(action);
+      expect(router.navigate).toHaveBeenCalledWith([
+        '/collections/UUID1/duplicate',
+      ]);
+
+      action = actions[3];
+      expect(action.label).toEqual(params.action3Label);
       expect(action && action.callback).toBeTruthy();
 
       if (params.publishDate) {
-        action = actions[3];
+        action = actions[4];
         expect(action.label).toEqual('Unpublish Collection');
         expect(action && action.callback).toBeTruthy();
-        action = actions[4];
+        action = actions[5];
       } else {
-        action = actions[3];
+        action = actions[4];
       }
       expect(action.label).toEqual('Archive Collection ');
       expect(action.primary).toBeFalsy();
