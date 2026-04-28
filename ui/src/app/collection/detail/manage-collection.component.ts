@@ -34,6 +34,7 @@ import { ApiNamedReference, KeywordType } from '../../richskill/ApiSkill';
 import { FilterDropdown } from '../../models/filter-dropdown.model';
 import { KeywordCountPillControl } from '../../core/pill/pill-control';
 import { SyncService } from '../../admin/sync/sync.service';
+import { openPublishedCollectionBrowserUrl } from '../../core/canonical-public-url.utils';
 
 @Component({
   selector: 'app-manage-collection',
@@ -399,8 +400,13 @@ export class ManageCollectionComponent
   }
 
   viewPublishedAction(): void {
-    const url = `/collections/${this.uuidParam}`;
-    window.open(url, '_blank');
+    window.open(
+      openPublishedCollectionBrowserUrl(
+        this.uuidParam ?? '',
+        this.collection?.id ?? ''
+      ),
+      '_blank'
+    );
   }
 
   publishAction(): void {

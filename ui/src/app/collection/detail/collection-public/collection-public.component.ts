@@ -12,6 +12,7 @@ import { ApiSortOrder, KeywordType } from '../../../richskill/ApiSkill';
 import { PublishStatus } from '../../../PublishStatus';
 import { ApiCollection } from '../../ApiCollection';
 import { Title } from '@angular/platform-browser';
+import { canonicalCollectionPublicUrl } from '../../../core/canonical-public-url.utils';
 import { Whitelabelled } from '../../../../whitelabel';
 import { FormControl } from '@angular/forms';
 import { SizePaginationComponent } from '../../../table/skills-library-table/size-pagination/size-pagination.component';
@@ -88,7 +89,10 @@ export class CollectionPublicComponent extends Whitelabelled implements OnInit {
   }
 
   get collectionUrl(): string {
-    return this.collection?.id ?? '';
+    return canonicalCollectionPublicUrl(
+      this.collection?.id ?? '',
+      this.collection?.uuid ?? ''
+    );
   }
 
   get collectionUuid(): string {

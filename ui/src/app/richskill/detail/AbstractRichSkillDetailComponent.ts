@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { PublishStatus } from '../../PublishStatus';
 import { QuickLinksHelper } from '../../core/quick-links-helper';
 import { dateformat } from '../../core/DateHelper';
+import { canonicalSkillPublicUrl } from '../../core/canonical-public-url.utils';
 import { Title } from '@angular/platform-browser';
 
 @Component({ template: `` })
@@ -69,7 +70,10 @@ export abstract class AbstractRichSkillDetailComponent
   }
 
   getSkillUrl(): string {
-    return this.richSkill?.id ?? '';
+    return canonicalSkillPublicUrl(
+      this.richSkill?.id ?? '',
+      this.richSkill?.uuid ?? ''
+    );
   }
 
   getPublishedDate(): string {

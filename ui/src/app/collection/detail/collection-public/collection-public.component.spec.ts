@@ -109,6 +109,14 @@ describe('CollectionPublicComponent', () => {
     expect(component.collectionUrl).toEqual('id1');
   });
 
+  it('collectionUrl uses public api path when publicInstanceUrl is set', () => {
+    AppConfig.settings.publicInstanceUrl = 'https://public.example.com';
+    expect(component.collectionUrl).toEqual(
+      'https://public.example.com/api/collections/uuid1'
+    );
+    AppConfig.settings.publicInstanceUrl = '';
+  });
+
   it('collectionUuid should be correct', () => {
     const curPageCount = 1; // Loaded by ngOnInit
     expect(component.collectionUuid).toEqual('uuid1');

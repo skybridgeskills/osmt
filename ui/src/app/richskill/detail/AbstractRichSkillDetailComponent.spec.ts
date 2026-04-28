@@ -151,6 +151,37 @@ describe('ConcreteComponent', () => {
     expect(component.getSkillUrl()).toEqual(skill.id);
   });
 
+  it('getSkillUrl uses public api path when publicInstanceUrl is set', () => {
+    const origUuid = skill.uuid;
+    const origId = skill.id;
+    AppConfig.settings.publicInstanceUrl = 'https://public.example.com';
+    component.richSkill = skill;
+    component.richSkill.uuid = 'abc-uuid';
+    component.richSkill.id = 'opaque-id';
+
+    expect(component.getSkillUrl()).toEqual(
+      'https://public.example.com/api/skills/abc-uuid'
+    );
+
+    skill.uuid = origUuid;
+    skill.id = origId;
+    AppConfig.settings.publicInstanceUrl = '';
+  });
+
+  it('getSkillUrl replaces origin when id is absolute URL', () => {
+    const origId = skill.id;
+    AppConfig.settings.publicInstanceUrl = 'https://public.example.com';
+    component.richSkill = skill;
+    component.richSkill.id = 'https://staff.example.com/api/skills/abc-uuid';
+
+    expect(component.getSkillUrl()).toEqual(
+      'https://public.example.com/api/skills/abc-uuid'
+    );
+
+    skill.id = origId;
+    AppConfig.settings.publicInstanceUrl = '';
+  });
+
   it('getPublishedDate should return', () => {
     // Arrange
     component.richSkill = null;
