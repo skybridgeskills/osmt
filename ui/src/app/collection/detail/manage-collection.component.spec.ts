@@ -122,6 +122,25 @@ describe('ManageCollectionComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('viewPublishedAction opens relative path without publicInstanceUrl', () => {
+    spyOn(window, 'open');
+    component.uuidParam = 'uuid1';
+    component.viewPublishedAction();
+    expect(window.open).toHaveBeenCalledWith('/collections/uuid1', '_blank');
+  });
+
+  it('viewPublishedAction opens public URL when publicInstanceUrl set', () => {
+    AppConfig.settings.publicInstanceUrl = 'https://public.example.com';
+    spyOn(window, 'open');
+    component.uuidParam = 'uuid1';
+    component.viewPublishedAction();
+    expect(window.open).toHaveBeenCalledWith(
+      'https://public.example.com/collections/uuid1',
+      '_blank'
+    );
+    AppConfig.settings.publicInstanceUrl = '';
+  });
+
   it('collectionHasSkills should be correct', () => {
     component.collection = undefined;
     expect(component.collectionHasSkills).toBeFalsy();

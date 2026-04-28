@@ -35,7 +35,7 @@ class TestHostComponent {
   mySkillName = 'my skill name';
   mySkillPublicUrl = 'mockUrl';
   myArchived = false;
-  myPublished = false;
+  myPublished: boolean | string = false;
 }
 
 export function createComponent(T: Type<TestHostComponent>): Promise<void> {
@@ -88,6 +88,12 @@ describe('ManageSkillActionBarVerticalComponent', () => {
 
     createComponent(TestHostComponent);
   }));
+
+  afterEach(() => {
+    AppConfig.settings.publicInstanceUrl = '';
+    hostComponent.myPublished = false;
+    hostComponent.mySkillPublicUrl = 'mockUrl';
+  });
 
   it('should be created', () => {
     expect(hostComponent).toBeTruthy();
@@ -175,6 +181,20 @@ describe('ManageSkillActionBarVerticalComponent', () => {
 
     // Assert
     expect(clicked).toBeTruthy();
+  });
+
+  it('handlePublish opens published skill URL when already published', () => {
+    hostComponent.myPublished = '2020-06-25T14:58:46.313Z';
+    hostComponent.mySkillPublicUrl =
+      'https://staff.example.com/api/skills/1234';
+    AppConfig.settings.publicInstanceUrl = 'https://public.example.com';
+    hostFixture.detectChanges();
+    spyOn(window, 'open');
+    childComponent.handlePublish();
+    expect(window.open).toHaveBeenCalledWith(
+      'https://public.example.com/api/skills/1234',
+      '_blank'
+    );
   });
 
   it('handleCopyPublicUrl should return', async () => {

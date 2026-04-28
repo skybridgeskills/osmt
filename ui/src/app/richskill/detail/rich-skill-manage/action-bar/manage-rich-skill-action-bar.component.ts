@@ -9,6 +9,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { AppConfig } from '../../../../app.config';
+import { openPublishedSkillBrowserUrl } from '../../../../core/canonical-public-url.utils';
 import { SvgHelper, SvgIcon } from '../../../../core/SvgHelper';
 import { PublishStatus } from '../../../../PublishStatus';
 import { ExtrasSelectedSkillsState } from '../../../../collection/add-skills-collection.component';
@@ -147,8 +148,10 @@ export abstract class ManageRichSkillActionBarComponent implements OnInit {
           });
       }
     } else {
-      const url = `skills/${this.skillUuid}`;
-      window.open(url, '_blank');
+      window.open(
+        openPublishedSkillBrowserUrl(this.skillUuid, this.skillPublicUrl),
+        '_blank'
+      );
     }
   }
 
